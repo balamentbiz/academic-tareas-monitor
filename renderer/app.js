@@ -482,6 +482,10 @@ el("btn-quit").addEventListener("click", function() {
   window.AT.quitApp();
 });
 
+el("btn-quit-idle").addEventListener("click", function() {
+  window.AT.quitApp();
+});
+
 el("btn-check-update").addEventListener("click", function() {
   var btn = el("btn-check-update");
   btn.textContent = "🔄 Buscando...";
