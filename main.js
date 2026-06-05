@@ -34,6 +34,7 @@ try {
   });
 
   autoUpdater.on("error", (e) => {
+    console.error("AutoUpdater error:", e.message);
     safeSend("update-progress", { error: true, message: e.message });
   });
 } catch (_) {

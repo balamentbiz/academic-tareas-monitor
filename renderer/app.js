@@ -213,9 +213,11 @@ if (window.AT.onUpdateProgress) {
     var btn = el("btn-check-update");
     if (!btn) return;
     if (data.error) {
-      btn.textContent = "⚠ Error al descargar — intenta de nuevo";
+      btn.textContent = "⚠ " + (data.message || "Error al descargar");
       btn.style.color = "#ff9f0a";
-      setTimeout(function() { btn.textContent = "🔄 Buscar actualizaciones"; btn.style.color = ""; }, 4000);
+      btn.disabled = false;
+      console.error("Update error:", data.message);
+      setTimeout(function() { btn.textContent = "🔄 Buscar actualizaciones"; btn.style.color = ""; }, 6000);
     } else if (data.done) {
       btn.textContent = "✓ Lista — reinicia para instalar";
       btn.style.color = "#32d74b";
