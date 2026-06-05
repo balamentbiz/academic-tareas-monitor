@@ -328,19 +328,32 @@ ipcMain.handle("save-report-image", async (_, { report, filename }) => {
 ipcMain.handle("get-version", () => app.getVersion());
 
 ipcMain.handle("check-for-updates", async () => {
-  if (!autoUpdater) return { status: "no-updater" };
+  const current = app.getVersion();
   try {
-    const result = await autoUpdater.checkForUpdates();
-    if (result && result.updateInfo) {
-      const current = app.getVersion();
-      const latest  = result.updateInfo.version;
-      if (latest !== current) {
-        return { status: "available", current, latest };
-      } else {
-        return { status: "up-to-date", current };
-      }
+    // Consultar GitHub API directamente — sin electron-updater
+    const https = require("https");
+    const data = await new Promise((resolve, reject) => {
+      https.get({
+        hostname: "api.github.com",
+        path: "/repos/balamentbiz/academic-tareas-monitor/releases/latest",
+        headers: { "User-Agent": "AcademicTareasMonitor/" + current }
+      }, (res) => {
+        let body = "";
+        res.on("data", d => body += d);
+        res.on("end", () => {
+          try { resolve(JSON.parse(body)); }
+          catch { reject(new Error("parse error")); }
+        });
+      }).on("error", reject);
+    });
+
+    const latest = (data.tag_name || "").replace(/^v/, "");
+    const downloadUrl = "https://github.com/balamentbiz/academic-tareas-monitor/releases/latest";
+
+    if (latest && latest !== current) {
+      return { status: "available", current, latest, downloadUrl };
     }
-    return { status: "up-to-date", current: app.getVersion() };
+    return { status: "up-to-date", current };
   } catch (e) {
     return { status: "error", message: e.message };
   }
@@ -383,6 +396,7 @@ ipcMain.handle("uninstall-app", async () => {
   return { ok: true };
 });
 
+ipcMain.handle("open-url", (_, url) => shell.openExternal(url));
 ipcMain.handle("open-blackboard", () => shell.openExternal("https://uvmonline.blackboard.com/webapps/login/?action=default_login"));
 ipcMain.handle("open-drive",       () => shell.openExternal("https://drive.google.com/drive/folders/1lL0EXrghttyvTjTR8PEevsRu09R6qk3U?usp=drive_link"));
 

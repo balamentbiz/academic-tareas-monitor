@@ -1,7 +1,7 @@
 {
   "name": "academic-tareas-monitor",
   "productName": "Academic Tareas Monitor",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Monitor de Productividad - Academic Tareas",
   "main": "main.js",
   "scripts": {
@@ -24,8 +24,18 @@
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
-        { "target": "dmg", "arch": ["arm64"] },
-        { "target": "zip", "arch": ["arm64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
       ],
       "icon": "assets/icon.icns",
       "notarize": false,

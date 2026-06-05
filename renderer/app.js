@@ -491,9 +491,15 @@ el("btn-check-update").addEventListener("click", function() {
   window.AT.checkForUpdates().then(function(res) {
     btn.disabled = false;
     btn.style.opacity = "";
+
     if (res.status === "available") {
-      btn.textContent = "⬇ Descargando v" + res.latest + "...";
+      // Hay actualización — cambiar botón para abrir descarga
+      btn.textContent = "⬇ Nueva versión v" + res.latest + " — Descargar";
       btn.style.color = "#09a3ef";
+      btn.style.border = "1px solid #09a3ef";
+      btn.onclick = function() {
+        window.AT.openUrl("https://github.com/balamentbiz/academic-tareas-monitor/releases/latest");
+      };
     } else if (res.status === "up-to-date") {
       btn.textContent = "✓ Ya tienes la versión más reciente";
       btn.style.color = "#32d74b";

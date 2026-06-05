@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld("AT", {
   onGlobalEvent:    (cb)   => ipcRenderer.on("global-event", (_, data) => cb(data)),
   getVersion:       ()     => ipcRenderer.invoke("get-version"),
   checkForUpdates:  ()     => ipcRenderer.invoke("check-for-updates"),
+  openUrl:          (url)  => ipcRenderer.invoke("open-url", url),
   quitApp:          ()     => ipcRenderer.send("quit-app"),
   uninstallApp:     ()     => ipcRenderer.invoke("uninstall-app"),
   sendInputEvents:  (d)    => ipcRenderer.send("input-events", d),
