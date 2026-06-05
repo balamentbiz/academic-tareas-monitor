@@ -397,11 +397,12 @@ ipcMain.handle("check-for-updates", async () => {
 
     safeSend("update-progress", { percent: 100, done: true, latest });
 
-    // Relanzar la app desde la versión recién instalada
+    // Relanzar la app instalada en /Applications/
     setTimeout(() => {
-      app.relaunch({ execPath: `/Applications/Academic Tareas Monitor.app/Contents/MacOS/Electron` });
-      app.quit();
-    }, 2000);
+      exec(`open "/Applications/Academic Tareas Monitor.app"`, () => {
+        app.quit();
+      });
+    }, 1500);
 
     return { status: "installing", current, latest };
   } catch (e) {
