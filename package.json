@@ -1,7 +1,7 @@
 {
   "name": "academic-tareas-monitor",
   "productName": "Academic Tareas Monitor",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Monitor de Productividad - Academic Tareas",
   "main": "main.js",
   "scripts": {
