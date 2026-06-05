@@ -99,8 +99,8 @@ function createWindow() {
   });
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
 
-  // Revisar actualizaciones 5s después de abrir (sin molestar al arranque)
-  if (autoUpdater) setTimeout(() => autoUpdater.checkForUpdatesAndNotify().catch(()=>{}), 5000);
+  // Revisar e instalar actualizaciones automáticamente 5s después de abrir
+  setTimeout(() => checkAndInstallUpdate(false), 5000);
 
   startIdleCheck();
   startAppTracking();
@@ -332,7 +332,88 @@ ipcMain.handle("save-report-image", async (_, { report, filename }) => {
 
 ipcMain.handle("get-version", () => app.getVersion());
 
+// ── Función central de actualización ─────────────────────────────────────────
+async function checkAndInstallUpdate(notify = true) {
+  const current = app.getVersion();
+  try {
+    const https = require("https");
+    const data = await new Promise((resolve, reject) => {
+      https.get({
+        hostname: "api.github.com",
+        path: "/repos/balamentbiz/academic-tareas-monitor/releases/latest",
+        headers: { "User-Agent": "AcademicTareasMonitor/" + current }
+      }, (res) => {
+        let body = "";
+        res.on("data", d => body += d);
+        res.on("end", () => { try { resolve(JSON.parse(body)); } catch { reject(new Error("parse")); } });
+      }).on("error", reject);
+    });
+
+    const latest = (data.tag_name || "").replace(/^v/, "");
+    if (!latest || latest === current) {
+      if (notify) safeSend("update-progress", { status: "up-to-date", current });
+      return { status: "up-to-date" };
+    }
+
+    // Hay actualización disponible — instalar silenciosamente
+    safeSend("update-progress", { percent: 0, latest, auto: !notify });
+
+    // Descargar ZIP del código fuente (~3MB, no el DMG de 100MB)
+    const zipUrl    = `https://github.com/balamentbiz/academic-tareas-monitor/archive/refs/tags/v${latest}.zip`;
+    const zipPath   = path.join(app.getPath("temp"), `at-update-${latest}.zip`);
+    const extractDir = path.join(app.getPath("temp"), `at-update-${latest}`);
+    const appPath   = app.getAppPath();
+
+    await new Promise((resolve, reject) => {
+      const file = fs.createWriteStream(zipPath);
+      https.get(zipUrl, (res) => {
+        const total = parseInt(res.headers["content-length"] || "0");
+        let received = 0;
+        res.on("data", chunk => {
+          received += chunk.length;
+          file.write(chunk);
+          if (total) safeSend("update-progress", { percent: Math.round((received / total) * 80), latest, auto: !notify });
+        });
+        res.on("end", () => { file.end(); resolve(); });
+        res.on("error", reject);
+      }).on("error", reject);
+    });
+
+    safeSend("update-progress", { percent: 85, latest, installing: true, auto: !notify });
+
+    // Extraer e instalar archivos JS/HTML/CSS
+    await new Promise((resolve) => {
+      exec([
+        `rm -rf "${extractDir}"`,
+        `mkdir -p "${extractDir}"`,
+        `unzip -q "${zipPath}" -d "${extractDir}"`,
+        `SRCDIR=$(ls "${extractDir}" | head -1)`,
+        `cp -f "${extractDir}/$SRCDIR/main.js" "${appPath}/" 2>/dev/null`,
+        `cp -f "${extractDir}/$SRCDIR/preload.js" "${appPath}/" 2>/dev/null`,
+        `cp -f "${extractDir}/$SRCDIR/preload-overlay.js" "${appPath}/" 2>/dev/null`,
+        `cp -Rf "${extractDir}/$SRCDIR/renderer/" "${appPath}/" 2>/dev/null`,
+        `rm -rf "${extractDir}" "${zipPath}"`
+      ].join(" && "), (err) => {
+        if (err) console.error("Update install error:", err.message);
+        resolve();
+      });
+    });
+
+    safeSend("update-progress", { percent: 100, done: true, latest, auto: !notify });
+
+    // Reiniciar automáticamente con el código nuevo
+    setTimeout(() => { app.relaunch(); app.quit(); }, 2000);
+
+    return { status: "installing", latest };
+  } catch (e) {
+    if (notify) safeSend("update-progress", { error: true, message: e.message });
+    return { status: "error", message: e.message };
+  }
+}
+
 ipcMain.handle("check-for-updates", async () => {
+  return checkAndInstallUpdate(true);
+});
   const current = app.getVersion();
   try {
     const https = require("https");
@@ -376,44 +457,44 @@ ipcMain.handle("check-for-updates", async () => {
 
     safeSend("update-progress", { percent: 100, installing: true, latest });
 
-    // Instalar: montar DMG → quitar cuarentena → copiar → abrir nueva versión
-    const logPath = path.join(app.getPath("temp"), "at-update.log");
+    // Actualizar solo los archivos JS/HTML/CSS dentro de la app actual
+    // Sin reemplazar el bundle completo → sin Gatekeeper
+    const appPath    = app.getAppPath(); // .../resources/app o similar
+    const updateZip  = destPath.replace(".dmg", "-update.zip");
+    const extractDir = path.join(app.getPath("temp"), "at-code-update");
+
+    // Descargar el ZIP de código (solo archivos de la app, no el bundle completo)
+    const codeZipUrl = `https://github.com/balamentbiz/academic-tareas-monitor/archive/refs/tags/v${latest}.zip`;
+
+    safeSend("update-progress", { percent: 50, installing: true, latest });
 
     await new Promise((resolve) => {
-      const script = [
-        `echo "START" > "${logPath}"`,
-        `hdiutil attach "${destPath}" -quiet -nobrowse -mountpoint /tmp/at-update >> "${logPath}" 2>&1`,
-        `echo "mount:$?" >> "${logPath}"`,
-        `xattr -cr "/tmp/at-update/Academic Tareas Monitor.app" 2>/dev/null`,
-        `cp -Rf "/tmp/at-update/Academic Tareas Monitor.app" "/Applications/" >> "${logPath}" 2>&1`,
-        `echo "copy:$?" >> "${logPath}"`,
-        `xattr -cr "/Applications/Academic Tareas Monitor.app" 2>/dev/null`,
-        `hdiutil detach /tmp/at-update -quiet 2>/dev/null`,
-        `rm -f "${destPath}"`,
-        `echo "DONE" >> "${logPath}"`
-      ].join(" ; ");
-
-      exec(script, (err) => {
-        try { console.log("Update log:", fs.readFileSync(logPath, "utf8")); } catch {}
-        if (err) console.error("Install error:", err.message);
+      exec([
+        `rm -rf "${extractDir}"`,
+        `mkdir -p "${extractDir}"`,
+        `curl -sL "${codeZipUrl}" -o "${updateZip}"`,
+        `unzip -q "${updateZip}" -d "${extractDir}"`,
+        `SRCDIR=$(ls "${extractDir}" | head -1)`,
+        // Copiar archivos de código al directorio de la app
+        `cp -f "${extractDir}/$SRCDIR/main.js" "${appPath}/" 2>/dev/null`,
+        `cp -f "${extractDir}/$SRCDIR/preload.js" "${appPath}/" 2>/dev/null`,
+        `cp -f "${extractDir}/$SRCDIR/preload-overlay.js" "${appPath}/" 2>/dev/null`,
+        `cp -Rf "${extractDir}/$SRCDIR/renderer/" "${appPath}/" 2>/dev/null`,
+        `rm -rf "${extractDir}" "${updateZip}" "${destPath}"`,
+        `echo "OK"`
+      ].join(" && "), (err, stdout) => {
+        console.log("Code update:", stdout, err?.message);
         resolve();
       });
     });
 
     safeSend("update-progress", { percent: 100, done: true, latest });
 
-    // Leer log y enviarlo al renderer para diagnóstico
-    try {
-      const log = fs.readFileSync(logPath, "utf8");
-      safeSend("update-log", { log });
-    } catch {}
-
-    // Abrir la nueva versión y cerrar la actual
+    // Reiniciar la app — ahora tiene el código nuevo, misma app bundle
     setTimeout(() => {
-      exec(`open "/Applications/Academic\\ Tareas\\ Monitor.app"`, () => {
-        setTimeout(() => app.quit(), 500);
-      });
-    }, 1000);
+      app.relaunch();
+      app.quit();
+    }, 1500);
 
     return { status: "installing", current, latest };
   } catch (e) {

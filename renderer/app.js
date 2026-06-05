@@ -219,19 +219,35 @@ if (window.AT.onUpdateProgress) {
   window.AT.onUpdateProgress(function(data) {
     var btn = el("btn-check-update");
     if (!btn) return;
+
     if (data.error) {
-      btn.textContent = "⚠ " + (data.message || "Error al descargar");
-      btn.style.color = "#ff9f0a";
-      btn.disabled = false;
-      console.error("Update error:", data.message);
-      setTimeout(function() { btn.textContent = "🔄 Buscar actualizaciones"; btn.style.color = ""; }, 6000);
+      if (!data.auto) {
+        btn.textContent = "⚠ Sin conexión — intenta más tarde";
+        btn.style.color = "#ff9f0a";
+        btn.disabled = false;
+        setTimeout(function() { btn.textContent = "🔄 Buscar actualizaciones"; btn.style.color = ""; }, 4000);
+      }
     } else if (data.done) {
-      btn.textContent = "✓ Lista — reinicia para instalar";
+      btn.textContent = "✓ v" + data.latest + " instalada — reiniciando...";
+      btn.style.color = "#32d74b";
+      btn.disabled = true;
+    } else if (data.installing) {
+      btn.textContent = "⚙ Instalando v" + data.latest + "...";
+      btn.style.color = "#09a3ef";
+      btn.disabled = true;
+    } else if (data.status === "up-to-date" && !data.auto) {
+      btn.textContent = "✓ Ya tienes la versión más reciente";
       btn.style.color = "#32d74b";
       btn.disabled = false;
-    } else {
-      btn.textContent = "⬇ Descargando " + data.percent + "%...";
+      setTimeout(function() { btn.textContent = "🔄 Buscar actualizaciones"; btn.style.color = ""; }, 3000);
+    } else if (data.percent !== undefined && !data.auto) {
+      btn.textContent = "⬇ Descargando v" + data.latest + " — " + data.percent + "%";
       btn.style.color = "#09a3ef";
+      btn.disabled = true;
+    } else if (data.percent !== undefined && data.auto) {
+      // Actualización automática silenciosa — solo mostrar en el título
+      var vEl = el("app-version");
+      if (vEl) vEl.textContent = "↓ " + data.percent + "%";
     }
   });
 }
