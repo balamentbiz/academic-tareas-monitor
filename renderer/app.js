@@ -207,6 +207,26 @@ window.AT.getStatus().then(function(data) {
 
 window.AT.onShowIdle(function() { showIdleOverlay(); });
 
+// Progreso de descarga de actualización
+if (window.AT.onUpdateProgress) {
+  window.AT.onUpdateProgress(function(data) {
+    var btn = el("btn-check-update");
+    if (!btn) return;
+    if (data.error) {
+      btn.textContent = "⚠ Error al descargar — intenta de nuevo";
+      btn.style.color = "#ff9f0a";
+      setTimeout(function() { btn.textContent = "🔄 Buscar actualizaciones"; btn.style.color = ""; }, 4000);
+    } else if (data.done) {
+      btn.textContent = "✓ Lista — reinicia para instalar";
+      btn.style.color = "#32d74b";
+      btn.disabled = false;
+    } else {
+      btn.textContent = "⬇ Descargando " + data.percent + "%...";
+      btn.style.color = "#09a3ef";
+    }
+  });
+}
+
 // Mostrar versión en el título
 if (window.AT.getVersion) {
   window.AT.getVersion().then(function(v) {

@@ -15,10 +15,15 @@ try {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  autoUpdater.on("download-progress", (p) => {
+    safeSend("update-progress", { percent: Math.round(p.percent) });
+  });
+
   autoUpdater.on("update-downloaded", () => {
-    dialog.showMessageBox({
+    safeSend("update-progress", { percent: 100, done: true });
+    dialog.showMessageBox(win, {
       type: "info",
-      title: "Actualización lista",
+      title: "✓ Actualización lista",
       message: "Hay una nueva versión de Academic Tareas Monitor.",
       detail: "La actualización se instalará al cerrar la aplicación.",
       buttons: ["Instalar ahora", "Más tarde"],
@@ -28,7 +33,9 @@ try {
     });
   });
 
-  autoUpdater.on("error", () => {}); // silenciar errores de actualización
+  autoUpdater.on("error", (e) => {
+    safeSend("update-progress", { error: true, message: e.message });
+  });
 } catch (_) {
   // electron-updater no disponible en desarrollo
 }
