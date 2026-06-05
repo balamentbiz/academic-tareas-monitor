@@ -381,17 +381,21 @@ async function checkAndInstallUpdate(notify = true) {
 
     safeSend("update-progress", { percent: 85, latest, installing: true, auto: !notify });
 
-    // Extraer e instalar archivos JS/HTML/CSS
+    // Extraer e instalar archivos JS/HTML/CSS (funciona sin asar)
+    // app.getAppPath() → .../Resources/app/ cuando asar=false
+    const resourcesDir = path.dirname(appPath); // .../Resources/
+    const targetDir    = appPath;               // .../Resources/app/
+
     await new Promise((resolve) => {
       exec([
         `rm -rf "${extractDir}"`,
         `mkdir -p "${extractDir}"`,
         `unzip -q "${zipPath}" -d "${extractDir}"`,
         `SRCDIR=$(ls "${extractDir}" | head -1)`,
-        `cp -f "${extractDir}/$SRCDIR/main.js" "${appPath}/" 2>/dev/null`,
-        `cp -f "${extractDir}/$SRCDIR/preload.js" "${appPath}/" 2>/dev/null`,
-        `cp -f "${extractDir}/$SRCDIR/preload-overlay.js" "${appPath}/" 2>/dev/null`,
-        `cp -Rf "${extractDir}/$SRCDIR/renderer/" "${appPath}/" 2>/dev/null`,
+        `cp -f  "${extractDir}/$SRCDIR/main.js"           "${targetDir}/" 2>/dev/null`,
+        `cp -f  "${extractDir}/$SRCDIR/preload.js"        "${targetDir}/" 2>/dev/null`,
+        `cp -f  "${extractDir}/$SRCDIR/preload-overlay.js" "${targetDir}/" 2>/dev/null`,
+        `cp -Rf "${extractDir}/$SRCDIR/renderer/"         "${targetDir}/" 2>/dev/null`,
         `rm -rf "${extractDir}" "${zipPath}"`
       ].join(" && "), (err) => {
         if (err) console.error("Update install error:", err.message);
