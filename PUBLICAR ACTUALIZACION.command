@@ -43,7 +43,7 @@ echo "Construyendo y publicando release en GitHub..."
 echo "(puede tardar 5-10 minutos)"
 echo ""
 
-npx electron-builder --mac dmg --publish always 2>&1
+npx electron-builder --mac dmg zip --publish always 2>&1
 
 echo ""
 echo "Verificando release en GitHub..."
