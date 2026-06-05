@@ -1,0 +1,36 @@
+#!/bin/bash
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+OUR_APP="$ROOT/node_modules/electron/dist/Academic Tareas Monitor.app"
+FALLBACK="$ROOT/node_modules/electron/dist/Electron.app"
+TARGET="$OUR_APP"
+[ ! -d "$TARGET" ] && TARGET="$FALLBACK"
+
+ICNS="$TARGET/Contents/Resources/AppIcon.icns"
+SRC_PNG="$ROOT/Academic Tareas Monitor.app/Contents/Resources/icon.png"
+
+# Generar ícono .icns si no existe (solo la primera vez)
+if [ ! -f "$ICNS" ] && [ -f "$SRC_PNG" ] && command -v iconutil &>/dev/null; then
+  ICONSET="/tmp/AT_iconset.iconset"
+  mkdir -p "$ICONSET"
+  for s in 16 32 128 256 512; do
+    sips -z $s $s "$SRC_PNG" --out "$ICONSET/icon_${s}x${s}.png" &>/dev/null
+    sips -z $((s*2)) $((s*2)) "$SRC_PNG" --out "$ICONSET/icon_${s}x${s}@2x.png" &>/dev/null
+  done
+  iconutil -c icns "$ICONSET" -o "$ICNS" &>/dev/null
+  rm -rf "$ICONSET"
+  # Refrescar caché de íconos del sistema
+  touch "$TARGET"
+  /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+    -f "$TARGET" &>/dev/null
+fi
+
+open -a "$TARGET" --args "$ROOT"
+
+sleep 0.3
+osascript 2>/dev/null << 'APPLE'
+tell application "Terminal"
+  tell front window
+    close saving no
+  end tell
+end tell
+APPLE

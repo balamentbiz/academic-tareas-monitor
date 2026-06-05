@@ -1,0 +1,4 @@
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
+ELECTRON="$SCRIPT_DIR/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+"$ELECTRON" "$SCRIPT_DIR" > /tmp/at-monitor.log 2>&1 &

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Academic Tareas Monitor</title>
+  <link rel="stylesheet" href="app.css"/>
+</head>
+<body>
+
+  <div class="titlebar">
+    <div class="titlebar-drag"></div>
+    <span class="titlebar-title">Academic Tareas <span id="app-version" style="font-family:var(--font);font-size:10px;font-weight:600;color:rgba(135,177,234,.45);letter-spacing:1px;vertical-align:middle"></span></span>
+    <button class="drive-btn" id="btn-drive">+ Extensiones</button>
+  </div>
+
+  <div id="app">
+
+    <!-- INICIO -->
+    <section id="view-idle" class="view">
+      <div class="hero-card">
+        <div class="hero-glow"></div>
+        <span class="hero-emoji">🎓</span>
+        <h2 class="hero-title">Academic Tareas</h2>
+        <p class="hero-sub">Monitor de Productividad</p>
+      </div>
+      <div class="list-section">
+        <div class="list-row">
+          <span class="row-icon" style="background:#09a3ef">👤</span>
+          <div class="row-content">
+            <label class="row-label">Tu nombre</label>
+            <input id="collaborator-name" class="row-input" type="text" placeholder="Ej. María García"/>
+          </div>
+        </div>
+      </div>
+      <button id="btn-start" class="btn-primary-lg">▶ Iniciar día</button>
+    </section>
+
+    <!-- ACTIVA -->
+    <section id="view-active" class="view hidden">
+      <div class="status-bar">
+        <div class="status-pill active"><span class="live-dot"></span>Sesión activa</div>
+        <span class="big-clock" id="stat-elapsed">0s</span>
+      </div>
+      <div class="stats-row">
+        <div class="stat-tile blue"><span class="tile-label">Entrada</span><span class="tile-value" id="stat-start">—</span></div>
+        <div class="stat-tile green"><span class="tile-label">Activo</span><span class="tile-value" id="stat-active">0s</span></div>
+        <div class="stat-tile orange"><span class="tile-label">Inactivo</span><span class="tile-value" id="stat-idle">0s</span></div>
+      </div>
+
+      <!-- Contadores en tiempo real -->
+      <div class="counters-row">
+        <div class="counter-chip">
+          <span class="counter-icon">🖱</span>
+          <span class="counter-val" id="cnt-clicks">0</span>
+          <span class="counter-lbl">clics</span>
+        </div>
+        <div class="counter-chip">
+          <span class="counter-icon">⌨️</span>
+          <span class="counter-val" id="cnt-keys">0</span>
+          <span class="counter-lbl">teclas</span>
+        </div>
+        <div class="counter-chip">
+          <span class="counter-icon">😴</span>
+          <span class="counter-val" id="cnt-idle">0</span>
+          <span class="counter-lbl">t. muertos</span>
+        </div>
+        <div class="counter-chip">
+          <span class="counter-icon">📋</span>
+          <span class="counter-val" id="cnt-activities">0</span>
+          <span class="counter-lbl">actividades</span>
+        </div>
+      </div>
+
+      <div class="section-card" id="activity-idle-state">
+        <div class="sc-header">
+          <span class="sc-icon" style="background:#5e6ad2">📋</span>
+          <span class="sc-title">Actividades</span>
+          <span class="sc-badge" id="activity-count">0</span>
+        </div>
+        <input id="activity-name" class="field-input" type="text" placeholder="Nombre de la actividad..." maxlength="80"/>
+        <button id="btn-activity-start" class="btn-indigo-sm">▶ Iniciar actividad</button>
+      </div>
+
+      <div class="section-card activity-live hidden" id="activity-running-state">
+        <div class="sc-header">
+          <span class="sc-icon green-icon">🟢</span>
+          <span class="sc-title">En curso</span>
+          <span class="sc-timer" id="activity-timer">0s</span>
+        </div>
+        <div class="activity-live-name" id="activity-current-name">—</div>
+        <button id="btn-activity-end" class="btn-green-ghost">■ Terminar actividad</button>
+      </div>
+
+      <div class="section-card">
+        <div class="sc-header">
+          <span class="sc-icon" style="background:#ff9f0a">⏸</span>
+          <span class="sc-title">Motivo de pausa</span>
+        </div>
+        <div class="chip-row" id="reason-chips">
+          <button class="chip" data-val="Comida 🍽">Comida 🍽</button>
+          <button class="chip" data-val="Reunión 🗣">Reunión 🗣</button>
+          <button class="chip" data-val="Descanso ☕">Descanso ☕</button>
+          <button class="chip" data-val="Baño 🚽">Baño 🚽</button>
+          <button class="chip" data-val="Problema 🔧">Problema 🔧</button>
+          <button class="chip" data-val="Llamada 📞">Llamada 📞</button>
+        </div>
+        <input id="pause-reason-input" class="field-input" type="text" placeholder="O escribe el motivo..."/>
+      </div>
+
+      <button id="btn-blackboard" class="btn-outline-full">🎓 Accede con accesos</button>
+
+      <div class="action-pair">
+        <button id="btn-pause" class="btn-warning-sm">⏸ Pausar</button>
+        <button id="btn-end"   class="btn-danger-sm">■ Terminar</button>
+      </div>
+    </section>
+
+    <!-- PAUSADA -->
+    <section id="view-paused" class="view hidden">
+      <div class="status-bar">
+        <div class="status-pill paused">⏸ Pausada</div>
+        <span class="big-clock orange" id="pause-elapsed">0s</span>
+      </div>
+      <div class="pause-hero">
+        <span class="pause-emoji">☕</span>
+        <p class="pause-label">Motivo</p>
+        <p class="pause-reason" id="pause-reason-display">—</p>
+      </div>
+      <div class="stats-row two">
+        <div class="stat-tile green"><span class="tile-label">Tiempo activo</span><span class="tile-value" id="stat-active-p">—</span></div>
+        <div class="stat-tile orange"><span class="tile-label">Total pausado</span><span class="tile-value" id="stat-paused-total">—</span></div>
+      </div>
+      <button id="btn-resume" class="btn-primary-lg">▶ Reanudar trabajo</button>
+    </section>
+
+    <!-- REPORTE -->
+    <section id="view-report" class="view hidden">
+      <div class="report-top"><span>📊</span><div>
+        <h2 class="report-title">Reporte del día</h2>
+        <p class="report-sub">Revisa antes de descargar</p>
+      </div></div>
+      <div class="report-scroll" id="report-summary"></div>
+      <div class="list-section">
+        <div class="list-row no-border">
+          <span class="row-icon" style="background:#636366">💬</span>
+          <div class="row-content">
+            <label class="row-label">Comentarios</label>
+            <textarea id="report-comments" class="row-textarea" placeholder="Notas, logros, bloqueos..."></textarea>
+          </div>
+        </div>
+      </div>
+      <button id="btn-dl-img" class="btn-primary-lg" style="font-size:15px;padding:14px">
+        🖼 Descargar reporte como imagen
+      </button>
+      <button id="btn-new-session" class="ghost-btn">+ Nueva sesión</button>
+      <button id="btn-quit" class="quit-btn">✕ Cerrar aplicación</button>
+      <button id="btn-uninstall" class="uninstall-btn">🗑 Desinstalar aplicación</button>
+    </section>
+
+    <!-- OVERLAY TIEMPO MUERTO -->
+    <div id="idle-overlay" class="idle-overlay hidden">
+      <div class="idle-card">
+        <div class="idle-emoji">😴</div>
+        <h2 class="idle-title">Tiempo muerto detectado</h2>
+        <p class="idle-sub">Llevas más de <strong>1 minuto</strong> sin actividad.</p>
+        <p class="idle-counter-row">Inactivo: <strong id="idle-counter">0:00</strong></p>
+        <div style="text-align:left;margin-bottom:16px">
+          <p class="idle-reason-label">¿Cuál fue el motivo? <span style="color:#ff453a">*</span></p>
+          <div class="chip-row" id="idle-chips">
+            <button class="chip" data-val="Comida 🍽">Comida 🍽</button>
+            <button class="chip" data-val="Reunión 🗣">Reunión 🗣</button>
+            <button class="chip" data-val="Descanso ☕">Descanso ☕</button>
+            <button class="chip" data-val="Baño 🚽">Baño 🚽</button>
+            <button class="chip" data-val="Problema 🔧">Problema 🔧</button>
+            <button class="chip" data-val="Llamada 📞">Llamada 📞</button>
+          </div>
+          <textarea id="idle-reason" class="idle-textarea" placeholder="Escribe el motivo (mínimo 10 caracteres)..."></textarea>
+          <p id="idle-hint" class="idle-hint">Mínimo 10 caracteres para continuar</p>
+        </div>
+        <button id="btn-resume-idle" class="btn-resume-idle">🔴 REANUDAR TRABAJO</button>
+      </div>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

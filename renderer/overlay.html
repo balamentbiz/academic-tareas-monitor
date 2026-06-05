@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Tiempo muerto</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quicksand:wght@500;600;700;800&display=swap');
+
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d1117;--card:#1c2236;--card2:#222840;
+      --cyan:#09a3ef;--cyan-dim:rgba(9,163,239,.18);--cyan-glow:rgba(9,163,239,.3);
+      --periwinkle:#87b1ea;--white:#f6f6f6;--text3:rgba(135,177,234,.4);
+      --border:rgba(135,177,234,.15);--green:#32d74b;--orange:#ff9f0a;--red:#ff453a;
+      --spring:cubic-bezier(.34,1.56,.64,1);
+      --font:'Quicksand',system-ui,sans-serif;
+      --display:'Bebas Neue',sans-serif;
+    }
+
+    html,body{
+      width:100%;height:100%;
+      background:rgba(13,17,23,0.0);
+      font-family:var(--font);
+      -webkit-font-smoothing:antialiased;
+      overflow:hidden;
+    }
+
+    .overlay{
+      width:100%;height:100%;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(13,17,23,.88);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      animation:fadeIn .3s ease both;
+    }
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    .card{
+      background:linear-gradient(150deg,#1c2236 0%,#222840 100%);
+      border:1px solid rgba(135,177,234,.2);
+      border-radius:28px;
+      padding:36px 32px 28px;
+      width:460px;
+      text-align:center;
+      box-shadow:0 32px 80px rgba(0,0,0,.8), 0 0 0 1px rgba(9,163,239,.08);
+      animation:cardIn .35s var(--spring) both;
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+      width:300px;height:300px;
+      background:radial-gradient(circle,rgba(255,159,10,.12) 0%,transparent 65%);
+      pointer-events:none;
+    }
+    @keyframes cardIn{from{opacity:0;transform:scale(.85) translateY(24px)}to{opacity:1;transform:none}}
+
+    .emoji{
+      font-size:64px;margin-bottom:14px;display:block;
+      animation:sway 2s ease infinite;
+      filter:drop-shadow(0 0 20px rgba(255,159,10,.5));
+    }
+    @keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+
+    .title{
+      font-family:var(--display);
+      font-size:30px;letter-spacing:2px;
+      color:var(--white);margin-bottom:6px;
+    }
+    .subtitle{
+      font-size:15px;color:var(--periwinkle);margin-bottom:6px;font-weight:600;
+    }
+    .subtitle strong{color:var(--orange)}
+
+    .timer-row{
+      font-size:13px;color:var(--text3);margin-bottom:24px;
+    }
+    .timer-val{
+      font-family:var(--display);font-size:20px;letter-spacing:2px;
+      color:var(--orange);font-variant-numeric:tabular-nums;
+      animation:blink 1.5s ease infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+    /* Chips */
+    .reason-label{
+      font-size:11px;font-weight:800;color:var(--text3);
+      text-transform:uppercase;letter-spacing:1px;
+      text-align:left;margin-bottom:10px;
+    }
+    .reason-label span{color:var(--red)}
+
+    .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;justify-content:flex-start}
+    .chip{
+      background:rgba(246,246,246,.06);
+      border:1.5px solid rgba(135,177,234,.2);
+      border-radius:20px;padding:6px 14px;
+      font-family:var(--font);font-size:12px;font-weight:700;
+      color:var(--periwinkle);cursor:pointer;
+      transition:all .2s var(--spring);
+      user-select:none;
+    }
+    .chip:active{transform:scale(.88)}
+    .chip.selected{
+      background:var(--cyan);border-color:var(--cyan);
+      color:#0d1117;font-weight:800;
+      box-shadow:0 3px 14px var(--cyan-glow);
+      transform:scale(1.06);
+    }
+
+    /* Textarea */
+    textarea{
+      width:100%;
+      background:rgba(246,246,246,.06);
+      border:1.5px solid rgba(135,177,234,.2);
+      border-radius:12px;
+      padding:12px 14px;
+      font-family:var(--font);font-size:14px;font-weight:500;
+      color:var(--white);outline:none;resize:none;
+      min-height:82px;
+      transition:border-color .2s,box-shadow .2s;
+      display:block;
+    }
+    textarea::placeholder{color:var(--text3)}
+    textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--cyan-dim)}
+    textarea.ok{border-color:var(--green)}
+
+    .hint{
+      font-size:12px;color:var(--text3);text-align:right;margin-top:6px;
+      transition:color .2s;
+    }
+    .hint.ok{color:var(--green)}
+
+    /* Botón */
+    .resume-btn{
+      width:100%;border:none;border-radius:14px;
+      padding:17px;margin-top:18px;
+      font-family:var(--display);font-size:20px;letter-spacing:2.5px;
+      cursor:not-allowed;
+      background:linear-gradient(135deg,#444,#222);
+      color:#fff;
+      transition:all .25s var(--spring);
+      box-shadow:none;
+    }
+    .resume-btn.ready{
+      background:linear-gradient(135deg,var(--red),#cc0000);
+      cursor:pointer;
+      box-shadow:0 6px 24px rgba(255,69,58,.5);
+      transform:none;
+    }
+    .resume-btn.ready:active{transform:scale(.95)}
+  </style>
+</head>
+<body>
+<div class="overlay">
+  <div class="card">
+    <span class="emoji">😴</span>
+    <h2 class="title">TIEMPO MUERTO</h2>
+    <p class="subtitle">Llevas más de <strong>1 minuto</strong> sin actividad.</p>
+    <p class="timer-row">Inactivo: <span class="timer-val" id="counter">0:00</span></p>
+
+    <div style="text-align:left">
+      <p class="reason-label">¿Cuál fue el motivo? <span>*</span></p>
+      <div class="chips" id="chips">
+        <button class="chip" data-val="Comida 🍽">Comida 🍽</button>
+        <button class="chip" data-val="Reunión 🗣">Reunión 🗣</button>
+        <button class="chip" data-val="Descanso ☕">Descanso ☕</button>
+        <button class="chip" data-val="Baño 🚽">Baño 🚽</button>
+        <button class="chip" data-val="Problema técnico 🔧">Problema técnico 🔧</button>
+        <button class="chip" data-val="Llamada 📞">Llamada 📞</button>
+      </div>
+      <textarea id="reason" placeholder="Escribe el motivo aquí (mínimo 10 caracteres)..."></textarea>
+      <p class="hint" id="hint">Mínimo 10 caracteres para continuar</p>
+    </div>
+
+    <button class="resume-btn" id="resume-btn">🔴 REANUDAR TRABAJO</button>
+  </div>
+</div>
+
+<script>
+  var canResume = false;
+  var t0 = Date.now();
+
+  // Contador
+  setInterval(function() {
+    var s = Math.floor((Date.now() - t0) / 1000);
+    document.getElementById("counter").textContent =
+      Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+  }, 1000);
+
+  // Chips
+  var chips = document.querySelectorAll(".chip");
+  chips.forEach(function(c) {
+    c.addEventListener("click", function() {
+      chips.forEach(function(x) { x.classList.remove("selected"); });
+      c.classList.add("selected");
+      var cur = document.getElementById("reason").value;
+      var v = c.dataset.val;
+      document.getElementById("reason").value = v + (cur ? " — " + cur : "");
+      validate();
+    });
+  });
+
+  document.getElementById("reason").addEventListener("input", function() {
+    chips.forEach(function(c) { c.classList.remove("selected"); });
+    validate();
+  });
+
+  function validate() {
+    var val = document.getElementById("reason").value.trim();
+    var ok  = val.length >= 10;
+    canResume = ok;
+    var btn  = document.getElementById("resume-btn");
+    var hint = document.getElementById("hint");
+    var ta   = document.getElementById("reason");
+    btn.classList.toggle("ready", ok);
+    ta.classList.toggle("ok", ok);
+    hint.classList.toggle("ok", ok);
+    hint.textContent = ok
+      ? "✓ Listo — puedes reanudar"
+      : "Faltan " + Math.max(0, 10 - val.length) + " caracteres";
+  }
+
+  document.getElementById("resume-btn").addEventListener("click", function() {
+    if (!canResume) {
+      document.getElementById("reason").style.borderColor = "#ff453a";
+      setTimeout(function() { document.getElementById("reason").style.borderColor = ""; }, 600);
+      return;
+    }
+    window.overlayAPI.resume(document.getElementById("reason").value.trim());
+  });
+</script>
+</body>
+</html>

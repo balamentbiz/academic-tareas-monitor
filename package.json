@@ -1,0 +1,93 @@
+{
+  "name": "academic-tareas-monitor",
+  "productName": "Academic Tareas Monitor",
+  "version": "1.1.7",
+  "description": "Monitor de Productividad - Academic Tareas",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac dmg"
+  },
+  "build": {
+    "appId": "com.academictareas.monitor",
+    "productName": "Academic Tareas Monitor",
+    "copyright": "Academic Tareas",
+    "icon": "assets/icon.icns",
+    "files": [
+      "main.js",
+      "preload.js",
+      "preload-overlay.js",
+      "renderer/**/*",
+      "node_modules/uiohook-napi/**/*"
+    ],
+    "extraResources": [],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.icns"
+    },
+    "dmg": {
+      "title": "Academic Tareas Monitor",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 140,
+          "y": 180,
+          "type": "file"
+        },
+        {
+          "x": 400,
+          "y": 180,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeader": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Academic Tareas Monitor"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "balamentbiz",
+      "repo": "academic-tareas-monitor",
+      "releaseType": "release"
+    }
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3",
+    "uiohook-napi": "^1.5.5"
+  }
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>Academic Tareas Monitor</string>
+  <key>CFBundleDisplayName</key>
+  <string>Academic Tareas Monitor</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.academictareas.monitor</string>
+  <key>CFBundleVersion</key>
+  <string>1.0</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0</string>
+  <key>CFBundleExecutable</key>
+  <string>launcher</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>LSMinimumSystemVersion</key>
+  <string>11.0</string>
+  <key>NSDesktopFolderUsageDescription</key>
+  <string>Academic Tareas Monitor necesita acceso al Escritorio para leer los archivos de la aplicación.</string>
+  <key>NSDocumentsFolderUsageDescription</key>
+  <string>Academic Tareas Monitor necesita acceso a los archivos de la aplicación.</string>
+  <key>NSDownloadsFolderUsageDescription</key>
+  <string>Academic Tareas Monitor necesita acceso para guardar reportes.</string>
+  <key>com.apple.security.app-sandbox</key>
+  <false/>
+  <key>com.apple.security.files.user-selected.read-write</key>
+  <true/>
+</dict>
+</plist>

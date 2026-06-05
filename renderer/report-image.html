@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quicksand:wght@500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--card:#1c2236;--card2:#222840;
+  --cyan:#09a3ef;--periwinkle:#87b1ea;--white:#f6f6f6;
+  --text3:rgba(135,177,234,.45);--border:rgba(135,177,234,.15);
+  --green:#32d74b;--orange:#ff9f0a;--red:#ff453a;--indigo:#5e6ad2;
+  --font:'Quicksand',sans-serif;--display:'Bebas Neue',sans-serif;
+}
+body{
+  background:var(--bg);color:var(--white);
+  font-family:var(--font);font-size:14px;
+  width:900px;min-height:600px;
+  padding:0;margin:0;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Header ── */
+.header{
+  background:linear-gradient(135deg,#10215c 0%,#212e67 50%,#09a3ef22 100%);
+  padding:32px 40px 28px;
+  display:flex;align-items:center;gap:20px;
+  border-bottom:2px solid var(--cyan);
+  position:relative;overflow:hidden;
+}
+.header::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+}
+.header-logo{
+  width:60px;height:60px;border-radius:14px;
+  background:linear-gradient(135deg,var(--cyan),#10215c);
+  display:flex;align-items:center;justify-content:center;
+  font-size:30px;flex-shrink:0;
+  box-shadow:0 0 20px rgba(9,163,239,.4);
+}
+.header-info{flex:1}
+.header-title{font-family:var(--display);font-size:32px;letter-spacing:3px;color:var(--white)}
+.header-sub{font-size:12px;color:var(--periwinkle);font-weight:600;
+  letter-spacing:.8px;text-transform:uppercase;margin-top:3px}
+.header-meta{text-align:right}
+.header-name{font-family:var(--display);font-size:22px;letter-spacing:1.5px;color:var(--cyan)}
+.header-date{font-size:12px;color:var(--text3);margin-top:4px;font-weight:600}
+
+/* ── Body ── */
+.body{padding:28px 40px 36px;display:flex;flex-direction:column;gap:22px}
+
+/* ── Stats row ── */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.stat-card{
+  background:var(--card);border-radius:14px;
+  border:1px solid var(--border);
+  padding:14px 12px;
+  position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:3px 3px 0 0;
+}
+.stat-card.blue::before{background:linear-gradient(90deg,var(--cyan),#0077cc)}
+.stat-card.green::before{background:linear-gradient(90deg,var(--green),#00a83a)}
+.stat-card.orange::before{background:linear-gradient(90deg,var(--orange),#cc7000)}
+.stat-card.red::before{background:linear-gradient(90deg,var(--red),#cc0000)}
+.stat-card.indigo::before{background:linear-gradient(90deg,var(--indigo),#3a3a9a)}
+.stat-label{font-size:9px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.stat-value{font-family:var(--display);font-size:22px;letter-spacing:1px;line-height:1}
+.stat-card.blue .stat-value{color:var(--cyan)}
+.stat-card.green .stat-value{color:var(--green)}
+.stat-card.orange .stat-value{color:var(--orange)}
+.stat-card.red .stat-value{color:var(--red)}
+.stat-card.indigo .stat-value{color:var(--indigo)}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:3px;font-weight:600}
+
+/* ── Interaction row ── */
+.interaction-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.int-chip{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:10px 12px;
+  display:flex;align-items:center;gap:10px;
+}
+.int-icon{font-size:18px}
+.int-val{font-family:var(--display);font-size:20px;color:var(--cyan);letter-spacing:.8px}
+.int-lbl{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Section ── */
+.section{display:flex;flex-direction:column;gap:8px}
+.section-title{
+  font-family:var(--display);font-size:14px;letter-spacing:2px;
+  color:var(--cyan);text-transform:uppercase;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+.section-title span{font-size:11px;color:var(--text3);font-family:var(--font);letter-spacing:0;font-weight:700}
+
+/* Actividades */
+.activity-row{
+  background:rgba(50,215,75,.07);
+  border-left:3px solid var(--green);
+  border-radius:0 10px 10px 0;
+  padding:8px 12px;
+  display:flex;align-items:center;gap:12px;
+}
+.activity-num{
+  font-family:var(--display);font-size:18px;color:var(--green);
+  width:24px;flex-shrink:0;
+}
+.activity-name{font-size:13px;font-weight:700;color:var(--white);flex:1}
+.activity-time{font-size:11px;color:var(--periwinkle);font-weight:600}
+.activity-dur{
+  font-family:var(--display);font-size:14px;color:var(--green);
+  background:rgba(50,215,75,.12);padding:3px 10px;border-radius:8px;
+}
+
+/* Tiempos muertos */
+.idle-row{
+  background:rgba(255,69,58,.06);
+  border-left:3px solid var(--red);
+  border-radius:0 10px 10px 0;
+  padding:8px 12px;
+  display:flex;align-items:center;gap:12px;
+}
+.idle-time{font-size:11px;color:var(--periwinkle)}
+.idle-dur{font-family:var(--display);font-size:14px;color:var(--red)}
+.idle-reason{font-size:11px;color:var(--text3);flex:1}
+
+/* Páginas Chrome */
+.page-row{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:8px 12px;
+  display:flex;align-items:center;gap:12px;
+}
+.page-num{font-family:var(--display);font-size:16px;color:var(--text3);width:20px;flex-shrink:0}
+.page-info{flex:1;min-width:0}
+.page-title{font-size:12px;font-weight:700;color:var(--white);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-url{font-size:10px;color:var(--text3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.page-dur{font-family:var(--display);font-size:14px;color:var(--cyan);flex-shrink:0}
+
+/* Apps */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.app-row{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:8px 12px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.app-name{font-size:12px;font-weight:700;color:var(--periwinkle)}
+.app-dur{font-family:var(--display);font-size:13px;color:var(--cyan)}
+
+/* Comentarios */
+.comments-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+  font-size:13px;color:var(--periwinkle);font-weight:500;
+  line-height:1.6;font-style:italic;
+}
+
+/* Footer */
+.footer{
+  background:linear-gradient(135deg,#10215c,#0d1117);
+  padding:16px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-top:1px solid var(--border);
+  margin-top:4px;
+}
+.footer-brand{font-family:var(--display);font-size:16px;letter-spacing:2px;color:var(--text3)}
+.footer-gen{font-size:11px;color:var(--text3);font-weight:600}
+</style>
+</head>
+<body id="report-root">
+<!-- Contenido inyectado por JS -->
+<script>
+// Recibir datos del proceso principal
+window.addEventListener("message", function(e) {
+  if (e.data && e.data.type === "render-report") {
+    renderReport(e.data.report);
+  }
+});
+
+function t(ts) { return ts || "—"; }
+function safe(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function renderReport(r) {
+  var s = r.summary || {};
+  var activities  = r.activities  || [];
+  var idlePeriods = r.idlePeriods || [];
+  var chromePages = r.chromePages || [];
+  var appsOpened  = r.appsOpened  || [];
+  var pauses      = r.pauses      || [];
+
+  var html = "";
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+  html += '<div class="header">';
+  html += '<div class="header-logo">🎓</div>';
+  html += '<div class="header-info">';
+  html += '<div class="header-title">ACADEMIC TAREAS</div>';
+  html += '<div class="header-sub">Reporte de Productividad</div>';
+  html += '</div>';
+  html += '<div class="header-meta">';
+  html += '<div class="header-name">' + safe(r.meta.collaborator) + '</div>';
+  html += '<div class="header-date">' + safe(r.meta.date) + ' &nbsp;·&nbsp; Generado: ' + new Date(r.meta.generatedAt).toLocaleTimeString("es-MX") + '</div>';
+  html += '</div></div>';
+
+  // ── Body ─────────────────────────────────────────────────────────────────────
+  html += '<div class="body">';
+
+  // Stats principales
+  html += '<div class="stats-row">';
+  html += statCard("blue",   "Entrada → Salida", t(s.startTime) + " – " + t(s.endTime), "Duración: " + t(s.totalDuration));
+  html += statCard("green",  "Tiempo activo",    t(s.activeTime),  "");
+  html += statCard("orange", "Tiempo inactivo",  t(s.idleTime),    "");
+  html += statCard("indigo", "Productividad",    (s.productivityPct||0) + "%", "");
+  html += statCard("red",    "Tiempos muertos",  idlePeriods.length + " período" + (idlePeriods.length!==1?"s":""), "");
+  html += '</div>';
+
+  // Interacciones
+  html += '<div class="interaction-row">';
+  html += intChip("🖱", s.clicks||0,              "Clics");
+  html += intChip("⌨️", s.keyPresses||0,         "Teclas");
+  html += intChip("😴", s.totalIdlePeriods||0,   "T. Muertos");
+  html += intChip("📋", s.totalActivities||0,    "Actividades");
+  html += '</div>';
+
+  // Actividades
+  if (activities.length > 0) {
+    html += '<div class="section">';
+    html += '<div class="section-title">📋 Actividades registradas <span>(' + activities.length + ')</span></div>';
+    activities.forEach(function(a) {
+      html += '<div class="activity-row">';
+      html += '<div class="activity-num">' + a.number + '</div>';
+      html += '<div class="activity-name">' + safe(a.name) + '</div>';
+      html += '<div class="activity-time">' + t(a.startTime) + ' → ' + t(a.endTime) + '</div>';
+      html += '<div class="activity-dur">' + t(a.duration) + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Pausas
+  if (pauses.length > 0) {
+    html += '<div class="section">';
+    html += '<div class="section-title">⏸ Pausas <span>(' + pauses.length + ')</span></div>';
+    html += '<div class="two-col">';
+    pauses.forEach(function(p) {
+      html += '<div class="app-row"><span class="app-name">' + safe(p.reason) + '</span>';
+      html += '<span class="app-dur">' + t(p.start) + '→' + t(p.end) + '</span></div>';
+    });
+    html += '</div></div>';
+  }
+
+  // Tiempos muertos
+  if (idlePeriods.length > 0) {
+    html += '<div class="section">';
+    html += '<div class="section-title">😴 Tiempos muertos <span>(' + idlePeriods.length + ')</span></div>';
+    idlePeriods.forEach(function(ip) {
+      html += '<div class="idle-row">';
+      html += '<div class="idle-dur">' + t(ip.duration) + '</div>';
+      html += '<div class="idle-time">' + t(ip.start) + ' → ' + t(ip.end) + '</div>';
+      html += '<div class="idle-reason">Motivo: ' + safe(ip.reason) + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Apps abiertas — PRIMERO
+  if (appsOpened.length > 0) {
+    html += '<div class="section">';
+    html += '<div class="section-title">💻 Aplicaciones usadas <span>(' + appsOpened.length + ')</span></div>';
+    html += '<div class="two-col">';
+    appsOpened.slice(0, 16).forEach(function(a) {
+      html += '<div class="app-row"><span class="app-name">' + safe(a.name) + '</span>';
+      html += '<span class="app-dur">' + t(a.duration) + '</span></div>';
+    });
+    html += '</div></div>';
+  }
+
+  // Páginas Chrome — DESPUÉS de apps
+  if (chromePages.length > 0) {
+    html += '<div class="section">';
+    html += '<div class="section-title">🌐 Páginas visitadas en Chrome <span>(' + chromePages.length + ')</span></div>';
+    chromePages.slice(0, 12).forEach(function(p, i) {
+      html += '<div class="page-row">';
+      html += '<div class="page-num">' + (i+1) + '</div>';
+      html += '<div class="page-info"><div class="page-title">' + safe(p.title) + '</div>';
+      html += '<div class="page-url">' + safe(p.url) + '</div></div>';
+      html += '<div class="page-dur">' + t(p.duration) + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Comentarios
+  if (r.comments) {
+    html += '<div class="section">';
+    html += '<div class="section-title">💬 Comentarios</div>';
+    html += '<div class="comments-box">' + safe(r.comments) + '</div>';
+    html += '</div>';
+  }
+
+  html += '</div>'; // /body
+
+  // Footer
+  html += '<div class="footer">';
+  html += '<div class="footer-brand">ACADEMIC TAREAS MONITOR</div>';
+  html += '<div class="footer-gen">Generado el ' + safe(r.meta.date) + ' · ' + new Date(r.meta.generatedAt).toLocaleTimeString("es-MX") + '</div>';
+  html += '</div>';
+
+  document.body.innerHTML = html;
+  document.title = "report-ready";
+}
+
+function statCard(cls, label, value, sub) {
+  return '<div class="stat-card ' + cls + '">'
+    + '<div class="stat-label">' + label + '</div>'
+    + '<div class="stat-value">' + safe(value) + '</div>'
+    + (sub ? '<div class="stat-sub">' + safe(sub) + '</div>' : '')
+    + '</div>';
+}
+function intChip(icon, val, label) {
+  return '<div class="int-chip">'
+    + '<div class="int-icon">' + icon + '</div>'
+    + '<div><div class="int-val">' + val + '</div>'
+    + '<div class="int-lbl">' + label + '</div></div>'
+    + '</div>';
+}
+</script>
+</body>
+</html>
