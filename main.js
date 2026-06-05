@@ -11,9 +11,11 @@ process.on("unhandledRejection", (e) => console.error("[promesa sin catch]", e?.
 let autoUpdater = null;
 try {
   autoUpdater = require("electron-updater").autoUpdater;
-  autoUpdater.logger = null; // silencioso
+  autoUpdater.logger = null;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
+  // App no firmada — desactivar verificación de firma para permitir actualizaciones
+  autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(undefined);
 
   autoUpdater.on("download-progress", (p) => {
     safeSend("update-progress", { percent: Math.round(p.percent) });
