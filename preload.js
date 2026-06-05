@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld("AT", {
   onShowIdle:       (cb)   => ipcRenderer.on("show-idle", cb),
   onSessionTick:      (cb) => ipcRenderer.on("session-tick",    (_, data) => cb(data)),
   onUpdateProgress:   (cb) => ipcRenderer.on("update-progress", (_, data) => cb(data)),
+  onUpdateLog:        (cb) => ipcRenderer.on("update-log",      (_, data) => cb(data)),
   onGlobalEvent:    (cb)   => ipcRenderer.on("global-event", (_, data) => cb(data)),
   getVersion:       ()     => ipcRenderer.invoke("get-version"),
   checkForUpdates:  ()     => ipcRenderer.invoke("check-for-updates"),

@@ -376,33 +376,44 @@ ipcMain.handle("check-for-updates", async () => {
 
     safeSend("update-progress", { percent: 100, installing: true, latest });
 
-    // Instalar automáticamente sin que el usuario toque nada:
-    // 1. Montar el DMG
-    // 2. Quitar cuarentena
-    // 3. Copiar a /Applications/
-    // 4. Desmontar y relanzar
+    // Instalar: montar DMG → quitar cuarentena → copiar → abrir nueva versión
+    const logPath = path.join(app.getPath("temp"), "at-update.log");
+
     await new Promise((resolve) => {
-      exec(
-        `hdiutil attach "${destPath}" -quiet -nobrowse -mountpoint /tmp/at-update 2>/dev/null && ` +
-        `xattr -cr "/tmp/at-update/Academic Tareas Monitor.app" 2>/dev/null && ` +
-        `cp -Rf "/tmp/at-update/Academic Tareas Monitor.app" "/Applications/" && ` +
-        `hdiutil detach /tmp/at-update -quiet 2>/dev/null && ` +
+      const script = [
+        `echo "START" > "${logPath}"`,
+        `hdiutil attach "${destPath}" -quiet -nobrowse -mountpoint /tmp/at-update >> "${logPath}" 2>&1`,
+        `echo "mount:$?" >> "${logPath}"`,
+        `xattr -cr "/tmp/at-update/Academic Tareas Monitor.app" 2>/dev/null`,
+        `cp -Rf "/tmp/at-update/Academic Tareas Monitor.app" "/Applications/" >> "${logPath}" 2>&1`,
+        `echo "copy:$?" >> "${logPath}"`,
+        `xattr -cr "/Applications/Academic Tareas Monitor.app" 2>/dev/null`,
+        `hdiutil detach /tmp/at-update -quiet 2>/dev/null`,
         `rm -f "${destPath}"`,
-        (err) => {
-          if (err) console.error("Install error:", err.message);
-          resolve();
-        }
-      );
+        `echo "DONE" >> "${logPath}"`
+      ].join(" ; ");
+
+      exec(script, (err) => {
+        try { console.log("Update log:", fs.readFileSync(logPath, "utf8")); } catch {}
+        if (err) console.error("Install error:", err.message);
+        resolve();
+      });
     });
 
     safeSend("update-progress", { percent: 100, done: true, latest });
 
-    // Relanzar la app instalada en /Applications/
+    // Leer log y enviarlo al renderer para diagnóstico
+    try {
+      const log = fs.readFileSync(logPath, "utf8");
+      safeSend("update-log", { log });
+    } catch {}
+
+    // Abrir la nueva versión y cerrar la actual
     setTimeout(() => {
-      exec(`open "/Applications/Academic Tareas Monitor.app"`, () => {
-        app.quit();
+      exec(`open "/Applications/Academic\\ Tareas\\ Monitor.app"`, () => {
+        setTimeout(() => app.quit(), 500);
       });
-    }, 1500);
+    }, 1000);
 
     return { status: "installing", current, latest };
   } catch (e) {
