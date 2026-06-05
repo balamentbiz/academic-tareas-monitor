@@ -14,8 +14,13 @@ try {
   autoUpdater.logger = null;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
-  // App no firmada — desactivar verificación de firma para permitir actualizaciones
-  autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(undefined);
+
+  // Deshabilitar verificación de firma — app no firmada con certificado Apple
+  // Cuando verifyUpdateCodeSignature es undefined/falsy, electron-updater salta la verificación
+  Object.defineProperty(autoUpdater, "verifyUpdateCodeSignature", {
+    get: () => undefined,
+    configurable: true
+  });
 
   autoUpdater.on("download-progress", (p) => {
     safeSend("update-progress", { percent: Math.round(p.percent) });
