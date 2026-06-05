@@ -335,8 +335,8 @@ ipcMain.handle("get-version", () => app.getVersion());
 ipcMain.handle("check-for-updates", async () => {
   const current = app.getVersion();
   try {
-    // Consultar GitHub API directamente — sin electron-updater
     const https = require("https");
+    // Consultar GitHub API para la versión más reciente
     const data = await new Promise((resolve, reject) => {
       https.get({
         hostname: "api.github.com",
@@ -345,20 +345,65 @@ ipcMain.handle("check-for-updates", async () => {
       }, (res) => {
         let body = "";
         res.on("data", d => body += d);
-        res.on("end", () => {
-          try { resolve(JSON.parse(body)); }
-          catch { reject(new Error("parse error")); }
-        });
+        res.on("end", () => { try { resolve(JSON.parse(body)); } catch { reject(new Error("parse")); } });
       }).on("error", reject);
     });
 
     const latest = (data.tag_name || "").replace(/^v/, "");
-    const downloadUrl = "https://github.com/balamentbiz/academic-tareas-monitor/releases/latest";
+    if (!latest || latest === current) return { status: "up-to-date", current };
 
-    if (latest && latest !== current) {
-      return { status: "available", current, latest, downloadUrl };
-    }
-    return { status: "up-to-date", current };
+    // Hay actualización — descargar el DMG directamente a Descargas
+    const dmgName = `Academic-Tareas-Monitor-${latest}-arm64.dmg`;
+    const dmgUrl  = `https://github.com/balamentbiz/academic-tareas-monitor/releases/download/v${latest}/${dmgName}`;
+    const destPath = path.join(app.getPath("downloads"), dmgName);
+
+    safeSend("update-progress", { percent: 0, latest });
+
+    await new Promise((resolve, reject) => {
+      const file = fs.createWriteStream(destPath);
+      https.get(dmgUrl, (res) => {
+        const total = parseInt(res.headers["content-length"] || "0");
+        let received = 0;
+        res.on("data", chunk => {
+          received += chunk.length;
+          file.write(chunk);
+          if (total) safeSend("update-progress", { percent: Math.round((received / total) * 100), latest });
+        });
+        res.on("end", () => { file.end(); resolve(); });
+        res.on("error", reject);
+      }).on("error", reject);
+    });
+
+    safeSend("update-progress", { percent: 100, installing: true, latest });
+
+    // Instalar automáticamente sin que el usuario toque nada:
+    // 1. Montar el DMG
+    // 2. Quitar cuarentena
+    // 3. Copiar a /Applications/
+    // 4. Desmontar y relanzar
+    await new Promise((resolve) => {
+      exec(
+        `hdiutil attach "${destPath}" -quiet -nobrowse -mountpoint /tmp/at-update 2>/dev/null && ` +
+        `xattr -cr "/tmp/at-update/Academic Tareas Monitor.app" 2>/dev/null && ` +
+        `cp -Rf "/tmp/at-update/Academic Tareas Monitor.app" "/Applications/" && ` +
+        `hdiutil detach /tmp/at-update -quiet 2>/dev/null && ` +
+        `rm -f "${destPath}"`,
+        (err) => {
+          if (err) console.error("Install error:", err.message);
+          resolve();
+        }
+      );
+    });
+
+    safeSend("update-progress", { percent: 100, done: true, latest });
+
+    // Relanzar la app desde la versión recién instalada
+    setTimeout(() => {
+      app.relaunch({ execPath: `/Applications/Academic Tareas Monitor.app/Contents/MacOS/Electron` });
+      app.quit();
+    }, 2000);
+
+    return { status: "installing", current, latest };
   } catch (e) {
     return { status: "error", message: e.message };
   }
