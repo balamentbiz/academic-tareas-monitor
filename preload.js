@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld("AT", {
   onSessionTick:    (cb)   => ipcRenderer.on("session-tick", (_, data) => cb(data)),
   onGlobalEvent:    (cb)   => ipcRenderer.on("global-event", (_, data) => cb(data)),
   getVersion:       ()     => ipcRenderer.invoke("get-version"),
+  checkForUpdates:  ()     => ipcRenderer.invoke("check-for-updates"),
   quitApp:          ()     => ipcRenderer.send("quit-app"),
   uninstallApp:     ()     => ipcRenderer.invoke("uninstall-app"),
   sendInputEvents:  (d)    => ipcRenderer.send("input-events", d),

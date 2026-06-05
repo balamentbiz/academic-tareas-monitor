@@ -460,6 +460,40 @@ el("btn-quit").addEventListener("click", function() {
   window.AT.quitApp();
 });
 
+el("btn-check-update").addEventListener("click", function() {
+  var btn = el("btn-check-update");
+  btn.textContent = "🔄 Buscando...";
+  btn.disabled = true;
+  btn.style.opacity = "0.6";
+
+  window.AT.checkForUpdates().then(function(res) {
+    btn.disabled = false;
+    btn.style.opacity = "";
+    if (res.status === "available") {
+      btn.textContent = "⬇ Descargando v" + res.latest + "...";
+      btn.style.color = "#09a3ef";
+    } else if (res.status === "up-to-date") {
+      btn.textContent = "✓ Ya tienes la versión más reciente";
+      btn.style.color = "#32d74b";
+      setTimeout(function() {
+        btn.textContent = "🔄 Buscar actualizaciones";
+        btn.style.color = "";
+      }, 3000);
+    } else {
+      btn.textContent = "⚠ Sin conexión — intenta más tarde";
+      btn.style.color = "#ff9f0a";
+      setTimeout(function() {
+        btn.textContent = "🔄 Buscar actualizaciones";
+        btn.style.color = "";
+      }, 3000);
+    }
+  }).catch(function() {
+    btn.disabled = false;
+    btn.style.opacity = "";
+    btn.textContent = "🔄 Buscar actualizaciones";
+  });
+});
+
 el("btn-uninstall").addEventListener("click", function() {
   window.AT.uninstallApp();
 });

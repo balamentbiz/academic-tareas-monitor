@@ -316,6 +316,25 @@ ipcMain.handle("save-report-image", async (_, { report, filename }) => {
 });
 
 ipcMain.handle("get-version", () => app.getVersion());
+
+ipcMain.handle("check-for-updates", async () => {
+  if (!autoUpdater) return { status: "no-updater" };
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    if (result && result.updateInfo) {
+      const current = app.getVersion();
+      const latest  = result.updateInfo.version;
+      if (latest !== current) {
+        return { status: "available", current, latest };
+      } else {
+        return { status: "up-to-date", current };
+      }
+    }
+    return { status: "up-to-date", current: app.getVersion() };
+  } catch (e) {
+    return { status: "error", message: e.message };
+  }
+});
 ipcMain.on("quit-app", () => app.quit());
 
 ipcMain.handle("uninstall-app", async () => {
