@@ -214,27 +214,6 @@ if (window.AT.onUpdateLog) {
   });
 }
 
-// Progreso de descarga de actualización
-if (window.AT.onUpdateProgress) {
-  window.AT.onUpdateProgress(function(data) {
-    var btn = el("btn-check-update");
-    if (!btn) return;
-    if (data.error) {
-      btn.textContent = "⚠ " + (data.message || "Error al descargar");
-      btn.style.color = "#ff9f0a";
-      btn.disabled = false;
-      console.error("Update error:", data.message);
-      setTimeout(function() { btn.textContent = "🔄 Buscar actualizaciones"; btn.style.color = ""; }, 6000);
-    } else if (data.done) {
-      btn.textContent = "✓ Lista — reinicia para instalar";
-      btn.style.color = "#32d74b";
-      btn.disabled = false;
-    } else {
-      btn.textContent = "⬇ Descargando " + data.percent + "%...";
-      btn.style.color = "#09a3ef";
-    }
-  });
-}
 
 // Mostrar versión en el título
 if (window.AT.getVersion) {
@@ -504,7 +483,7 @@ el("btn-check-update").addEventListener("click", function() {
     btn.style.opacity = "";
 
     if (res.status === "update-available") {
-      btn.textContent = "↗ Nueva versión v" + res.latest + " — abriendo descarga...";
+      btn.textContent = "✓ Nueva versión v" + res.latest + " disponible";
       btn.style.color = "#09a3ef";
       setTimeout(function() {
         btn.textContent = "🔄 Buscar actualizaciones";
