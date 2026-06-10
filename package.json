@@ -50,26 +50,14 @@
       "contents": [
         {
           "x": 140,
-          "y": 200,
+          "y": 180,
           "type": "file"
         },
         {
           "x": 400,
-          "y": 200,
+          "y": 180,
           "type": "link",
           "path": "/Applications"
-        },
-        {
-          "x": 200,
-          "y": 360,
-          "type": "file",
-          "path": "INSTALAR EN ESTA MAC.command"
-        },
-        {
-          "x": 370,
-          "y": 360,
-          "type": "file",
-          "path": "COMANDO INSTALACION MAC.txt"
         }
       ]
     },
