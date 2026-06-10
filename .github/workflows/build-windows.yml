@@ -21,12 +21,24 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
+      - name: Generar icono Windows 256x256
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          $src = [System.Drawing.Image]::FromFile("assets\icon.ico")
+          $bmp = New-Object System.Drawing.Bitmap(256, 256)
+          $g = [System.Drawing.Graphics]::FromImage($bmp)
+          $g.DrawImage($src, 0, 0, 256, 256)
+          $g.Dispose()
+          $src.Dispose()
+          $ms = New-Object System.IO.MemoryStream
+          $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Icon)
+          [System.IO.File]::WriteAllBytes("assets\icon.ico", $ms.ToArray())
+          $ms.Dispose()
+          $bmp.Dispose()
+          Write-Host "Icono generado correctamente"
+
       - name: Construir instalador Windows
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npx electron-builder --win nsis --publish always
-
-      - name: Subir EXE al release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "Build completado"
