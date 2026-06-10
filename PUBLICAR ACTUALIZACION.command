@@ -38,15 +38,11 @@ git commit -m "v$CURRENT" 2>/dev/null || echo "(sin cambios nuevos)"
 git push --force https://balamentbiz:${GH_TOKEN}@github.com/balamentbiz/academic-tareas-monitor.git main 2>&1 | tail -3
 
 echo ""
-echo "Instalando dependencias..."
-npm install --save electron-updater 2>&1 | grep -E "added|updated" | head -3
-
-echo ""
 echo "Construyendo y publicando release en GitHub..."
 echo "(puede tardar 5-10 minutos)"
 echo ""
 
-npx electron-builder --mac dmg zip --publish always 2>&1
+npx electron-builder --mac dmg --publish always 2>&1
 
 echo ""
 echo "Publicando release v$CURRENT en GitHub..."
