@@ -30,9 +30,12 @@ fi
 
 echo ""
 echo "Subiendo código a GitHub..."
+rm -f .git/index.lock 2>/dev/null
+git config user.email "academicsolutionsmx@gmail.com"
+git config user.name "balamentbiz"
 git add -A
 git commit -m "v$CURRENT" 2>/dev/null || echo "(sin cambios nuevos)"
-git push 2>&1 | tail -3
+git push --force https://balamentbiz:${GH_TOKEN}@github.com/balamentbiz/academic-tareas-monitor.git main 2>&1 | tail -3
 
 echo ""
 echo "Instalando dependencias..."
