@@ -7,46 +7,6 @@ const { exec } = require("child_process");
 process.on("uncaughtException",  (e) => console.error("[error silenciado]", e.message));
 process.on("unhandledRejection", (e) => console.error("[promesa sin catch]", e?.message || e));
 
-// ── Auto-actualizador ─────────────────────────────────────────────────────────
-let autoUpdater = null;
-try {
-  autoUpdater = require("electron-updater").autoUpdater;
-  autoUpdater.logger = null;
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  // Deshabilitar verificación de firma — app no firmada con certificado Apple
-  // Cuando verifyUpdateCodeSignature es undefined/falsy, electron-updater salta la verificación
-  Object.defineProperty(autoUpdater, "verifyUpdateCodeSignature", {
-    get: () => undefined,
-    configurable: true
-  });
-
-  autoUpdater.on("download-progress", (p) => {
-    safeSend("update-progress", { percent: Math.round(p.percent) });
-  });
-
-  autoUpdater.on("update-downloaded", () => {
-    safeSend("update-progress", { percent: 100, done: true });
-    dialog.showMessageBox(win, {
-      type: "info",
-      title: "✓ Actualización lista",
-      message: "Hay una nueva versión de Academic Tareas Monitor.",
-      detail: "La actualización se instalará al cerrar la aplicación.",
-      buttons: ["Instalar ahora", "Más tarde"],
-      defaultId: 0,
-    }).then(({ response }) => {
-      if (response === 0) autoUpdater.quitAndInstall();
-    });
-  });
-
-  autoUpdater.on("error", (e) => {
-    console.error("AutoUpdater error:", e.message);
-    safeSend("update-progress", { error: true, message: e.message });
-  });
-} catch (_) {
-  // electron-updater no disponible en desarrollo
-}
 
 // ── Persistencia ─────────────────────────────────────────────────────────────
 const DATA_DIR = path.join(app.getPath("userData"), "sessions");
@@ -98,9 +58,6 @@ function createWindow() {
     },
   });
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
-
-  // Revisar actualizaciones 5s después de abrir (sin molestar al arranque)
-  if (autoUpdater) setTimeout(() => autoUpdater.checkForUpdatesAndNotify().catch(()=>{}), 5000);
 
   startIdleCheck();
   startAppTracking();
