@@ -61,7 +61,7 @@ if [ -n "$RELEASE_ID" ]; then
   curl -s -X PATCH \
     -H "Authorization: token $GH_TOKEN" \
     -H "Content-Type: application/json" \
-    -d '{"draft":false,"prerelease":false}' \
+    -d '{"draft":false,"prerelease":false,"make_latest":"true"}' \
     "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID" > /dev/null
   echo "================================================"
   echo "  ✓ Release v$CURRENT publicado en GitHub"
