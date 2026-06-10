@@ -207,6 +207,13 @@ window.AT.getStatus().then(function(data) {
 
 window.AT.onShowIdle(function() { showIdleOverlay(); });
 
+// Log de instalación para diagnóstico
+if (window.AT.onUpdateLog) {
+  window.AT.onUpdateLog(function(data) {
+    console.log("Update install log:", data.log);
+  });
+}
+
 // Progreso de descarga de actualización
 if (window.AT.onUpdateProgress) {
   window.AT.onUpdateProgress(function(data) {
