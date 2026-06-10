@@ -46,32 +46,27 @@ echo ""
 npx electron-builder --mac dmg zip --publish always 2>&1
 
 echo ""
-echo "Verificando release en GitHub..."
-sleep 3
-RELEASE=$(curl -s -H "Authorization: token $GH_TOKEN" \
-  "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/latest" \
-  | grep -o '"tag_name": "[^"]*"' | head -1)
+echo "Publicando release v$CURRENT en GitHub..."
+sleep 5
 
-if [ -n "$RELEASE" ]; then
+# Buscar el release por tag (puede ser draft) y publicarlo
+RELEASE_ID=$(curl -s -H "Authorization: token $GH_TOKEN" \
+  "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/tags/v$CURRENT" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id',''))" 2>/dev/null)
+
+if [ -n "$RELEASE_ID" ]; then
+  curl -s -X PATCH \
+    -H "Authorization: token $GH_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"draft":false,"prerelease":false}' \
+    "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID" > /dev/null
   echo "================================================"
-  echo "  ✓ Release publicado: $RELEASE"
-  echo "  Tus asesores recibirán la actualización"
-  echo "  automáticamente al abrir la app."
+  echo "  ✓ Release v$CURRENT publicado en GitHub"
+  echo "  Tus asesores verán la actualización"
+  echo "  al abrir la app."
   echo "================================================"
 else
-  echo "Publicando release manualmente..."
-  DRAFT_ID=$(curl -s -H "Authorization: token $GH_TOKEN" \
-    "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases" \
-    | python3 -c "import json,sys; r=json.load(sys.stdin); drafts=[x for x in r if x['draft']]; print(drafts[0]['id'] if drafts else '')" 2>/dev/null)
-
-  if [ -n "$DRAFT_ID" ]; then
-    curl -s -X PATCH \
-      -H "Authorization: token $GH_TOKEN" \
-      -H "Content-Type: application/json" \
-      -d '{"draft":false,"prerelease":false}' \
-      "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$DRAFT_ID" > /dev/null
-    echo "  ✓ Release publicado exitosamente"
-  fi
+  echo "  ⚠ No se encontró el release. Verifica en GitHub manualmente."
 fi
 
 echo ""
