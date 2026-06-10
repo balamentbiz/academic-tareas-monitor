@@ -503,10 +503,13 @@ el("btn-check-update").addEventListener("click", function() {
     btn.disabled = false;
     btn.style.opacity = "";
 
-    if (res.status === "installing") {
-      btn.textContent = "⚙ Instalando... la app se reiniciará sola";
+    if (res.status === "update-available") {
+      btn.textContent = "↗ Nueva versión v" + res.latest + " — abriendo descarga...";
       btn.style.color = "#09a3ef";
-      btn.disabled = true;
+      setTimeout(function() {
+        btn.textContent = "🔄 Buscar actualizaciones";
+        btn.style.color = "";
+      }, 4000);
     } else if (res.status === "up-to-date") {
       btn.textContent = "✓ Ya tienes la versión más reciente";
       btn.style.color = "#32d74b";

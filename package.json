@@ -1,7 +1,7 @@
 {
   "name": "academic-tareas-monitor",
   "productName": "Academic Tareas Monitor",
-  "version": "1.3.9",
+  "version": "1.4.0",
   "description": "Monitor de Productividad - Academic Tareas",
   "main": "main.js",
   "scripts": {
@@ -44,20 +44,32 @@
     "dmg": {
       "title": "Academic Tareas Monitor",
       "window": {
-        "width": 540,
-        "height": 380
+        "width": 580,
+        "height": 420
       },
       "contents": [
         {
           "x": 140,
-          "y": 180,
+          "y": 200,
           "type": "file"
         },
         {
           "x": 400,
-          "y": 180,
+          "y": 200,
           "type": "link",
           "path": "/Applications"
+        },
+        {
+          "x": 200,
+          "y": 360,
+          "type": "file",
+          "path": "INSTALAR EN ESTA MAC.command"
+        },
+        {
+          "x": 370,
+          "y": 360,
+          "type": "file",
+          "path": "COMANDO INSTALACION MAC.txt"
         }
       ]
     },

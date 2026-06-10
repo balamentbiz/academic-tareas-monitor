@@ -336,7 +336,6 @@ ipcMain.handle("check-for-updates", async () => {
   const current = app.getVersion();
   try {
     const https = require("https");
-    // Consultar GitHub API para la versión más reciente
     const data = await new Promise((resolve, reject) => {
       https.get({
         hostname: "api.github.com",
@@ -352,70 +351,11 @@ ipcMain.handle("check-for-updates", async () => {
     const latest = (data.tag_name || "").replace(/^v/, "");
     if (!latest || latest === current) return { status: "up-to-date", current };
 
-    // Hay actualización — descargar el DMG directamente a Descargas
-    const dmgName = `Academic-Tareas-Monitor-${latest}-arm64.dmg`;
-    const dmgUrl  = `https://github.com/balamentbiz/academic-tareas-monitor/releases/download/v${latest}/${dmgName}`;
-    const destPath = path.join(app.getPath("downloads"), dmgName);
+    // Hay actualización — abrir página de descarga en GitHub
+    const releasesUrl = `https://github.com/balamentbiz/academic-tareas-monitor/releases/latest`;
+    shell.openExternal(releasesUrl);
 
-    safeSend("update-progress", { percent: 0, latest });
-
-    await new Promise((resolve, reject) => {
-      const file = fs.createWriteStream(destPath);
-      https.get(dmgUrl, (res) => {
-        const total = parseInt(res.headers["content-length"] || "0");
-        let received = 0;
-        res.on("data", chunk => {
-          received += chunk.length;
-          file.write(chunk);
-          if (total) safeSend("update-progress", { percent: Math.round((received / total) * 100), latest });
-        });
-        res.on("end", () => { file.end(); resolve(); });
-        res.on("error", reject);
-      }).on("error", reject);
-    });
-
-    safeSend("update-progress", { percent: 100, installing: true, latest });
-
-    // Instalar: montar DMG → quitar cuarentena → copiar → abrir nueva versión
-    const logPath = path.join(app.getPath("temp"), "at-update.log");
-
-    await new Promise((resolve) => {
-      const script = [
-        `echo "START" > "${logPath}"`,
-        `hdiutil attach "${destPath}" -quiet -nobrowse -mountpoint /tmp/at-update >> "${logPath}" 2>&1`,
-        `echo "mount:$?" >> "${logPath}"`,
-        `xattr -cr "/tmp/at-update/Academic Tareas Monitor.app" 2>/dev/null`,
-        `cp -Rf "/tmp/at-update/Academic Tareas Monitor.app" "/Applications/" >> "${logPath}" 2>&1`,
-        `echo "copy:$?" >> "${logPath}"`,
-        `xattr -cr "/Applications/Academic Tareas Monitor.app" 2>/dev/null`,
-        `hdiutil detach /tmp/at-update -quiet 2>/dev/null`,
-        `rm -f "${destPath}"`,
-        `echo "DONE" >> "${logPath}"`
-      ].join(" ; ");
-
-      exec(script, (err) => {
-        try { console.log("Update log:", fs.readFileSync(logPath, "utf8")); } catch {}
-        if (err) console.error("Install error:", err.message);
-        resolve();
-      });
-    });
-
-    safeSend("update-progress", { percent: 100, done: true, latest });
-
-    // Leer log y enviarlo al renderer para diagnóstico
-    try {
-      const log = fs.readFileSync(logPath, "utf8");
-      safeSend("update-log", { log });
-    } catch {}
-
-    // Abrir la nueva versión y cerrar la actual
-    setTimeout(() => {
-      exec(`open "/Applications/Academic\\ Tareas\\ Monitor.app"`, () => {
-        setTimeout(() => app.quit(), 500);
-      });
-    }, 1000);
-
-    return { status: "installing", current, latest };
+    return { status: "update-available", current, latest, url: releasesUrl };
   } catch (e) {
     return { status: "error", message: e.message };
   }

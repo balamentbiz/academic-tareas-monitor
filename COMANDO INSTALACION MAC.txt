@@ -1,0 +1,8 @@
+Si al abrir la app sale el error "está dañada y no puede abrirse",
+abre Terminal (busca "Terminal" en Spotlight) y pega este comando:
+
+xattr -cr "/Applications/Academic Tareas Monitor.app" && open "/Applications/Academic Tareas Monitor.app"
+
+Presiona Enter. La app se abrirá normalmente.
+
+Este comando solo se necesita UNA VEZ por instalación.
