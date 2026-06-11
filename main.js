@@ -356,7 +356,18 @@ ipcMain.handle("uninstall-app", async () => {
 });
 
 ipcMain.handle("open-url", (_, url) => shell.openExternal(url));
-ipcMain.handle("open-blackboard", () => shell.openExternal("https://uvmonline.blackboard.com/webapps/login/?action=default_login"));
+ipcMain.handle("open-blackboard", () => {
+  const { BrowserWindow, session } = require("electron");
+  const incognitoSession = session.fromPartition("incognito-blackboard", { cache: false });
+  const win = new BrowserWindow({
+    width: 1100,
+    height: 750,
+    webPreferences: { session: incognitoSession, nodeIntegration: false, contextIsolation: true },
+    title: "Blackboard — Sesión privada",
+    autoHideMenuBar: true
+  });
+  win.loadURL("https://uvmonline.blackboard.com/webapps/login/?action=default_login");
+});
 ipcMain.handle("open-drive",       () => shell.openExternal("https://drive.google.com/drive/folders/1lL0EXrghttyvTjTR8PEevsRu09R6qk3U?usp=drive_link"));
 
 ipcMain.handle("save-report-file", async (_, { content, filename, ext }) => {

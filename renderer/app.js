@@ -395,6 +395,15 @@ el("btn-activity-end").addEventListener("click", function() {
 el("btn-blackboard").addEventListener("click", function() { window.AT.openBlackboard(); });
 el("btn-drive").addEventListener("click", function()      { window.AT.openDrive(); });
 
+// ── Herramientas toggle ──
+el("tools-toggle").addEventListener("click", function() {
+  var body  = el("tools-body");
+  var arrow = el("tools-arrow");
+  var open  = body.style.display !== "none";
+  body.style.display  = open ? "none" : "block";
+  arrow.style.transform = open ? "rotate(0deg)" : "rotate(90deg)";
+});
+
 el("btn-dl-img").addEventListener("click", function() {
   if (!currentReport) return;
   currentReport.comments = el("report-comments").value;

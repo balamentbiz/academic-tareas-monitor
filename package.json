@@ -1,7 +1,7 @@
 {
   "name": "academic-tareas-monitor",
   "productName": "Academic Tareas Monitor",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Monitor de Productividad - Academic Tareas",
   "main": "main.js",
   "scripts": {
@@ -71,7 +71,6 @@
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
-      "installerHeader": "assets/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Academic Tareas Monitor"

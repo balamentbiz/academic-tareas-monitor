@@ -110,7 +110,17 @@
         <input id="pause-reason-input" class="field-input" type="text" placeholder="O escribe el motivo..."/>
       </div>
 
-      <button id="btn-blackboard" class="btn-outline-full">🎓 Accede con accesos</button>
+      <!-- HERRAMIENTAS -->
+      <div class="section-card" id="tools-section">
+        <div class="sc-header tools-toggle" id="tools-toggle" style="cursor:pointer;user-select:none">
+          <span class="sc-icon" style="background:#5e6ad2">🛠</span>
+          <span class="sc-title">Herramientas</span>
+          <span id="tools-arrow" style="font-size:10px;color:var(--periwinkle);transition:transform .2s;display:inline-block">▶</span>
+        </div>
+        <div id="tools-body" style="display:none;margin-top:4px">
+          <button id="btn-blackboard" class="btn-outline-full">🎓 Accede con accesos</button>
+        </div>
+      </div>
 
       <div class="action-pair">
         <button id="btn-pause" class="btn-warning-sm">⏸ Pausar</button>

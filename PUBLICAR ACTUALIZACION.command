@@ -4,6 +4,7 @@ export PATH="/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
 
 echo "================================================"
 echo "   Academic Tareas Monitor — Publicar actualización"
+echo "   Mac (DMG) + Windows (EXE)"
 echo "================================================"
 echo ""
 
@@ -28,6 +29,7 @@ if [ -n "$NEW_VERSION" ] && [ "$NEW_VERSION" != "$CURRENT" ]; then
   echo "Versión actualizada a v$CURRENT"
 fi
 
+# ── Subir código ──
 echo ""
 echo "Subiendo código a GitHub..."
 rm -f .git/index.lock 2>/dev/null
@@ -37,36 +39,62 @@ git add -A
 git commit -m "v$CURRENT" 2>/dev/null || echo "(sin cambios nuevos)"
 git push --force https://balamentbiz:${GH_TOKEN}@github.com/balamentbiz/academic-tareas-monitor.git main 2>&1 | tail -3
 
+# ── Construir Mac DMG ──
 echo ""
-echo "Construyendo DMG (sin subir)..."
+echo "[1/4] Construyendo Mac DMG..."
 echo "(~2-3 minutos)"
-echo ""
-
-# Solo construir, SIN publicar — evita la subida lentísima de electron-builder
 npx electron-builder --mac dmg 2>&1
 
-# Buscar el DMG generado
-DMG=$(ls dist/*.dmg 2>/dev/null | head -1)
+DMG=$(ls dist/*-arm64.dmg 2>/dev/null | grep "$CURRENT" | head -1)
+if [ -z "$DMG" ]; then DMG=$(ls dist/*.dmg 2>/dev/null | head -1); fi
 if [ -z "$DMG" ]; then
   echo "ERROR: No se generó el DMG"
   read -p "Enter para cerrar..."; exit 1
 fi
-echo ""
-echo "✓ DMG generado: $(basename "$DMG")"
+echo "✓ DMG: $(basename "$DMG")"
 
-# Crear release en GitHub (o actualizar si ya existe)
+# ── Construir Windows EXE ──
 echo ""
-echo "Creando release v$CURRENT en GitHub..."
+echo "[2/4] Construyendo Windows EXE..."
+echo "(~5-10 minutos)"
 
-# Verificar si ya existe
+# Reparar icon.ico
+python3 -c "
+from PIL import Image
+try:
+    img = Image.open('assets/icon.icns').convert('RGBA')
+except:
+    img = Image.new('RGBA', (256,256), (9,163,239,255))
+sizes = [(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)]
+imgs = [img.resize(s, Image.LANCZOS) for s in sizes]
+imgs[0].save('assets/icon.ico', format='ICO', append_images=imgs[1:])
+" 2>/dev/null
+
+# Limpiar EXE viejo
+rm -f dist/*Setup*.exe dist/*Setup*.exe.blockmap 2>/dev/null
+rm -rf dist/win-unpacked 2>/dev/null
+
+npx electron-builder --win nsis --x64 2>&1
+
+EXE=$(ls dist/*Setup*.exe 2>/dev/null | head -1)
+if [ -z "$EXE" ]; then EXE=$(ls dist/*.exe 2>/dev/null | head -1); fi
+if [ -z "$EXE" ]; then
+  echo "ERROR: No se generó el EXE"
+  read -p "Enter para cerrar..."; exit 1
+fi
+echo "✓ EXE: $(basename "$EXE")"
+
+# ── Crear release en GitHub ──
+echo ""
+echo "[3/4] Creando release v$CURRENT en GitHub..."
+
 EXISTING=$(curl -s -H "Authorization: token $GH_TOKEN" \
   "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/tags/v$CURRENT" \
   | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id',''))" 2>/dev/null)
 
 if [ -n "$EXISTING" ]; then
   RELEASE_ID="$EXISTING"
-  echo "Release existente encontrado (ID: $RELEASE_ID)"
-  # Eliminar assets viejos para re-subir
+  echo "Release existente (ID: $RELEASE_ID) — eliminando assets viejos..."
   curl -s -H "Authorization: token $GH_TOKEN" \
     "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID/assets" \
     | python3 -c "
@@ -78,7 +106,6 @@ for a in assets:
     req.add_header('Authorization','token '+token)
     try: urllib.request.urlopen(req)
     except: pass
-print('Assets anteriores eliminados')
 " 2>/dev/null
 else
   RELEASE_ID=$(curl -s -X POST \
@@ -95,9 +122,11 @@ if [ -z "$RELEASE_ID" ]; then
   read -p "Enter para cerrar..."; exit 1
 fi
 
-# Subir DMG con curl (mucho más rápido que electron-builder --publish)
+# ── Subir DMG y EXE ──
 echo ""
-echo "Subiendo DMG a GitHub..."
+echo "[4/4] Subiendo archivos a GitHub..."
+
+echo "Subiendo DMG (Mac)..."
 DMG_NAME=$(basename "$DMG" | sed 's/ /-/g')
 curl -X POST \
   -H "Authorization: token $GH_TOKEN" \
@@ -105,10 +134,19 @@ curl -X POST \
   --progress-bar \
   --data-binary @"$DMG" \
   "https://uploads.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID/assets?name=$DMG_NAME"
-
 echo ""
 
-# Publicar (marcar como latest)
+echo "Subiendo EXE (Windows)..."
+EXE_NAME=$(basename "$EXE" | sed 's/ /-/g')
+curl -X POST \
+  -H "Authorization: token $GH_TOKEN" \
+  -H "Content-Type: application/octet-stream" \
+  --progress-bar \
+  --data-binary @"$EXE" \
+  "https://uploads.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID/assets?name=$EXE_NAME"
+echo ""
+
+# Marcar como latest
 curl -s -X PATCH \
   -H "Authorization: token $GH_TOKEN" \
   -H "Content-Type: application/json" \
@@ -117,8 +155,10 @@ curl -s -X PATCH \
 
 echo ""
 echo "================================================"
-echo "  ✓ Release v$CURRENT publicado en GitHub"
-echo "  Tus asesores verán la actualización al abrir la app."
+echo "  ✓ Release v$CURRENT publicado"
+echo "  Mac:     $(basename "$DMG" | sed 's/ /-/g')"
+echo "  Windows: $(basename "$EXE" | sed 's/ /-/g')"
+echo "  github.com/balamentbiz/academic-tareas-monitor/releases"
 echo "================================================"
 echo ""
 read -p "Presiona Enter para cerrar..."
