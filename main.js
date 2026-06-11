@@ -357,16 +357,13 @@ ipcMain.handle("uninstall-app", async () => {
 
 ipcMain.handle("open-url", (_, url) => shell.openExternal(url));
 ipcMain.handle("open-blackboard", () => {
-  const { BrowserWindow, session } = require("electron");
-  const incognitoSession = session.fromPartition("incognito-blackboard", { cache: false });
-  const win = new BrowserWindow({
-    width: 1100,
-    height: 750,
-    webPreferences: { session: incognitoSession, nodeIntegration: false, contextIsolation: true },
-    title: "Blackboard — Sesión privada",
-    autoHideMenuBar: true
-  });
-  win.loadURL("https://uvmonline.blackboard.com/webapps/login/?action=default_login");
+  const { spawn } = require("child_process");
+  const url = "https://uvmonline.blackboard.com/webapps/login/?action=default_login";
+  if (process.platform === "darwin") {
+    spawn("open", ["-na", "Google Chrome", "--args", "--incognito", url]);
+  } else if (process.platform === "win32") {
+    spawn("cmd", ["/c", "start", "chrome", "--incognito", url], { shell: true });
+  }
 });
 ipcMain.handle("open-drive",       () => shell.openExternal("https://drive.google.com/drive/folders/1lL0EXrghttyvTjTR8PEevsRu09R6qk3U?usp=drive_link"));
 
