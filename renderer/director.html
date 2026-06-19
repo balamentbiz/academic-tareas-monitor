@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
+  <title>Director — Academic Tareas</title>
+  <style>
+    :root {
+      --bg: #0d1117; --card: #161b22; --border: rgba(255,255,255,.08);
+      --text: #e6edf3; --sub: rgba(230,237,243,.5); --cyan: #09a3ef;
+      --green: #32d74b; --orange: #ff9f0a; --red: #ff453a;
+      --purple: #bf5af2; --indigo: #5e6ad2; --gold: #ffd60a;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      --r: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); font-family: var(--font); color: var(--text); overflow-x: hidden; }
+
+    .hidden { display: none !important; }
+
+    /* Titlebar */
+    .titlebar {
+      -webkit-app-region: drag;
+      background: rgba(22,27,34,.95);
+      backdrop-filter: blur(10px);
+      height: 44px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px 0 80px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .titlebar-left { -webkit-app-region: no-drag; }
+    .titlebar-title { font-size: 13px; font-weight: 700; flex: 1; text-align: center; }
+    .titlebar-right { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; }
+    .role-badge { background: rgba(255,214,10,.15); border: 1px solid rgba(255,214,10,.4); color: var(--gold); border-radius: 6px; font-size: 10px; font-weight: 700; padding: 3px 8px; text-transform: uppercase; letter-spacing: .5px; }
+    .user-name { font-size: 12px; color: var(--sub); }
+    .btn-logout { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 11px; padding: 4px 10px; cursor: pointer; font-family: var(--font); }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 16px; overflow-x: auto; }
+    .tab { padding: 10px 14px; font-size: 11px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .tab-panel { display: none; flex-direction: column; gap: 12px; }
+    .tab-panel.active { display: flex; }
+
+    /* KPI */
+    .kpi-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+    .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+    .kpi-label { font-size: 10px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .kpi-value { font-size: 22px; font-weight: 700; }
+    .kpi-value.cyan   { color: var(--cyan); }
+    .kpi-value.green  { color: var(--green); }
+    .kpi-value.orange { color: var(--orange); }
+    .kpi-value.red    { color: var(--red); }
+    .kpi-value.gold   { color: var(--gold); }
+
+    /* Section title */
+    .section-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+
+    /* Asesor cards */
+    .asesores-list { display: flex; flex-direction: column; gap: 8px; }
+    .asesor-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .asesor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .asesor-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--indigo); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .asesor-name { font-size: 13px; font-weight: 600; }
+    .asesor-status { font-size: 11px; }
+    .asesor-status.active { color: var(--green); }
+    .asesor-status.idle   { color: var(--orange); }
+    .asesor-status.offline { color: var(--sub); }
+    .cuota-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .cuota-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; }
+    .cuota-bar-fill { height: 100%; border-radius: 3px; background: var(--cyan); transition: width .5s; }
+    .cuota-bar-fill.done { background: var(--green); }
+    .cuota-pct { font-size: 11px; font-weight: 700; color: var(--sub); min-width: 36px; text-align: right; }
+    .asesor-stats { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+    .asesor-stat { font-size: 10px; color: var(--sub); }
+    .asesor-stat span { color: var(--text); font-weight: 600; }
+
+    /* Cola */
+    .cola-list { display: flex; flex-direction: column; gap: 6px; }
+    .cola-item { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .cola-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+    .cola-badge.App { background: rgba(191,90,242,.15); color: #bf5af2; }
+    .cola-badge.Ap  { background: rgba(255,69,58,.15);  color: var(--red); }
+    .cola-badge.A   { background: rgba(255,159,10,.15); color: var(--orange); }
+    .cola-badge.B   { background: rgba(9,163,239,.15);  color: var(--cyan); }
+    .cola-info { flex: 1; }
+    .cola-cliente { font-size: 12px; font-weight: 600; }
+    .cola-desc { font-size: 11px; color: var(--sub); }
+    .cola-empty { text-align: center; color: var(--sub); font-size: 12px; padding: 16px; }
+
+    /* Pedidos */
+    .pedidos-list { display: flex; flex-direction: column; gap: 8px; }
+    .pedido-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .pedido-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .pedido-id { font-size: 10px; color: var(--sub); font-family: monospace; }
+    .pedido-cliente { font-size: 13px; font-weight: 600; flex: 1; }
+    .pedido-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .pedido-badge.en_cola    { background: rgba(255,159,10,.1);  color: var(--orange); }
+    .pedido-badge.asignado   { background: rgba(9,163,239,.15);  color: var(--cyan); }
+    .pedido-badge.en_proceso { background: rgba(94,106,210,.15); color: #7c8cf8; }
+    .pedido-badge.completado { background: rgba(50,215,75,.15);  color: var(--green); }
+    .pedido-badge.pendiente  { background: rgba(255,159,10,.1);  color: var(--orange); }
+    .pedido-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+    .pedido-meta span { font-size: 10px; color: var(--sub); }
+    .pedido-meta b { color: var(--text); }
+    .pedido-actions { display: flex; gap: 6px; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+    .btn-p-action { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 11px; font-weight: 600; padding: 5px 8px; cursor: pointer; font-family: inherit; }
+    .btn-p-action:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
+    .btn-p-action.primary:hover { border-color: rgba(255,214,10,.5); color: var(--gold); background: rgba(255,214,10,.08); }
+
+    /* Usuarios */
+    .usuarios-list { display: flex; flex-direction: column; gap: 8px; }
+    .usuario-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+    .usuario-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .usuario-info { flex: 1; min-width: 0; }
+    .usuario-nombre { font-size: 13px; font-weight: 600; }
+    .usuario-email { font-size: 11px; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rol-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .rol-badge.director { background: rgba(255,214,10,.15); color: var(--gold); }
+    .rol-badge.gerencia { background: rgba(191,90,242,.15); color: var(--purple); }
+    .rol-badge.atc      { background: rgba(9,163,239,.15);  color: var(--cyan); }
+    .rol-badge.asesor   { background: rgba(50,215,75,.15);  color: var(--green); }
+    .usuario-actions { display: flex; gap: 6px; }
+
+    /* Cuotas tab */
+    .cuotas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .cuota-dif-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+    .cuota-dif-label { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .cuota-dif-card.App .cuota-dif-label { color: #bf5af2; }
+    .cuota-dif-card.Ap  .cuota-dif-label { color: var(--red); }
+    .cuota-dif-card.A   .cuota-dif-label { color: var(--orange); }
+    .cuota-dif-card.B   .cuota-dif-label { color: var(--cyan); }
+    .cuota-dif-desc { font-size: 10px; color: var(--sub); margin-bottom: 10px; line-height: 1.4; }
+    .cuota-input-row { display: flex; align-items: center; gap: 8px; }
+    .cuota-input-row label { font-size: 10px; color: var(--sub); flex: 1; }
+    .cuota-input-row input { width: 70px; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 12px; padding: 5px 8px; outline: none; }
+    .cuota-input-row input:focus { border-color: var(--gold); }
+
+    .asesor-cuota-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .asesor-cuota-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .asesor-cuota-name { font-size: 13px; font-weight: 600; flex: 1; }
+    .tipos-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .tipo-chip { border: 1.5px solid var(--border); border-radius: 6px; background: transparent; color: var(--sub); font-size: 11px; font-weight: 700; padding: 4px 10px; cursor: pointer; font-family: inherit; }
+    .tipo-chip.selected.App { border-color: #bf5af2; color: #bf5af2; background: rgba(191,90,242,.1); }
+    .tipo-chip.selected.Ap  { border-color: var(--red); color: var(--red); background: rgba(255,69,58,.1); }
+    .tipo-chip.selected.A   { border-color: var(--orange); color: var(--orange); background: rgba(255,159,10,.1); }
+    .tipo-chip.selected.B   { border-color: var(--cyan); color: var(--cyan); background: rgba(9,163,239,.1); }
+
+    /* Buttons */
+    .btn-primary { background: var(--gold); border: none; border-radius: 8px; color: #0d1117; font-family: var(--font); font-size: 12px; font-weight: 700; padding: 8px 14px; cursor: pointer; }
+    .btn-primary:hover { opacity: .85; }
+    .btn-sm { background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 10px; font-weight: 600; padding: 4px 8px; cursor: pointer; font-family: inherit; }
+    .btn-sm:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
+    .btn-sm.danger:hover { color: var(--red); border-color: rgba(255,69,58,.4); }
+    .btn-refresh { background: rgba(255,214,10,.1); border: 1px solid rgba(255,214,10,.25); border-radius: 8px; color: var(--gold); font-size: 12px; font-weight: 600; padding: 8px 16px; cursor: pointer; font-family: var(--font); }
+    .btn-refresh:hover { background: rgba(255,214,10,.2); }
+    .btn-save-cuotas { width: 100%; background: var(--gold); border: none; border-radius: 10px; color: #0d1117; font-family: var(--font); font-size: 13px; font-weight: 700; padding: 11px; cursor: pointer; }
+    .btn-save-cuotas:hover { opacity: .85; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .modal { background: #161b22; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 24px; width: 340px; max-height: 85vh; overflow-y: auto; }
+    .modal h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+    .modal label { display: block; font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; margin-top: 10px; }
+    .modal label:first-of-type { margin-top: 0; }
+    .modal input, .modal select { width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 12px; padding: 8px 10px; outline: none; }
+    .modal input:focus, .modal select:focus { border-color: var(--gold); }
+    .modal select option { background: #161b22; }
+    .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-modal-sec { flex: 1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: var(--sub); font-size: 12px; font-weight: 600; padding: 9px; cursor: pointer; font-family: inherit; }
+    .btn-modal-pri { flex: 2; background: var(--gold); border: none; border-radius: 8px; color: #0d1117; font-size: 12px; font-weight: 700; padding: 9px; cursor: pointer; font-family: inherit; }
+    .btn-modal-del { flex: 2; background: rgba(255,69,58,.2); border: 1px solid rgba(255,69,58,.4); border-radius: 8px; color: #ff453a; font-size: 12px; font-weight: 700; padding: 9px; cursor: pointer; font-family: inherit; }
+
+    /* Misc */
+    .loading-state { text-align: center; color: var(--sub); font-size: 13px; padding: 30px 0; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,214,10,.3); border-top-color: var(--gold); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .msg-ok  { background: rgba(50,215,75,.1);  border: 1px solid rgba(50,215,75,.25);  border-radius: 8px; color: var(--green); font-size: 12px; padding: 8px 12px; margin-top: 8px; }
+    .msg-err { background: rgba(255,69,58,.1);  border: 1px solid rgba(255,69,58,.25);  border-radius: 8px; color: var(--red);   font-size: 12px; padding: 8px 12px; margin-top: 8px; }
+    .dif-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+    .dif-badge.App { background: rgba(191,90,242,.15); color: #bf5af2; }
+    .dif-badge.Ap  { background: rgba(255,69,58,.15);  color: var(--red); }
+    .dif-badge.A   { background: rgba(255,159,10,.15); color: var(--orange); }
+    .dif-badge.B   { background: rgba(9,163,239,.15);  color: var(--cyan); }
+  </style>
+</head>
+<body>
+
+  <div class="titlebar">
+    <div class="titlebar-left"><span class="role-badge">⭐ Director</span></div>
+    <span class="titlebar-title">🎓 Academic Tareas</span>
+    <div class="titlebar-right">
+      <span class="user-name" id="user-name">—</span>
+      <button class="btn-logout" id="btn-logout">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
+    <div class="tab" data-tab="pedidos">📋 Pedidos</div>
+    <div class="tab" data-tab="usuarios">👥 Usuarios</div>
+    <div class="tab" data-tab="cuotas">⚙ Cuotas</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Asesores activos</div><div class="kpi-value cyan" id="kpi-activos">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Tareas en cola</div><div class="kpi-value orange" id="kpi-cola">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Completadas hoy</div><div class="kpi-value green" id="kpi-completadas">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Tasa de rechazo</div><div class="kpi-value red" id="kpi-rechazo">—</div></div>
+      </div>
+      <div>
+        <div class="section-title">Asesores</div>
+        <div id="dash-asesores" class="asesores-list"><div class="loading-state"><span class="spinner"></span>Cargando...</div></div>
+      </div>
+      <div>
+        <div class="section-title">Cola de espera</div>
+        <div id="dash-cola" class="cola-list"><div class="loading-state"><span class="spinner"></span>Cargando...</div></div>
+      </div>
+      <button class="btn-refresh" id="btn-refresh">↻ Actualizar</button>
+    </div>
+
+    <!-- ── PEDIDOS ── -->
+    <div class="tab-panel" id="panel-pedidos">
+      <div id="pedidos-list" class="pedidos-list">
+        <div class="loading-state"><span class="spinner"></span>Cargando pedidos...</div>
+      </div>
+    </div>
+
+    <!-- ── USUARIOS ── -->
+    <div class="tab-panel" id="panel-usuarios">
+      <div class="section-header">
+        <div class="section-title" style="margin:0">Todos los usuarios</div>
+        <button class="btn-primary" id="btn-crear-usuario">+ Crear usuario</button>
+      </div>
+      <div id="usuarios-list" class="usuarios-list">
+        <div class="loading-state"><span class="spinner"></span>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ── CUOTAS ── -->
+    <div class="tab-panel" id="panel-cuotas">
+      <!-- Costos globales por dificultad -->
+      <div>
+        <div class="section-title">Costo por tipo de tarea (fracción de cuota diaria)</div>
+        <div class="cuotas-grid">
+          <div class="cuota-dif-card App">
+            <div class="cuota-dif-label">A++ — Muy difícil</div>
+            <div class="cuota-dif-desc">Programación, diseño digital, contabilidad (Excel + fórmulas complejas), química, aduanas</div>
+            <div class="cuota-input-row">
+              <label>Costo (0–1)</label>
+              <input type="number" id="costo-App" step="0.001" min="0" max="1" value="0.333"/>
+            </div>
+          </div>
+          <div class="cuota-dif-card Ap">
+            <div class="cuota-dif-label">A+ — Difícil</div>
+            <div class="cuota-dif-desc">Contabilidad, SPSS, fórmulas básicas, software básico</div>
+            <div class="cuota-input-row">
+              <label>Costo (0–1)</label>
+              <input type="number" id="costo-Ap" step="0.001" min="0" max="1" value="0.25"/>
+            </div>
+          </div>
+          <div class="cuota-dif-card A">
+            <div class="cuota-dif-label">A — Media</div>
+            <div class="cuota-dif-desc">Materias de relleno, videos, infografías</div>
+            <div class="cuota-input-row">
+              <label>Costo (0–1)</label>
+              <input type="number" id="costo-A" step="0.001" min="0" max="1" value="0.167"/>
+            </div>
+          </div>
+          <div class="cuota-dif-card B">
+            <div class="cuota-dif-label">B — Fácil</div>
+            <div class="cuota-dif-desc">Cursos, foros, exámenes</div>
+            <div class="cuota-input-row">
+              <label>Costo (0–1)</label>
+              <input type="number" id="costo-B" step="0.001" min="0" max="1" value="0.125"/>
+            </div>
+          </div>
+        </div>
+        <div id="msg-cuotas-global"></div>
+        <button class="btn-save-cuotas" id="btn-save-cuotas-global" style="margin-top:10px">Guardar costos globales</button>
+      </div>
+
+      <!-- Cuotas por asesor -->
+      <div>
+        <div class="section-title">Tipos habilitados por asesor</div>
+        <div id="asesores-cuotas" class="asesores-list">
+          <div class="loading-state"><span class="spinner"></span>Cargando asesores...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal: Crear usuario -->
+  <div class="modal-overlay hidden" id="modal-crear-usuario">
+    <div class="modal">
+      <h3>👤 Crear nuevo usuario</h3>
+      <label>Nombre completo</label>
+      <input type="text" id="nu-nombre" placeholder="Ej. Ana López"/>
+      <label>Correo electrónico</label>
+      <input type="email" id="nu-email" placeholder="usuario@ejemplo.com"/>
+      <label>Contraseña (mín. 6 caracteres)</label>
+      <input type="password" id="nu-pass" placeholder="••••••"/>
+      <label>Rol</label>
+      <select id="nu-rol">
+        <option value="asesor">Asesor</option>
+        <option value="atc">ATC</option>
+        <option value="gerencia">Gerencia</option>
+        <option value="director">Director</option>
+      </select>
+      <div id="nu-msg"></div>
+      <div class="modal-btns">
+        <button class="btn-modal-sec" id="btn-nu-cancel">Cancelar</button>
+        <button class="btn-modal-pri" id="btn-nu-crear">Crear usuario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cambiar rol -->
+  <div class="modal-overlay hidden" id="modal-cambiar-rol">
+    <div class="modal">
+      <h3>🔄 Cambiar rol</h3>
+      <input type="hidden" id="cr-uid"/>
+      <p style="font-size:12px;color:var(--sub);margin-bottom:12px">Usuario: <b id="cr-nombre" style="color:var(--text)"></b></p>
+      <label>Nuevo rol</label>
+      <select id="cr-rol">
+        <option value="asesor">Asesor</option>
+        <option value="atc">ATC</option>
+        <option value="gerencia">Gerencia</option>
+        <option value="director">Director</option>
+      </select>
+      <div class="modal-btns">
+        <button class="btn-modal-sec" id="btn-cr-cancel">Cancelar</button>
+        <button class="btn-modal-pri" id="btn-cr-save">Guardar rol</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar dificultad de pedido -->
+  <div class="modal-overlay hidden" id="modal-edit-dif">
+    <div class="modal">
+      <h3>✏️ Cambiar dificultad</h3>
+      <input type="hidden" id="ed-id"/>
+      <p style="font-size:12px;color:var(--sub);margin-bottom:12px">Pedido: <b id="ed-cliente" style="color:var(--text)"></b></p>
+      <label>Dificultad</label>
+      <select id="ed-dif">
+        <option value="A++">A++ — Muy difícil (programación, diseño, conta compleja)</option>
+        <option value="A+">A+ — Difícil (conta, SPSS, fórmulas)</option>
+        <option value="A">A — Media (relleno, videos, infografías)</option>
+        <option value="B">B — Fácil (cursos, foros, exámenes)</option>
+      </select>
+      <div class="modal-btns">
+        <button class="btn-modal-sec" id="btn-ed-cancel">Cancelar</button>
+        <button class="btn-modal-pri" id="btn-ed-save">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
+      authDomain: "academic-tareas-monitor.firebaseapp.com",
+      projectId: "academic-tareas-monitor",
+      storageBucket: "academic-tareas-monitor.firebasestorage.app",
+      messagingSenderId: "131741560355",
+      appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const db    = getFirestore(fbApp);
+
+    let currentUser = null;
+
+    if (window.AT) {
+      window.AT.getLoggedUser().then(u => {
+        currentUser = u;
+        if (u) document.getElementById("user-name").textContent = u.nombre;
+      });
+    }
+
+    document.getElementById("btn-logout").addEventListener("click", () => window.AT.authLogout());
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+    function avatarLetters(nombre) { return (nombre || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2); }
+    function avatarColor(rol) { return { director:"#b8860b", gerencia:"#7b4fa8", atc:"#0f6b9e", asesor:"#1a6b36" }[rol] || "#3a4a6b"; }
+    function difBadgeClass(d) { if (d === "A++") return "App"; if (d === "A+") return "Ap"; return d || "B"; }
+    const estadoLabel = { pendiente:"Pendiente", asignado:"Asignado", en_proceso:"En proceso", completado:"Completado", en_cola:"En cola" };
+
+    // ── TABS ─────────────────────────────────────────────────────────────────────
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+        const actions = { dashboard: cargarDashboard, pedidos: cargarPedidos, usuarios: cargarUsuarios, cuotas: cargarCuotas };
+        if (actions[tab.dataset.tab]) actions[tab.dataset.tab]();
+      });
+    });
+
+    // ── DASHBOARD ────────────────────────────────────────────────────────────────
+    async function cargarDashboard() {
+      const hoy = new Date().toISOString().split("T")[0];
+      try {
+        const snap = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+        const listEl = document.getElementById("dash-asesores");
+        listEl.innerHTML = "";
+        let activos = 0;
+
+        for (const docu of snap.docs) {
+          const u = docu.data();
+          const cuotaSnap = await getDoc(doc(db, "cuota_diaria", docu.id + "_" + hoy));
+          const cuota = cuotaSnap.exists() ? cuotaSnap.data() : { cuota_actual: 0, total_tareas: 0 };
+          const pct = Math.min(100, Math.round((cuota.cuota_actual || 0) * 100));
+          const estado = u.estado_hoy || "offline";
+          if (estado === "activo") activos++;
+
+          const tipos = (u.tipos_habilitados || []).map(t => `<span class="dif-badge ${difBadgeClass(t)}">${t}</span>`).join(" ");
+
+          listEl.innerHTML += `
+            <div class="asesor-card">
+              <div class="asesor-header">
+                <div class="asesor-avatar">${avatarLetters(u.nombre)}</div>
+                <div class="asesor-info">
+                  <div class="asesor-name">${u.nombre}</div>
+                  <div class="asesor-status ${estado === "activo" ? "active" : estado === "inactivo" ? "idle" : "offline"}">
+                    ${estado === "activo" ? "● Activo" : estado === "inactivo" ? "● Inactivo" : "○ Desconectado"}
+                  </div>
+                </div>
+                ${tipos ? `<div style="display:flex;gap:4px;flex-wrap:wrap">${tipos}</div>` : ""}
+              </div>
+              <div class="cuota-bar-wrap">
+                <div class="cuota-bar-bg"><div class="cuota-bar-fill ${pct>=100?"done":""}" style="width:${pct}%"></div></div>
+                <div class="cuota-pct">${pct}%</div>
+              </div>
+              <div class="asesor-stats">
+                <div class="asesor-stat">Tareas hoy: <span>${cuota.total_tareas || 0}</span></div>
+                <div class="asesor-stat">Completadas: <span>${cuota.tareas_completadas || 0}</span></div>
+              </div>
+            </div>`;
+        }
+        if (snap.empty) listEl.innerHTML = '<div class="cola-empty">Sin asesores</div>';
+        document.getElementById("kpi-activos").textContent = activos;
+
+        // Cola
+        const colaSnap = await getDocs(query(collection(db, "tareas"), where("estado", "==", "en_cola")));
+        const colaEl = document.getElementById("dash-cola");
+        colaEl.innerHTML = "";
+        document.getElementById("kpi-cola").textContent = colaSnap.size;
+        if (colaSnap.empty) {
+          colaEl.innerHTML = '<div class="cola-empty">✓ Sin tareas en cola</div>';
+        } else {
+          colaSnap.forEach(d => {
+            const t = d.data();
+            const dc = difBadgeClass(t.dificultad);
+            colaEl.innerHTML += `<div class="cola-item"><span class="cola-badge ${dc}">${t.dificultad||"?"}</span><div class="cola-info"><div class="cola-cliente">${t.cliente}</div><div class="cola-desc">${t.materia||t.descripcion||""}</div></div></div>`;
+          });
+        }
+
+        // KPIs
+        const compSnap = await getDocs(query(collection(db, "tareas"), where("estado", "==", "completado")));
+        const compHoy = compSnap.docs.filter(d => (d.data().fecha_dia || "") === hoy);
+        document.getElementById("kpi-completadas").textContent = compHoy.length;
+
+        let rechazos = 0;
+        try {
+          const rechSnap = await getDocs(query(collection(db, "rechazos"), where("fecha_dia", "==", hoy)));
+          rechazos = rechSnap.size;
+        } catch {}
+        const total = compHoy.length + rechazos;
+        document.getElementById("kpi-rechazo").textContent = total > 0 ? Math.round((rechazos / total) * 100) + "%" : "0%";
+
+      } catch (e) { console.error(e); }
+    }
+
+    document.getElementById("btn-refresh").addEventListener("click", cargarDashboard);
+    cargarDashboard();
+
+    // ── PEDIDOS ──────────────────────────────────────────────────────────────────
+    async function cargarPedidos() {
+      const listEl = document.getElementById("pedidos-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+      try {
+        const snap = await getDocs(collection(db, "tareas"));
+        listEl.innerHTML = "";
+        if (snap.empty) { listEl.innerHTML = '<div class="loading-state">Sin pedidos</div>'; return; }
+
+        const docs = snap.docs.sort((a,b) => (b.data().creado_en||"").localeCompare(a.data().creado_en||""));
+        docs.forEach(d => {
+          const t = d.data(); const id = d.id;
+          const dc = difBadgeClass(t.dificultad);
+          const card = document.createElement("div");
+          card.className = "pedido-card";
+          card.innerHTML = `
+            <div class="pedido-header">
+              <span class="pedido-id">#${t.numero_pedido||"—"}</span>
+              <span class="pedido-cliente">${t.cliente||"—"}</span>
+              <span class="dif-badge ${dc}">${t.dificultad||"?"}</span>
+              <span class="pedido-badge ${t.estado||"pendiente"}">${estadoLabel[t.estado]||t.estado}</span>
+            </div>
+            <div class="pedido-meta">
+              ${t.materia ? `<span>Materia: <b>${t.materia}</b></span>` : ""}
+              ${t.entregable ? `<span>Entregable: <b>${t.entregable}</b></span>` : ""}
+              <span>Asesor: <b>${t.asesor_nombre||"Sin asignar"}</b></span>
+              ${t.dia_entrega ? `<span>Entrega: <b>${t.dia_entrega}</b></span>` : ""}
+              ${t.estatus_pago ? `<span>Pago: <b>${t.estatus_pago}</b></span>` : ""}
+            </div>
+            <div class="pedido-actions">
+              <button class="btn-p-action primary btn-edit-dif">✏️ Cambiar dificultad</button>
+            </div>`;
+          card.querySelector(".btn-edit-dif").onclick = () => {
+            document.getElementById("ed-id").value = id;
+            document.getElementById("ed-cliente").textContent = t.cliente || "—";
+            document.getElementById("ed-dif").value = t.dificultad || "B";
+            document.getElementById("modal-edit-dif").classList.remove("hidden");
+          };
+          listEl.appendChild(card);
+        });
+      } catch(e) { listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>'; }
+    }
+
+    // Modal editar dificultad
+    document.getElementById("btn-ed-cancel").onclick = () => document.getElementById("modal-edit-dif").classList.add("hidden");
+    document.getElementById("btn-ed-save").onclick = async () => {
+      const id  = document.getElementById("ed-id").value;
+      const dif = document.getElementById("ed-dif").value;
+      await updateDoc(doc(db, "tareas", id), { dificultad: dif, descripcion: dif });
+      document.getElementById("modal-edit-dif").classList.add("hidden");
+      cargarPedidos();
+    };
+
+    // ── USUARIOS ─────────────────────────────────────────────────────────────────
+    async function cargarUsuarios() {
+      const listEl = document.getElementById("usuarios-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+      try {
+        const snap = await getDocs(collection(db, "usuarios"));
+        listEl.innerHTML = "";
+        if (snap.empty) { listEl.innerHTML = '<div class="loading-state">Sin usuarios</div>'; return; }
+
+        snap.docs.forEach(d => {
+          const u = d.data(); const uid = d.id;
+          const card = document.createElement("div");
+          card.className = "usuario-card";
+          card.innerHTML = `
+            <div class="usuario-avatar" style="background:${avatarColor(u.rol)}">${avatarLetters(u.nombre)}</div>
+            <div class="usuario-info">
+              <div class="usuario-nombre">${u.nombre || "—"}</div>
+              <div class="usuario-email">${u.email || "—"}</div>
+            </div>
+            <span class="rol-badge ${u.rol||"asesor"}">${(u.rol||"asesor").toUpperCase()}</span>
+            <div class="usuario-actions">
+              <button class="btn-sm btn-cambiar-rol">🔄 Rol</button>
+            </div>`;
+          card.querySelector(".btn-cambiar-rol").onclick = () => {
+            document.getElementById("cr-uid").value = uid;
+            document.getElementById("cr-nombre").textContent = u.nombre || "—";
+            document.getElementById("cr-rol").value = u.rol || "asesor";
+            document.getElementById("modal-cambiar-rol").classList.remove("hidden");
+          };
+          listEl.appendChild(card);
+        });
+      } catch(e) { listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>'; }
+    }
+
+    // Modal crear usuario — usa app secundaria para no cerrar sesión
+    document.getElementById("btn-crear-usuario").onclick = () => {
+      document.getElementById("nu-nombre").value = "";
+      document.getElementById("nu-email").value  = "";
+      document.getElementById("nu-pass").value   = "";
+      document.getElementById("nu-rol").value    = "asesor";
+      document.getElementById("nu-msg").innerHTML = "";
+      document.getElementById("modal-crear-usuario").classList.remove("hidden");
+    };
+    document.getElementById("btn-nu-cancel").onclick = () => document.getElementById("modal-crear-usuario").classList.add("hidden");
+    document.getElementById("btn-nu-crear").onclick  = async () => {
+      const nombre = document.getElementById("nu-nombre").value.trim();
+      const email  = document.getElementById("nu-email").value.trim();
+      const pass   = document.getElementById("nu-pass").value;
+      const rol    = document.getElementById("nu-rol").value;
+      const msgEl  = document.getElementById("nu-msg");
+      msgEl.innerHTML = "";
+
+      if (!nombre || !email || !pass) { msgEl.innerHTML = '<div class="msg-err">Completa todos los campos.</div>'; return; }
+      if (pass.length < 6) { msgEl.innerHTML = '<div class="msg-err">La contraseña debe tener al menos 6 caracteres.</div>'; return; }
+
+      const btn = document.getElementById("btn-nu-crear");
+      btn.disabled = true; btn.textContent = "Creando...";
+
+      try {
+        // Crear en Firebase Auth con app secundaria (no cierra la sesión actual)
+        const secondaryApp  = initializeApp(firebaseConfig, "secondary_" + Date.now());
+        const secondaryAuth = getAuth(secondaryApp);
+        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
+        const uid  = cred.user.uid;
+        await signOut(secondaryAuth);
+        await deleteApp(secondaryApp);
+
+        // Guardar en Firestore
+        await setDoc(doc(db, "usuarios", uid), {
+          nombre, email, rol,
+          estado_hoy: "offline",
+          tipos_habilitados: rol === "asesor" ? ["A", "B"] : [],
+          creado_en: new Date().toISOString()
+        });
+
+        msgEl.innerHTML = `<div class="msg-ok">✓ Usuario ${nombre} creado con rol ${rol.toUpperCase()}</div>`;
+        btn.textContent = "Crear usuario"; btn.disabled = false;
+        setTimeout(() => {
+          document.getElementById("modal-crear-usuario").classList.add("hidden");
+          cargarUsuarios();
+        }, 1500);
+      } catch(e) {
+        const msgs = {
+          "auth/email-already-in-use": "Este correo ya está registrado.",
+          "auth/invalid-email": "Correo no válido.",
+          "auth/weak-password": "Contraseña muy débil (mín. 6 caracteres)."
+        };
+        msgEl.innerHTML = `<div class="msg-err">${msgs[e.code] || e.message}</div>`;
+        btn.textContent = "Crear usuario"; btn.disabled = false;
+      }
+    };
+
+    // Modal cambiar rol
+    document.getElementById("btn-cr-cancel").onclick = () => document.getElementById("modal-cambiar-rol").classList.add("hidden");
+    document.getElementById("btn-cr-save").onclick   = async () => {
+      const uid = document.getElementById("cr-uid").value;
+      const rol = document.getElementById("cr-rol").value;
+      await updateDoc(doc(db, "usuarios", uid), { rol });
+      document.getElementById("modal-cambiar-rol").classList.add("hidden");
+      cargarUsuarios();
+    };
+
+    // ── CUOTAS ───────────────────────────────────────────────────────────────────
+    const CUOTA_DEFAULT = { "A++": 0.333, "A+": 0.25, "A": 0.167, "B": 0.125 };
+
+    async function cargarCuotas() {
+      // Cargar costos globales
+      try {
+        const snap = await getDoc(doc(db, "configuracion", "cuotas"));
+        if (snap.exists()) {
+          const d = snap.data();
+          if (d["A++"] != null) document.getElementById("costo-App").value = d["A++"];
+          if (d["A+"]  != null) document.getElementById("costo-Ap").value  = d["A+"];
+          if (d["A"]   != null) document.getElementById("costo-A").value   = d["A"];
+          if (d["B"]   != null) document.getElementById("costo-B").value   = d["B"];
+        }
+      } catch {}
+
+      // Cargar asesores con sus tipos habilitados
+      const listEl = document.getElementById("asesores-cuotas");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span></div>';
+      try {
+        const snap = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+        listEl.innerHTML = "";
+        if (snap.empty) { listEl.innerHTML = '<div class="cola-empty">Sin asesores</div>'; return; }
+
+        snap.docs.forEach(d => {
+          const u = d.data(); const uid = d.id;
+          const habilitados = u.tipos_habilitados || [];
+          const tipos = ["A++", "A+", "A", "B"];
+
+          const card = document.createElement("div");
+          card.className = "asesor-cuota-card";
+          card.dataset.uid = uid;
+          card.innerHTML = `
+            <div class="asesor-cuota-header">
+              <div class="asesor-avatar" style="width:28px;height:28px;font-size:11px">${avatarLetters(u.nombre)}</div>
+              <div class="asesor-cuota-name">${u.nombre}</div>
+              <button class="btn-sm btn-save-tipos">Guardar</button>
+            </div>
+            <div style="font-size:10px;color:var(--sub);margin-bottom:6px">Tipos de tarea que puede recibir:</div>
+            <div class="tipos-chips">
+              ${tipos.map(t => {
+                const dc = difBadgeClass(t);
+                const sel = habilitados.includes(t) ? "selected " + dc : "";
+                return `<button class="tipo-chip ${sel}" data-tipo="${t}">${t}</button>`;
+              }).join("")}
+            </div>`;
+
+          // Toggle tipo
+          card.querySelectorAll(".tipo-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+              const tipo = chip.dataset.tipo;
+              const dc   = difBadgeClass(tipo);
+              chip.classList.toggle("selected");
+              if (chip.classList.contains("selected")) chip.classList.add(dc);
+              else chip.classList.remove(dc);
+            });
+          });
+
+          // Guardar tipos
+          card.querySelector(".btn-save-tipos").addEventListener("click", async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true; btn.textContent = "...";
+            const seleccionados = [...card.querySelectorAll(".tipo-chip.selected")].map(c => c.dataset.tipo);
+            await updateDoc(doc(db, "usuarios", uid), { tipos_habilitados: seleccionados });
+            btn.textContent = "✓"; btn.style.color = "var(--green)";
+            setTimeout(() => { btn.textContent = "Guardar"; btn.style.color = ""; btn.disabled = false; }, 1500);
+          });
+
+          listEl.appendChild(card);
+        });
+      } catch(e) { listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>'; }
+    }
+
+    // Guardar costos globales
+    document.getElementById("btn-save-cuotas-global").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-save-cuotas-global");
+      btn.disabled = true; btn.textContent = "Guardando...";
+      const msgEl = document.getElementById("msg-cuotas-global");
+      try {
+        await setDoc(doc(db, "configuracion", "cuotas"), {
+          "A++": parseFloat(document.getElementById("costo-App").value) || 0.333,
+          "A+":  parseFloat(document.getElementById("costo-Ap").value)  || 0.25,
+          "A":   parseFloat(document.getElementById("costo-A").value)   || 0.167,
+          "B":   parseFloat(document.getElementById("costo-B").value)   || 0.125,
+        });
+        msgEl.innerHTML = '<div class="msg-ok" style="margin-top:8px">✓ Costos guardados — el sistema usará estos valores al asignar tareas</div>';
+      } catch(e) {
+        msgEl.innerHTML = '<div class="msg-err" style="margin-top:8px">Error: ' + e.message + '</div>';
+      }
+      btn.disabled = false; btn.textContent = "Guardar costos globales";
+    });
+  </script>
+</body>
+</html>

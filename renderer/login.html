@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
+  <title>Academic Tareas — Login</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: rgba(255,255,255,.08);
+      --text: #e6edf3;
+      --sub: rgba(230,237,243,.5);
+      --cyan: #09a3ef;
+      --cyan-dim: rgba(9,163,239,.12);
+      --red: #ff453a;
+      --green: #32d74b;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      --r: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); font-family: var(--font); color: var(--text); }
+
+    /* Titlebar drag area */
+    .titlebar {
+      -webkit-app-region: drag;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 32px);
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo-emoji { font-size: 40px; display: block; margin-bottom: 8px; }
+    .logo-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .logo-sub { font-size: 12px; color: var(--sub); margin-top: 2px; }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+    .field input {
+      width: 100%;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .field input:focus { border-color: var(--cyan); }
+    .field input::placeholder { color: rgba(230,237,243,.25); }
+
+    .btn-login {
+      width: 100%;
+      background: var(--cyan);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .85; }
+    .btn-login:disabled { opacity: .4; cursor: not-allowed; }
+
+    .error-msg {
+      background: rgba(255,69,58,.12);
+      border: 1px solid rgba(255,69,58,.3);
+      border-radius: 8px;
+      color: var(--red);
+      font-size: 12px;
+      padding: 10px 12px;
+      margin-top: 14px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    .loading {
+      text-align: center;
+      color: var(--sub);
+      font-size: 13px;
+      margin-top: 14px;
+      display: none;
+    }
+    .loading.show { display: block; }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(9,163,239,.3);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .version {
+      text-align: center;
+      color: rgba(230,237,243,.2);
+      font-size: 10px;
+      margin-top: 20px;
+      letter-spacing: .5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar"></div>
+
+  <div class="container">
+    <div class="card">
+      <div class="logo">
+        <span class="logo-emoji">🎓</span>
+        <div class="logo-title">Academic Tareas</div>
+        <div class="logo-sub">Monitor de Producción</div>
+      </div>
+
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input id="email" type="email" placeholder="tu@correo.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input id="password" type="password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+
+      <button class="btn-login" id="btn-login">Iniciar sesión</button>
+
+      <div class="error-msg" id="error-msg"></div>
+      <div class="loading" id="loading"><span class="spinner"></span>Verificando...</div>
+    </div>
+    <div class="version" id="version-label"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
+      authDomain: "academic-tareas-monitor.firebaseapp.com",
+      projectId: "academic-tareas-monitor",
+      storageBucket: "academic-tareas-monitor.firebasestorage.app",
+      messagingSenderId: "131741560355",
+      appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const auth  = getAuth(fbApp);
+    const db    = getFirestore(fbApp);
+
+    // Mostrar versión
+    if (window.AT) {
+      window.AT.getVersion().then(v => {
+        document.getElementById("version-label").textContent = "v" + v;
+      }).catch(() => {});
+    }
+
+    const emailEl    = document.getElementById("email");
+    const passEl     = document.getElementById("password");
+    const btnLogin   = document.getElementById("btn-login");
+    const errorMsg   = document.getElementById("error-msg");
+    const loadingEl  = document.getElementById("loading");
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.add("show");
+      loadingEl.classList.remove("show");
+      btnLogin.disabled = false;
+    }
+
+    function setLoading(on) {
+      loadingEl.classList.toggle("show", on);
+      btnLogin.disabled = on;
+      errorMsg.classList.remove("show");
+    }
+
+    async function doLogin() {
+      const email = emailEl.value.trim();
+      const pass  = passEl.value;
+      if (!email || !pass) { showError("Ingresa tu correo y contraseña."); return; }
+
+      setLoading(true);
+      try {
+        // 1. Autenticar con Firebase
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        const uid  = cred.user.uid;
+
+        // 2. Obtener rol desde Firestore
+        const snap = await getDoc(doc(db, "usuarios", uid));
+        if (!snap.exists()) {
+          showError("Usuario no configurado. Contacta a tu administrador.");
+          return;
+        }
+        const data = snap.data();
+        const usuario = { uid, email, nombre: data.nombre || email, rol: data.rol || "asesor" };
+
+        // 3. Notificar al proceso principal → carga el dashboard correcto
+        await window.AT.authSuccess(usuario);
+
+      } catch (err) {
+        const msgs = {
+          "auth/invalid-credential":  "Correo o contraseña incorrectos.",
+          "auth/user-not-found":       "Usuario no encontrado.",
+          "auth/wrong-password":       "Contraseña incorrecta.",
+          "auth/too-many-requests":    "Demasiados intentos. Espera un momento.",
+          "auth/network-request-failed": "Sin conexión a internet.",
+        };
+        showError(msgs[err.code] || "Error: " + err.message);
+      }
+    }
+
+    btnLogin.addEventListener("click", doLogin);
+    passEl.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+    emailEl.addEventListener("keydown", e => { if (e.key === "Enter") passEl.focus(); });
+  </script>
+</body>
+</html>

@@ -32,9 +32,10 @@ function load(filename) {
 function remove(filename) { try { if (fs.existsSync(f(filename))) fs.unlinkSync(f(filename)); } catch {} }
 
 // ── Estado ────────────────────────────────────────────────────────────────────
-let session = load("current.json");
-let win     = null;
-let idleTimer = null;
+let session     = load("current.json");
+let win         = null;
+let idleTimer   = null;
+let loggedUser  = null;  // { uid, email, nombre, rol }
 
 // Envío seguro — nunca crashea si la ventana fue destruida
 function safeSend(channel, data) {
@@ -57,11 +58,30 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  win.loadFile(path.join(__dirname, "renderer", "index.html"));
+  // Siempre arranca en el login
+  win.loadFile(path.join(__dirname, "renderer", "login.html"));
+}
 
-  startIdleCheck();
-  startAppTracking();
-  startActivityPolling();
+// Carga el dashboard según el rol
+function loadDashboard(rol) {
+  const rolNorm = (rol || "").toLowerCase().trim();
+  console.log("[AUTH] Rol recibido:", rol, "→ normalizado:", rolNorm);
+  const map = {
+    director: "director.html",
+    gerencia: "gerencia.html",
+    atc:      "atc.html",
+    asesor:   "index.html",
+  };
+  const file = map[rolNorm] || "index.html";
+  console.log("[AUTH] Cargando dashboard:", file);
+  win.loadFile(path.join(__dirname, "renderer", file));
+
+  // Solo el asesor necesita el tracking de tiempo
+  if (rol === "asesor") {
+    startIdleCheck();
+    startAppTracking();
+    startActivityPolling();
+  }
 }
 
 // ── Idle check → lanza ventana overlay del sistema ───────────────────────────
@@ -633,6 +653,26 @@ ipcMain.handle("get-tracking", () => ({
   apps:        session?.appLog     || [],
   chromePages: session?.chromePages || [],
 }));
+
+// ── Auth IPC ──────────────────────────────────────────────────────────────────
+ipcMain.handle("auth-success", (_, usuario) => {
+  loggedUser = usuario;
+  save("logged_user.json", usuario);
+  loadDashboard(usuario.rol);
+  return { ok: true };
+});
+
+ipcMain.handle("auth-logout", () => {
+  loggedUser = null;
+  remove("logged_user.json");
+  // Detener tracking si estaba activo
+  clearInterval(idleTimer);
+  idleTimer = null;
+  win.loadFile(path.join(__dirname, "renderer", "login.html"));
+  return { ok: true };
+});
+
+ipcMain.handle("get-logged-user", () => loggedUser);
 
 // ── Ciclo de vida ─────────────────────────────────────────────────────────────
 app.whenReady().then(createWindow);

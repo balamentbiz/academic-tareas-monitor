@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
+  <title>Gerencia — Academic Tareas</title>
+  <style>
+    :root {
+      --bg: #0d1117; --card: #161b22; --border: rgba(255,255,255,.08);
+      --text: #e6edf3; --sub: rgba(230,237,243,.5); --cyan: #09a3ef;
+      --cyan-dim: rgba(9,163,239,.12); --green: #32d74b; --orange: #ff9f0a;
+      --red: #ff453a; --purple: #bf5af2; --indigo: #5e6ad2;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      --r: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); font-family: var(--font); color: var(--text); overflow-x: hidden; }
+
+    .titlebar {
+      -webkit-app-region: drag;
+      background: rgba(22,27,34,.9);
+      backdrop-filter: blur(10px);
+      height: 44px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px 0 80px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .titlebar-left { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; }
+    .titlebar-title { font-size: 13px; font-weight: 700; color: var(--text); -webkit-app-region: drag; flex:1; text-align:center; }
+    .titlebar-right { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; }
+    .role-badge { background: rgba(191,90,242,.15); border: 1px solid rgba(191,90,242,.3); color: var(--purple); border-radius: 6px; font-size: 10px; font-weight: 700; padding: 3px 8px; text-transform: uppercase; letter-spacing: .5px; }
+    .user-name { font-size: 12px; color: var(--sub); }
+    .btn-logout { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 11px; padding: 4px 10px; cursor: pointer; font-family: var(--font); transition: all .2s; }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* KPI Cards */
+    .kpi-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+    .kpi-label { font-size: 10px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .kpi-value { font-size: 22px; font-weight: 700; }
+    .kpi-value.cyan { color: var(--cyan); }
+    .kpi-value.green { color: var(--green); }
+    .kpi-value.orange { color: var(--orange); }
+    .kpi-value.red { color: var(--red); }
+
+    /* Sección */
+    .section-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+
+    /* Tabla asesores */
+    .asesores-list { display: flex; flex-direction: column; gap: 8px; }
+    .asesor-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .asesor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .asesor-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--indigo); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .asesor-info { flex: 1; }
+    .asesor-name { font-size: 13px; font-weight: 600; }
+    .asesor-status { font-size: 11px; }
+    .asesor-status.active { color: var(--green); }
+    .asesor-status.idle { color: var(--orange); }
+    .asesor-status.offline { color: var(--sub); }
+    .asesor-status.completed { color: var(--cyan); }
+    .cuota-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .cuota-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; }
+    .cuota-bar-fill { height: 100%; border-radius: 3px; background: var(--cyan); transition: width .5s; }
+    .cuota-bar-fill.done { background: var(--green); }
+    .cuota-pct { font-size: 11px; font-weight: 700; color: var(--sub); min-width: 36px; text-align: right; }
+    .asesor-stats { display: flex; gap: 12px; margin-top: 8px; }
+    .asesor-stat { font-size: 10px; color: var(--sub); }
+    .asesor-stat span { color: var(--text); font-weight: 600; }
+
+    /* Cola */
+    .cola-list { display: flex; flex-direction: column; gap: 6px; }
+    .cola-item { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .cola-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+    .cola-badge.A { background: rgba(255,69,58,.15); color: var(--red); }
+    .cola-badge.B { background: rgba(9,163,239,.15); color: var(--cyan); }
+    .cola-badge.S { background: rgba(50,215,75,.15); color: var(--green); }
+    .cola-info { flex: 1; }
+    .cola-cliente { font-size: 12px; font-weight: 600; }
+    .cola-desc { font-size: 11px; color: var(--sub); }
+    .cola-empty { text-align: center; color: var(--sub); font-size: 12px; padding: 16px; }
+
+    /* Loading */
+    .loading-state { text-align: center; color: var(--sub); font-size: 13px; padding: 40px 0; }
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(9,163,239,.3); border-top-color: var(--cyan); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Refresh btn */
+    .btn-refresh { background: rgba(9,163,239,.1); border: 1px solid rgba(9,163,239,.25); border-radius: 8px; color: var(--cyan); font-size: 12px; font-weight: 600; padding: 8px 16px; cursor: pointer; font-family: var(--font); transition: all .2s; }
+    .btn-refresh:hover { background: rgba(9,163,239,.2); }
+  </style>
+</head>
+<body>
+
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <span class="role-badge">Gerencia</span>
+    </div>
+    <span class="titlebar-title">🎓 Academic Tareas</span>
+    <div class="titlebar-right">
+      <span class="user-name" id="user-name">—</span>
+      <button class="btn-logout" id="btn-logout">Salir</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Asesores activos</div>
+        <div class="kpi-value cyan" id="kpi-activos">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Tareas en cola</div>
+        <div class="kpi-value orange" id="kpi-cola">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Completadas hoy</div>
+        <div class="kpi-value green" id="kpi-completadas">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Tasa de rechazo</div>
+        <div class="kpi-value red" id="kpi-rechazo">—</div>
+      </div>
+    </div>
+
+    <!-- Asesores -->
+    <div>
+      <div class="section-title">Asesores</div>
+      <div id="asesores-list" class="asesores-list">
+        <div class="loading-state"><div class="spinner"></div><br>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- Cola de espera -->
+    <div>
+      <div class="section-title">Cola de espera</div>
+      <div id="cola-list" class="cola-list">
+        <div class="loading-state"><div class="spinner"></div><br>Cargando...</div>
+      </div>
+    </div>
+
+    <button class="btn-refresh" id="btn-refresh">↻ Actualizar datos</button>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
+      authDomain: "academic-tareas-monitor.firebaseapp.com",
+      projectId: "academic-tareas-monitor",
+      storageBucket: "academic-tareas-monitor.firebasestorage.app",
+      messagingSenderId: "131741560355",
+      appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const db    = getFirestore(fbApp);
+
+    // Mostrar nombre usuario
+    if (window.AT) {
+      window.AT.getLoggedUser().then(u => {
+        if (u) document.getElementById("user-name").textContent = u.nombre;
+      });
+    }
+
+    // Logout
+    document.getElementById("btn-logout").addEventListener("click", () => {
+      window.AT.authLogout();
+    });
+
+    function avatarLetters(nombre) {
+      return (nombre || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2);
+    }
+
+    function statusLabel(estado) {
+      const map = { activo: "● Activo", inactivo: "● Inactivo", completó: "✓ Completó cuota", offline: "○ Desconectado" };
+      return map[estado] || "○ Desconectado";
+    }
+    function statusClass(estado) {
+      const map = { activo: "active", inactivo: "idle", completó: "completed" };
+      return map[estado] || "offline";
+    }
+
+    async function cargarDatos() {
+      try {
+        // ── Asesores ──
+        const snap = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+        const hoy = new Date().toISOString().split("T")[0];
+        const asesorEl = document.getElementById("asesores-list");
+        asesorEl.innerHTML = "";
+        let activos = 0;
+
+        for (const docu of snap.docs) {
+          const u = docu.data();
+          // Leer cuota del día
+          const cuotaSnap = await getDocs(query(collection(db, "cuota_diaria"),
+            where("asesor_id", "==", docu.id), where("fecha", "==", hoy)));
+          const cuota = cuotaSnap.empty ? { cuota_actual: 0, tareas_completadas: 0 } : cuotaSnap.docs[0].data();
+          const pct = Math.min(100, Math.round((cuota.cuota_actual || 0) * 100));
+          const estado = u.estado_hoy || "offline";
+          if (estado === "activo") activos++;
+
+          asesorEl.innerHTML += `
+            <div class="asesor-card">
+              <div class="asesor-header">
+                <div class="asesor-avatar">${avatarLetters(u.nombre)}</div>
+                <div class="asesor-info">
+                  <div class="asesor-name">${u.nombre}</div>
+                  <div class="asesor-status ${statusClass(estado)}">${statusLabel(estado)}</div>
+                </div>
+              </div>
+              <div class="cuota-bar-wrap">
+                <div class="cuota-bar-bg">
+                  <div class="cuota-bar-fill ${pct >= 100 ? 'done' : ''}" style="width:${pct}%"></div>
+                </div>
+                <div class="cuota-pct">${pct}%</div>
+              </div>
+              <div class="asesor-stats">
+                <div class="asesor-stat">Tareas: <span>${cuota.tareas_completadas || 0}</span></div>
+                <div class="asesor-stat">T. Muertos: <span>${u.tiempos_muertos_hoy || 0} min</span></div>
+              </div>
+            </div>`;
+        }
+        if (snap.empty) asesorEl.innerHTML = '<div class="cola-empty">Sin asesores registrados</div>';
+        document.getElementById("kpi-activos").textContent = activos;
+
+        // ── Cola ──
+        const colaSnap = await getDocs(query(collection(db, "tareas"), where("estado", "==", "en_cola"), orderBy("creado_en")));
+        const colaEl = document.getElementById("cola-list");
+        colaEl.innerHTML = "";
+        document.getElementById("kpi-cola").textContent = colaSnap.size;
+
+        if (colaSnap.empty) {
+          colaEl.innerHTML = '<div class="cola-empty">✓ Sin tareas en cola</div>';
+        } else {
+          colaSnap.forEach(docu => {
+            const t = docu.data();
+            colaEl.innerHTML += `
+              <div class="cola-item">
+                <span class="cola-badge ${t.dificultad}">${t.dificultad}</span>
+                <div class="cola-info">
+                  <div class="cola-cliente">${t.cliente}</div>
+                  <div class="cola-desc">${(t.descripcion||"").slice(0,50)}${t.descripcion?.length > 50 ? "…" : ""}</div>
+                </div>
+              </div>`;
+          });
+        }
+
+        // ── KPIs completadas/rechazo ──
+        const compSnap = await getDocs(query(collection(db, "tareas"), where("estado", "==", "completado"), where("fecha_completacion", ">=", hoy)));
+        document.getElementById("kpi-completadas").textContent = compSnap.size;
+
+        const rechSnap = await getDocs(query(collection(db, "rechazos"), where("fecha_dia", "==", hoy)));
+        const total = compSnap.size + rechSnap.size;
+        document.getElementById("kpi-rechazo").textContent = total > 0 ? Math.round((rechSnap.size / total) * 100) + "%" : "0%";
+
+      } catch (e) {
+        console.error("Error cargando datos:", e);
+      }
+    }
+
+    document.getElementById("btn-refresh").addEventListener("click", cargarDatos);
+    cargarDatos();
+  </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("AT", {
+  // ── Sesión (asesor) ───────────────────────────────────────────────────────
   getStatus:        ()     => ipcRenderer.invoke("get-status"),
   startDay:         (d)    => ipcRenderer.invoke("start-day", d),
   pauseSession:     (d)    => ipcRenderer.invoke("pause-session", d),
@@ -26,4 +27,10 @@ contextBridge.exposeInMainWorld("AT", {
   quitApp:          ()     => ipcRenderer.send("quit-app"),
   uninstallApp:     ()     => ipcRenderer.invoke("uninstall-app"),
   sendInputEvents:  (d)    => ipcRenderer.send("input-events", d),
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  // El renderer (login.html) llama esto tras hacer signIn en Firebase
+  authSuccess:      (user) => ipcRenderer.invoke("auth-success", user),
+  authLogout:       ()     => ipcRenderer.invoke("auth-logout"),
+  getLoggedUser:    ()     => ipcRenderer.invoke("get-logged-user"),
 });

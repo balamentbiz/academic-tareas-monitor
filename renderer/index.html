@@ -3,8 +3,46 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
   <title>Academic Tareas Monitor</title>
   <link rel="stylesheet" href="app.css"/>
+  <style>
+    /* Tarea cards */
+    .tarea-card { background: rgba(255,255,255,.04); border: 1px solid var(--border,rgba(255,255,255,.08)); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; }
+    .tarea-card.tipo-A { border-left: 3px solid #ff453a; }
+    .tarea-card.tipo-B { border-left: 3px solid #09a3ef; }
+    .tarea-card.tipo-S { border-left: 3px solid #32d74b; }
+    .tarea-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .tarea-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+    .tarea-badge.A { background: rgba(255,69,58,.15); color: #ff453a; }
+    .tarea-badge.B { background: rgba(9,163,239,.15); color: #09a3ef; }
+    .tarea-badge.S { background: rgba(50,215,75,.15); color: #32d74b; }
+    .tarea-cliente { font-size: 13px; font-weight: 600; flex: 1; color: var(--text,#e6edf3); }
+    .tarea-desc { font-size: 11px; color: var(--sub,rgba(230,237,243,.5)); margin-bottom: 7px; }
+    .tarea-actions { display: flex; gap: 6px; }
+    .btn-aceptar { flex: 1; background: rgba(50,215,75,.15); border: 1px solid rgba(50,215,75,.3); border-radius: 7px; color: #32d74b; font-size: 11px; font-weight: 700; padding: 6px; cursor: pointer; font-family: inherit; }
+    .btn-rechazar { flex: 1; background: rgba(255,69,58,.1); border: 1px solid rgba(255,69,58,.25); border-radius: 7px; color: #ff453a; font-size: 11px; font-weight: 700; padding: 6px; cursor: pointer; font-family: inherit; }
+    .sin-tareas-notif { text-align: center; color: var(--sub,rgba(230,237,243,.4)); font-size: 11px; padding: 8px; }
+    #tareas-notif-section { border-color: rgba(255,159,10,.25); }
+    #badge-tareas-count { background: #ff9f0a; color: #000; }
+    /* Actividades aceptadas */
+    #mis-actividades-section { border-color: rgba(50,215,75,.25); }
+    .act-aceptada-card { background: rgba(50,215,75,.06); border: 1px solid rgba(50,215,75,.2); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; }
+    .act-aceptada-card.tipo-A { border-left: 3px solid #ff453a; }
+    .act-aceptada-card.tipo-B { border-left: 3px solid #09a3ef; }
+    .act-aceptada-card.tipo-S { border-left: 3px solid #32d74b; }
+    .btn-iniciar-act { width: 100%; background: rgba(50,215,75,.2); border: 1px solid rgba(50,215,75,.4); border-radius: 7px; color: #32d74b; font-size: 12px; font-weight: 700; padding: 8px; cursor: pointer; font-family: inherit; margin-top: 6px; }
+    .btn-iniciar-act:hover { background: rgba(50,215,75,.3); }
+    /* Modal rechazo */
+    .rechazo-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .rechazo-modal { background: #161b22; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 24px; width: 280px; }
+    .rechazo-modal h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #e6edf3; }
+    .rechazo-modal textarea { width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: #e6edf3; font-family: inherit; font-size: 12px; padding: 8px 10px; resize: none; height: 70px; outline: none; }
+    .rechazo-modal textarea:focus { border-color: #09a3ef; }
+    .rechazo-modal-btns { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-modal-cancel { flex: 1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: rgba(230,237,243,.6); font-size: 12px; font-weight: 600; padding: 8px; cursor: pointer; font-family: inherit; }
+    .btn-modal-confirm { flex: 1; background: rgba(255,69,58,.2); border: 1px solid rgba(255,69,58,.4); border-radius: 8px; color: #ff453a; font-size: 12px; font-weight: 700; padding: 8px; cursor: pointer; font-family: inherit; }
+  </style>
 </head>
 <body>
 
@@ -12,6 +50,7 @@
     <div class="titlebar-drag"></div>
     <span class="titlebar-title">Academic Tareas <span id="app-version" style="font-family:var(--font);font-size:10px;font-weight:600;color:rgba(135,177,234,.45);letter-spacing:1px;vertical-align:middle"></span></span>
     <button class="drive-btn" id="btn-drive">+ Extensiones</button>
+    <button id="btn-logout-asesor" style="-webkit-app-region:no-drag;background:none;border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(230,237,243,.4);font-size:10px;padding:3px 8px;cursor:pointer;margin-left:4px;font-family:inherit" title="Cerrar sesión">⎋</button>
   </div>
 
   <div id="app">
@@ -72,6 +111,26 @@
           <span class="counter-val" id="cnt-activities">0</span>
           <span class="counter-lbl">actividades</span>
         </div>
+      </div>
+
+      <!-- NOTIFICACIÓN TAREAS ASIGNADAS -->
+      <div class="section-card" id="tareas-notif-section">
+        <div class="sc-header">
+          <span class="sc-icon" style="background:rgba(255,159,10,.8)">📋</span>
+          <span class="sc-title">Mis Tareas</span>
+          <span class="sc-badge" id="badge-tareas-count" style="background:#ff9f0a;color:#000">0</span>
+        </div>
+        <div id="mis-tareas-list"><div class="sin-tareas-notif">Cargando...</div></div>
+      </div>
+
+      <!-- MIS ACTIVIDADES (tareas aceptadas) -->
+      <div class="section-card hidden" id="mis-actividades-section" style="border-color:rgba(50,215,75,.25)">
+        <div class="sc-header">
+          <span class="sc-icon" style="background:rgba(50,215,75,.7)">✅</span>
+          <span class="sc-title">Mis Actividades</span>
+          <span class="sc-badge" id="badge-actividades-count" style="background:#32d74b;color:#000">0</span>
+        </div>
+        <div id="mis-actividades-list"></div>
       </div>
 
       <div class="section-card" id="activity-idle-state">
@@ -195,6 +254,253 @@
     </div>
 
   </div>
+
+  <!-- Modal para rechazar tarea -->
+  <div class="rechazo-modal-overlay hidden" id="rechazo-modal-overlay">
+    <div class="rechazo-modal">
+      <h3>¿Por qué rechazas esta tarea?</h3>
+      <textarea id="rechazo-razon" placeholder="Escribe el motivo..."></textarea>
+      <div class="rechazo-modal-btns">
+        <button class="btn-modal-cancel" id="btn-modal-cancel">Cancelar</button>
+        <button class="btn-modal-confirm" id="btn-modal-confirm">Rechazar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
+      authDomain: "academic-tareas-monitor.firebaseapp.com",
+      projectId: "academic-tareas-monitor",
+      storageBucket: "academic-tareas-monitor.firebasestorage.app",
+      messagingSenderId: "131741560355",
+      appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const db    = getFirestore(fbApp);
+
+    // ── Modal de rechazo ──────────────────────────────────────────────────────
+    let _rechazarCallback = null;
+    const modalOverlay = document.getElementById("rechazo-modal-overlay");
+    const modalRazon   = document.getElementById("rechazo-razon");
+
+    document.getElementById("btn-modal-cancel").addEventListener("click", () => {
+      modalOverlay.classList.add("hidden");
+      _rechazarCallback = null;
+    });
+    document.getElementById("btn-modal-confirm").addEventListener("click", async () => {
+      const razon = modalRazon.value.trim() || "Sin motivo";
+      modalOverlay.classList.add("hidden");
+      if (_rechazarCallback) await _rechazarCallback(razon);
+      _rechazarCallback = null;
+    });
+
+    function mostrarModalRechazo(callback) {
+      modalRazon.value = "";
+      _rechazarCallback = callback;
+      modalOverlay.classList.remove("hidden");
+      setTimeout(() => modalRazon.focus(), 50);
+    }
+
+    // ── "Mis Actividades" (tareas aceptadas listas para iniciar) ──────────────
+    const actSection  = document.getElementById("mis-actividades-section");
+    const actList     = document.getElementById("mis-actividades-list");
+    const actBadge    = document.getElementById("badge-actividades-count");
+    let actividadesCount = 0;
+
+    function agregarActividadAceptada(tarea) {
+      actividadesCount++;
+      actBadge.textContent = actividadesCount;
+      actSection.classList.remove("hidden");
+
+      const card = document.createElement("div");
+      card.className = "act-aceptada-card tipo-" + (tarea.dificultad || "B");
+      card.dataset.id = tarea.id;
+      card.innerHTML = `
+        <div class="tarea-header">
+          <span class="tarea-badge ${tarea.dificultad||'B'}">Tipo ${tarea.dificultad||'?'}</span>
+          <span class="tarea-cliente">${tarea.cliente||'Sin cliente'}</span>
+        </div>
+        <div class="tarea-desc">${(tarea.descripcion||"").slice(0,60)}${(tarea.descripcion||"").length>60?"…":""}</div>
+        <button class="btn-iniciar-act" data-nombre="${(tarea.cliente||'tarea').replace(/"/g,'')}" data-id="${tarea.id}">▶ Iniciar actividad</button>`;
+      actList.appendChild(card);
+
+      // Iniciar actividad → cambia a "Completar tarea"
+      card.querySelector(".btn-iniciar-act").addEventListener("click", async function() {
+        const nombre  = this.dataset.nombre;
+        const tareaId = this.dataset.id;
+
+        // Iniciar en el tracker existente
+        const actInput = document.getElementById("activity-name");
+        const actBtn   = document.getElementById("btn-activity-start");
+        if (actInput && actBtn) {
+          actInput.value = nombre;
+          actBtn.click();
+        }
+
+        // Cambiar botón a "Completar"
+        this.textContent = "■ Completar tarea";
+        this.style.background = "rgba(9,163,239,.2)";
+        this.style.borderColor = "rgba(9,163,239,.4)";
+        this.style.color = "#09a3ef";
+        this.onclick = async () => {
+          const cuotaValor = { A: 1.0, B: 0.166, S: 0.33 };
+          try {
+            // 1. Marcar tarea como completada
+            await updateDoc(doc(db, "tareas", tareaId), { estado: "completado" });
+
+            // 2. Restar cuota del asesor para que vuelva a recibir tareas
+            const usuario2 = await window.AT.getLoggedUser();
+            if (usuario2) {
+              const hoy = new Date().toISOString().split("T")[0];
+              const cuotaDocRef = doc(db, "cuota_diaria", usuario2.uid + "_" + hoy);
+              const cuotaSnap = await getDoc(cuotaDocRef);
+              const cuotaActual = cuotaSnap.exists() ? (cuotaSnap.data().cuota_actual || 0) : 0;
+              const resta = cuotaValor[tarea.dificultad] || 0.166;
+              const nuevaCuota = Math.max(0, cuotaActual - resta);
+              await setDoc(cuotaDocRef, { asesor_id: usuario2.uid, fecha: hoy, cuota_actual: nuevaCuota }, { merge: true });
+            }
+          } catch(e) { console.error("Error al completar tarea:", e); }
+
+          // 3. Terminar actividad en el tracker
+          const endBtn = document.getElementById("btn-activity-end");
+          if (endBtn && !document.getElementById("activity-running-state").classList.contains("hidden")) {
+            endBtn.click();
+          }
+          card.remove();
+          actividadesCount = Math.max(0, actividadesCount - 1);
+          actBadge.textContent = actividadesCount;
+          if (!actList.querySelector(".act-aceptada-card")) actSection.classList.add("hidden");
+        };
+      });
+    }
+
+    // ── Cargar tareas asignadas ───────────────────────────────────────────────
+    let _cargando = false; // evita llamadas paralelas
+    async function cargarMisTareas() {
+      if (_cargando) return;
+      _cargando = true;
+      const listEl  = document.getElementById("mis-tareas-list");
+      const badgeEl = document.getElementById("badge-tareas-count");
+      try {
+        const usuario = await window.AT.getLoggedUser();
+        if (!usuario) return;
+
+        // Rellenar nombre y sincronizar con localStorage (fix race condition)
+        const nameInput = document.getElementById("collaborator-name");
+        if (nameInput && usuario.nombre) {
+          nameInput.value = usuario.nombre;
+          localStorage.setItem("collaboratorName", usuario.nombre);
+        }
+
+        const snap = await getDocs(query(
+          collection(db, "tareas"),
+          where("asesor_asignado_id", "==", usuario.uid)
+        ));
+
+        const tareas = [];
+        snap.forEach(d => {
+          const t = d.data();
+          if (["asignado", "en_proceso"].includes(t.estado)) tareas.push({ id: d.id, ...t });
+        });
+
+        if (badgeEl) badgeEl.textContent = tareas.length;
+
+        if (tareas.length === 0) {
+          listEl.innerHTML = '<div class="sin-tareas-notif">✓ Sin tareas pendientes</div>';
+          return;
+        }
+
+        listEl.innerHTML = "";
+        tareas.forEach(t => {
+          const card = document.createElement("div");
+          card.className = "tarea-card tipo-" + (t.dificultad || "B");
+          card.innerHTML = `
+            <div class="tarea-header">
+              <span class="tarea-badge ${t.dificultad||'B'}">Tipo ${t.dificultad||'?'}</span>
+              <span class="tarea-cliente">${t.cliente||'Sin cliente'}</span>
+            </div>
+            <div class="tarea-desc">${(t.descripcion||"").slice(0,80)}${(t.descripcion||"").length>80?"…":""}</div>
+            <div class="tarea-actions">
+              <button class="btn-aceptar" data-id="${t.id}">✓ Aceptar</button>
+              <button class="btn-rechazar" data-id="${t.id}">✕ Rechazar</button>
+            </div>`;
+          listEl.appendChild(card);
+        });
+
+        // Aceptar → mover a "Mis Actividades"
+        listEl.querySelectorAll(".btn-aceptar").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            // Bloquear inmediatamente para evitar doble click
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.textContent = "...";
+
+            const card = btn.closest(".tarea-card");
+            const tId  = btn.dataset.id;
+            const tarea = tareas.find(x => x.id === tId);
+            // Deshabilitar también el botón rechazar del mismo card
+            const btnRechazar = card.querySelector(".btn-rechazar");
+            if (btnRechazar) btnRechazar.disabled = true;
+
+            await updateDoc(doc(db, "tareas", tId), { estado: "en_proceso" });
+            card.remove();
+            const restantes = listEl.querySelectorAll(".tarea-card").length;
+            if (badgeEl) badgeEl.textContent = restantes;
+            if (!restantes) listEl.innerHTML = '<div class="sin-tareas-notif">✓ Sin tareas pendientes</div>';
+            if (tarea) agregarActividadAceptada(tarea);
+          });
+        });
+
+        // Rechazar → modal propio (sin prompt)
+        listEl.querySelectorAll(".btn-rechazar").forEach(btn => {
+          btn.addEventListener("click", () => {
+            if (btn.disabled) return;
+            mostrarModalRechazo(async (razon) => {
+              btn.disabled = true;
+              const card = listEl.querySelector(`[data-id="${btn.dataset.id}"]`)?.closest(".tarea-card")
+                         || btn.closest(".tarea-card");
+              const tareaRechazada = tareas.find(x => x.id === btn.dataset.id);
+              await updateDoc(doc(db, "tareas", btn.dataset.id), {
+                estado: "en_cola",
+                asesor_asignado_id: null,
+                asesor_nombre: null,
+                razon_rechazo: razon
+              });
+
+              // Restar cuota al rechazar (liberar capacidad del asesor)
+              const cuotaValor = { A: 1.0, B: 0.166, S: 0.33 };
+              const usuario3 = await window.AT.getLoggedUser();
+              if (usuario3 && tareaRechazada) {
+                const hoy = new Date().toISOString().split("T")[0];
+                const cuotaDocRef = doc(db, "cuota_diaria", usuario3.uid + "_" + hoy);
+                const cuotaSnap = await getDoc(cuotaDocRef);
+                const cuotaActual = cuotaSnap.exists() ? (cuotaSnap.data().cuota_actual || 0) : 0;
+                const resta = cuotaValor[tareaRechazada.dificultad] || 0.166;
+                await setDoc(cuotaDocRef, { asesor_id: usuario3.uid, fecha: hoy, cuota_actual: Math.max(0, cuotaActual - resta) }, { merge: true });
+              }
+              card.remove();
+              const restantes = listEl.querySelectorAll(".tarea-card").length;
+              if (badgeEl) badgeEl.textContent = restantes;
+              if (!restantes) listEl.innerHTML = '<div class="sin-tareas-notif">✓ Sin tareas pendientes</div>';
+            });
+          });
+        });
+
+      } catch(e) {
+        const listEl2 = document.getElementById("mis-tareas-list");
+        if (listEl2) listEl2.innerHTML = '<div class="sin-tareas-notif">Error al cargar tareas</div>';
+      } finally {
+        _cargando = false;
+      }
+    }
+
+    cargarMisTareas();
+  </script>
 </body>
 </html>

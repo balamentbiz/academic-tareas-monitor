@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
+  <title>ATC — Academic Tareas</title>
+  <style>
+    :root {
+      --bg: #0d1117; --card: #161b22; --border: rgba(255,255,255,.08);
+      --text: #e6edf3; --sub: rgba(230,237,243,.5); --cyan: #09a3ef;
+      --cyan-dim: rgba(9,163,239,.12); --green: #32d74b; --orange: #ff9f0a;
+      --red: #ff453a; --indigo: #5e6ad2;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      --r: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); font-family: var(--font); color: var(--text); }
+
+    .titlebar {
+      -webkit-app-region: drag;
+      background: rgba(22,27,34,.9);
+      backdrop-filter: blur(10px);
+      height: 44px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px 0 80px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .titlebar-left { -webkit-app-region: no-drag; }
+    .titlebar-title { font-size: 13px; font-weight: 700; flex: 1; text-align: center; }
+    .titlebar-right { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; }
+    .role-badge { background: rgba(9,163,239,.15); border: 1px solid rgba(9,163,239,.3); color: var(--cyan); border-radius: 6px; font-size: 10px; font-weight: 700; padding: 3px 8px; text-transform: uppercase; letter-spacing: .5px; }
+    .user-name { font-size: 12px; color: var(--sub); }
+    .btn-logout { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 11px; padding: 4px 10px; cursor: pointer; font-family: var(--font); transition: all .2s; }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 16px; }
+    .tab { padding: 10px 16px; font-size: 12px; font-weight: 600; color: var(--sub); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; }
+    .tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .tab-panel { display: none; flex-direction: column; gap: 12px; }
+    .tab-panel.active { display: flex; }
+
+    /* Formulario */
+    .form-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .field label { display: block; font-size: 11px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+    .field input, .field textarea, .field select {
+      width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px;
+      padding: 9px 12px; outline: none; transition: border-color .2s; resize: vertical;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--cyan); }
+    .field select option { background: #1c2128; }
+    .field textarea { min-height: 70px; }
+    .dif-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .dif-btn { border: 1.5px solid var(--border); border-radius: 8px; background: transparent; color: var(--sub); font-family: var(--font); font-size: 12px; font-weight: 700; padding: 10px 4px; cursor: pointer; transition: all .2s; text-align: center; }
+    .dif-btn.App.selected { border-color: #bf5af2; background: rgba(191,90,242,.1); color: #bf5af2; }
+    .dif-btn.Ap.selected  { border-color: var(--red); background: rgba(255,69,58,.1); color: var(--red); }
+    .dif-btn.A.selected   { border-color: var(--orange); background: rgba(255,159,10,.1); color: var(--orange); }
+    .dif-btn.B.selected   { border-color: var(--cyan); background: rgba(9,163,239,.1); color: var(--cyan); }
+    .dif-btn:hover { border-color: var(--text); color: var(--text); }
+
+    .btn-submit { width: 100%; background: var(--cyan); border: none; border-radius: 10px; color: #fff; font-family: var(--font); font-size: 14px; font-weight: 700; padding: 12px; cursor: pointer; transition: opacity .2s; }
+    .btn-submit:hover { opacity: .85; }
+    .btn-submit:disabled { opacity: .4; cursor: not-allowed; }
+
+    .success-msg { background: rgba(50,215,75,.1); border: 1px solid rgba(50,215,75,.25); border-radius: 8px; color: var(--green); font-size: 12px; padding: 10px 12px; display: none; }
+    .success-msg.show { display: block; }
+    .error-msg { background: rgba(255,69,58,.1); border: 1px solid rgba(255,69,58,.25); border-radius: 8px; color: var(--red); font-size: 12px; padding: 10px 12px; display: none; }
+    .error-msg.show { display: block; }
+
+    /* Lista pedidos */
+    .pedidos-list { display: flex; flex-direction: column; gap: 8px; }
+    .pedido-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .pedido-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .pedido-id { font-size: 10px; color: var(--sub); font-family: monospace; }
+    .pedido-cliente { font-size: 13px; font-weight: 600; flex: 1; }
+    .pedido-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .pedido-badge.pendiente { background: rgba(255,159,10,.15); color: var(--orange); }
+    .pedido-badge.asignado { background: rgba(9,163,239,.15); color: var(--cyan); }
+    .pedido-badge.en_proceso { background: rgba(94,106,210,.15); color: #7c8cf8; }
+    .pedido-badge.completado { background: rgba(50,215,75,.15); color: var(--green); }
+    .pedido-badge.en_cola { background: rgba(255,159,10,.1); color: var(--orange); }
+    .pedido-desc { font-size: 12px; color: var(--sub); }
+    .pedido-meta { display: flex; gap: 12px; margin-top: 6px; }
+    .pedido-meta span { font-size: 10px; color: var(--sub); }
+    .pedido-meta b { color: var(--text); }
+    .loading-state { text-align: center; color: var(--sub); font-size: 13px; padding: 30px 0; }
+    .pedido-actions { display: flex; gap: 6px; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+    .btn-p-action { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 11px; font-weight: 600; padding: 5px 8px; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .btn-p-action:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
+    .btn-p-action.danger:hover { border-color: rgba(255,69,58,.5); color: #ff453a; background: rgba(255,69,58,.08); }
+    .btn-p-action.primary:hover { border-color: rgba(9,163,239,.5); color: var(--cyan); background: rgba(9,163,239,.08); }
+    .btn-p-action:disabled { opacity: .35; cursor: not-allowed; }
+    /* Modales ATC */
+    .atc-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .atc-modal { background: #161b22; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 24px; width: 320px; max-height: 80vh; overflow-y: auto; }
+    .atc-modal h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+    .atc-modal label { display: block; font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; margin-top: 10px; }
+    .atc-modal label:first-of-type { margin-top: 0; }
+    .atc-modal input, .atc-modal select, .atc-modal textarea { width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 12px; padding: 8px 10px; outline: none; }
+    .atc-modal input:focus, .atc-modal select:focus, .atc-modal textarea:focus { border-color: var(--cyan); }
+    .atc-modal select option { background: #161b22; }
+    .atc-modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-modal-sec { flex: 1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: var(--sub); font-size: 12px; font-weight: 600; padding: 9px; cursor: pointer; font-family: inherit; }
+    .btn-modal-pri { flex: 2; background: var(--cyan); border: none; border-radius: 8px; color: #fff; font-size: 12px; font-weight: 700; padding: 9px; cursor: pointer; font-family: inherit; }
+    .btn-modal-del { flex: 2; background: rgba(255,69,58,.2); border: 1px solid rgba(255,69,58,.4); border-radius: 8px; color: #ff453a; font-size: 12px; font-weight: 700; padding: 9px; cursor: pointer; font-family: inherit; }
+    .hidden { display: none !important; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(9,163,239,.3); border-top-color: var(--cyan); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="titlebar">
+    <div class="titlebar-left"><span class="role-badge">ATC</span></div>
+    <span class="titlebar-title">🎓 Academic Tareas</span>
+    <div class="titlebar-right">
+      <span class="user-name" id="user-name">—</span>
+      <button id="btn-migrar" style="-webkit-app-region:no-drag;background:rgba(255,159,10,.15);border:1px solid rgba(255,159,10,.4);border-radius:6px;color:#ff9f0a;font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer;font-family:inherit" title="Migrar tareas de Aldahir al nuevo UID">🔧 Migrar</button>
+      <button class="btn-logout" id="btn-logout">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="nuevo">+ Nuevo pedido</div>
+    <div class="tab" data-tab="pedidos">Mis pedidos</div>
+  </div>
+
+  <div class="content">
+
+    <!-- NUEVO PEDIDO -->
+    <div class="tab-panel active" id="panel-nuevo">
+      <div class="form-card">
+
+        <!-- Fila: Cliente + Plataforma + Escuela -->
+        <div class="field">
+          <label># Cliente</label>
+          <input id="f-cliente" type="text" placeholder="Nombre o número de cliente"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field">
+            <label>Plataforma</label>
+            <select id="f-plataforma">
+              <option value="">— Seleccionar —</option>
+              <option>BLACKBOARD</option>
+              <option>COURSERA</option>
+              <option>CAMBRIDGE</option>
+              <option>EXÁMEN</option>
+              <option>DOCTORADO</option>
+              <option>TAREA</option>
+              <option>PUBLICA</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Escuela</label>
+            <select id="f-escuela">
+              <option value="">— Seleccionar —</option>
+              <option>UNITEC</option>
+              <option>UVM</option>
+              <option>UTC</option>
+              <option>UTEL</option>
+              <option>TEC</option>
+              <option>IPN</option>
+              <option>RC</option>
+              <option>UNADM</option>
+              <option>CUT</option>
+              <option>CNCI</option>
+              <option>UNIDEP</option>
+              <option>UNRC</option>
+              <option>UNAM</option>
+              <option>CUCEA</option>
+              <option>MARISTAS</option>
+              <option>SAE</option>
+              <option>LA SALLE</option>
+              <option>ULA</option>
+              <option>TEC MILENIO</option>
+              <option>CULV</option>
+              <option>ITESO</option>
+              <option>N/A</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Fila: ID + Contraseña -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field">
+            <label>ID / Usuario</label>
+            <input id="f-id-alumno" type="text" placeholder="ID de acceso"/>
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <input id="f-contrasena" type="text" placeholder="Contraseña de la plataforma"/>
+          </div>
+        </div>
+
+        <!-- Materia -->
+        <div class="field">
+          <label>Materia</label>
+          <input id="f-materia" type="text" placeholder="Nombre de la materia o curso"/>
+        </div>
+
+        <!-- Entregable -->
+        <div class="field">
+          <label>Entregable</label>
+          <input id="f-entregable" type="text" placeholder="Ej. ENTREGABLE 2, EXAMEN FINAL..."/>
+        </div>
+
+        <!-- Fila: Día Agenda + Día Entrega -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field">
+            <label>Día Agenda</label>
+            <input id="f-dia-agenda" type="date"/>
+          </div>
+          <div class="field">
+            <label>Día Entrega</label>
+            <input id="f-dia-entrega" type="date"/>
+          </div>
+        </div>
+
+        <!-- Subir/No Subir -->
+        <div class="field">
+          <label>Subir / No Subir</label>
+          <select id="f-subir">
+            <option value="">— Seleccionar —</option>
+            <option>SUBIR</option>
+            <option>NO SUBIR</option>
+          </select>
+        </div>
+
+        <!-- Anotaciones -->
+        <div class="field">
+          <label>Anotaciones</label>
+          <textarea id="f-anotaciones" placeholder="Notas adicionales, instrucciones especiales..."></textarea>
+        </div>
+
+        <!-- Fila: Precio + Estatus pago + Cantidad pagada -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="field">
+            <label>Precio</label>
+            <input id="f-precio" type="number" placeholder="0" min="0" step="1"/>
+          </div>
+          <div class="field">
+            <label>Estatus pago</label>
+            <select id="f-estatus-pago">
+              <option value="">— Seleccionar —</option>
+              <option>PAGADO</option>
+              <option>PENDIENTE</option>
+              <option>PARCIAL</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Cantidad pagada</label>
+            <input id="f-cantidad-pagada" type="number" placeholder="0" min="0" step="1"/>
+          </div>
+        </div>
+
+        <!-- Dificultad (para asignación automática) -->
+        <div class="field">
+          <label>Dificultad (asignación asesor)</label>
+          <div class="dif-row" style="grid-template-columns:repeat(4,1fr)">
+            <button class="dif-btn App" data-dif="A++">A++<br><small>Muy difícil</small></button>
+            <button class="dif-btn Ap" data-dif="A+">A+<br><small>Difícil</small></button>
+            <button class="dif-btn A" data-dif="A">A<br><small>Media</small></button>
+            <button class="dif-btn B" data-dif="B">B<br><small>Fácil</small></button>
+          </div>
+        </div>
+
+        <button class="btn-submit" id="btn-crear">Crear pedido y asignar</button>
+        <div class="success-msg" id="success-msg"></div>
+        <div class="error-msg" id="error-msg"></div>
+      </div>
+    </div>
+
+    <!-- MIS PEDIDOS -->
+    <div class="tab-panel" id="panel-pedidos">
+      <div id="pedidos-list" class="pedidos-list">
+        <div class="loading-state"><span class="spinner"></span>Cargando pedidos...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Editar pedido -->
+  <div class="atc-modal-overlay hidden" id="modal-editar">
+    <div class="atc-modal" style="width:380px">
+      <h3>✏️ Editar pedido</h3>
+      <input type="hidden" id="edit-id"/>
+      <label># Cliente</label>
+      <input type="text" id="edit-cliente"/>
+      <label>Plataforma</label>
+      <select id="edit-plataforma">
+        <option value="">— Seleccionar —</option>
+        <option>BLACKBOARD</option><option>COURSERA</option><option>CAMBRIDGE</option>
+        <option>EXÁMEN</option><option>DOCTORADO</option><option>TAREA</option><option>PUBLICA</option>
+      </select>
+      <label>Escuela</label>
+      <select id="edit-escuela">
+        <option value="">— Seleccionar —</option>
+        <option>UNITEC</option><option>UVM</option><option>UTC</option><option>UTEL</option>
+        <option>TEC</option><option>IPN</option><option>RC</option><option>UNADM</option>
+        <option>CUT</option><option>CNCI</option><option>UNIDEP</option><option>UNRC</option>
+        <option>UNAM</option><option>CUCEA</option><option>MARISTAS</option><option>SAE</option>
+        <option>LA SALLE</option><option>ULA</option><option>TEC MILENIO</option>
+        <option>CULV</option><option>ITESO</option><option>N/A</option>
+      </select>
+      <label>ID / Usuario</label>
+      <input type="text" id="edit-id-alumno"/>
+      <label>Contraseña</label>
+      <input type="text" id="edit-contrasena"/>
+      <label>Materia</label>
+      <input type="text" id="edit-materia"/>
+      <label>Entregable</label>
+      <input type="text" id="edit-entregable"/>
+      <label>Día Agenda</label>
+      <input type="date" id="edit-dia-agenda"/>
+      <label>Día Entrega</label>
+      <input type="date" id="edit-dia-entrega"/>
+      <label>Subir / No Subir</label>
+      <select id="edit-subir">
+        <option value="">— Seleccionar —</option>
+        <option>SUBIR</option><option>NO SUBIR</option>
+      </select>
+      <label>Anotaciones</label>
+      <textarea id="edit-anotaciones" rows="2" style="resize:none"></textarea>
+      <label>Precio</label>
+      <input type="number" id="edit-precio" min="0" step="1"/>
+      <label>Estatus pago</label>
+      <select id="edit-estatus-pago">
+        <option value="">— Seleccionar —</option>
+        <option>PAGADO</option><option>PENDIENTE</option><option>PARCIAL</option>
+      </select>
+      <label>Cantidad pagada</label>
+      <input type="number" id="edit-cantidad-pagada" min="0" step="1"/>
+      <label>Dificultad</label>
+      <select id="edit-dif">
+        <option value="A++">A++ — Muy difícil</option>
+        <option value="A+">A+ — Difícil</option>
+        <option value="A">A — Media</option>
+        <option value="B">B — Fácil</option>
+      </select>
+      <div class="atc-modal-btns">
+        <button class="btn-modal-sec" id="btn-edit-cancel">Cancelar</button>
+        <button class="btn-modal-pri" id="btn-edit-save">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Reasignar asesor -->
+  <div class="atc-modal-overlay hidden" id="modal-reasignar">
+    <div class="atc-modal">
+      <h3>👤 Reasignar asesor</h3>
+      <input type="hidden" id="reasig-id"/>
+      <label>Asesor</label>
+      <select id="reasig-select"></select>
+      <div class="atc-modal-btns">
+        <button class="btn-modal-sec" id="btn-reasig-cancel">Cancelar</button>
+        <button class="btn-modal-pri" id="btn-reasig-save">Reasignar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Eliminar pedido -->
+  <div class="atc-modal-overlay hidden" id="modal-eliminar">
+    <div class="atc-modal">
+      <h3>🗑 Eliminar pedido</h3>
+      <input type="hidden" id="del-id"/>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:4px">¿Eliminar el pedido <b id="del-nombre" style="color:var(--text)"></b>? Esta acción no se puede deshacer.</p>
+      <div class="atc-modal-btns">
+        <button class="btn-modal-sec" id="btn-del-cancel">Cancelar</button>
+        <button class="btn-modal-del" id="btn-del-confirm">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs, orderBy, Timestamp, doc, updateDoc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
+      authDomain: "academic-tareas-monitor.firebaseapp.com",
+      projectId: "academic-tareas-monitor",
+      storageBucket: "academic-tareas-monitor.firebasestorage.app",
+      messagingSenderId: "131741560355",
+      appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const db    = getFirestore(fbApp);
+
+    let currentUser = null;
+    let difSeleccionada = null;
+
+    // Cargar usuario
+    if (window.AT) {
+      window.AT.getLoggedUser().then(u => {
+        currentUser = u;
+        if (u) document.getElementById("user-name").textContent = u.nombre;
+      });
+    }
+
+    // Logout
+    document.getElementById("btn-logout").addEventListener("click", () => window.AT.authLogout());
+
+    // Migración única: cambiar UID viejo de Aldahir → nuevo
+    document.getElementById("btn-migrar").addEventListener("click", async () => {
+      const UID_VIEJO = "UaE0PXt4NuT0GduusSjeOfMzS5z2";
+      const UID_NUEVO = "vusdvsAbYMTWHnRLBGToHKIf6Ts2";
+      const btn = document.getElementById("btn-migrar");
+      btn.disabled = true; btn.textContent = "Migrando...";
+      try {
+        const snap = await getDocs(query(
+          collection(db, "tareas"),
+          where("asesor_asignado_id", "==", UID_VIEJO)
+        ));
+        if (snap.empty) {
+          btn.textContent = "✓ Sin tareas que migrar";
+          return;
+        }
+        const updates = snap.docs.map(d => updateDoc(doc(db, "tareas", d.id), {
+          asesor_asignado_id: UID_NUEVO
+        }));
+        await Promise.all(updates);
+        btn.textContent = `✓ ${snap.size} tareas migradas`;
+        btn.style.color = "#32d74b";
+        btn.style.borderColor = "rgba(50,215,75,.4)";
+        btn.style.background = "rgba(50,215,75,.15)";
+      } catch(e) {
+        btn.textContent = "Error: " + e.message;
+        btn.disabled = false;
+      }
+    });
+
+    // Tabs
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+        if (tab.dataset.tab === "pedidos") cargarPedidos();
+      });
+    });
+
+    // Selección dificultad
+    document.querySelectorAll(".dif-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".dif-btn").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        difSeleccionada = btn.dataset.dif;
+      });
+    });
+
+    // Cuotas por defecto (se sobreescriben si hay doc en Firestore)
+    const CUOTA_DEFAULT = { "A++": 0.333, "A+": 0.25, "A": 0.167, "B": 0.125 };
+
+    async function getCuotaValores() {
+      try {
+        const snap = await getDoc(doc(db, "configuracion", "cuotas"));
+        if (snap.exists()) return { ...CUOTA_DEFAULT, ...snap.data() };
+      } catch {}
+      return CUOTA_DEFAULT;
+    }
+
+    // Algoritmo de asignación inteligente v2
+    async function asignarAsesor(tareaId, dificultad) {
+      const hoy = new Date().toISOString().split("T")[0];
+      const cuotaValor = await getCuotaValores();
+      const cuotaRequerida = cuotaValor[dificultad] || 0.167;
+      const asesores = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+
+      const candidatos = [];
+      for (const snap of asesores.docs) {
+        const u = snap.data();
+        if (u.estado_hoy === "offline") continue;
+        // Filtrar por tipos habilitados (si está configurado)
+        const tipos = u.tipos_habilitados;
+        if (tipos && Array.isArray(tipos) && !tipos.includes(dificultad)) continue;
+        const cuotaDocSnap = await getDoc(doc(db, "cuota_diaria", snap.id + "_" + hoy));
+        const cd = cuotaDocSnap.exists() ? cuotaDocSnap.data() : {};
+        const cuotaActual = cd.cuota_actual || 0;
+        const totalTareas = cd.total_tareas || 0;
+        candidatos.push({ id: snap.id, nombre: u.nombre, cuotaActual, totalTareas });
+      }
+
+      if (candidatos.length === 0) {
+        await updateDoc(doc(db, "tareas", tareaId), { estado: "en_cola" });
+        return null;
+      }
+
+      // Prioridad: ≤3 tareas van primero, luego menor cuota, aleatorio en empate
+      candidatos.sort((a, b) => {
+        const aPrior = a.totalTareas <= 3 ? 0 : 1;
+        const bPrior = b.totalTareas <= 3 ? 0 : 1;
+        if (aPrior !== bPrior) return aPrior - bPrior;
+        const diff = a.cuotaActual - b.cuotaActual;
+        return diff !== 0 ? diff : Math.random() - 0.5;
+      });
+      const elegido = candidatos[0];
+
+      await updateDoc(doc(db, "tareas", tareaId), {
+        estado: "asignado",
+        asesor_asignado_id: elegido.id,
+        asesor_nombre: elegido.nombre,
+        fecha_asignacion: hoy
+      });
+
+      const nuevaCuota = elegido.cuotaActual + cuotaRequerida;
+      await setDoc(doc(db, "cuota_diaria", elegido.id + "_" + hoy), {
+        asesor_id: elegido.id,
+        fecha: hoy,
+        cuota_actual: nuevaCuota,
+        total_tareas: elegido.totalTareas + 1
+      }, { merge: true });
+
+      return elegido.nombre;
+    }
+
+    // Crear pedido
+    document.getElementById("btn-crear").addEventListener("click", async () => {
+      const cliente         = document.getElementById("f-cliente").value.trim();
+      const plataforma      = document.getElementById("f-plataforma").value;
+      const escuela         = document.getElementById("f-escuela").value;
+      const idAlumno        = document.getElementById("f-id-alumno").value.trim();
+      const contrasena      = document.getElementById("f-contrasena").value.trim();
+      const materia         = document.getElementById("f-materia").value.trim();
+      const entregable      = document.getElementById("f-entregable").value.trim();
+      const diaAgenda       = document.getElementById("f-dia-agenda").value;
+      const diaEntrega      = document.getElementById("f-dia-entrega").value;
+      const subir           = document.getElementById("f-subir").value;
+      const anotaciones     = document.getElementById("f-anotaciones").value.trim();
+      const precio          = document.getElementById("f-precio").value;
+      const estatusPago     = document.getElementById("f-estatus-pago").value;
+      const cantidadPagada  = document.getElementById("f-cantidad-pagada").value;
+      const errEl           = document.getElementById("error-msg");
+      const sucEl           = document.getElementById("success-msg");
+
+      errEl.classList.remove("show");
+      sucEl.classList.remove("show");
+
+      if (!cliente) { errEl.textContent = "El campo # Cliente es obligatorio."; errEl.classList.add("show"); return; }
+      if (!difSeleccionada)  { errEl.textContent = "Selecciona la dificultad de la tarea."; errEl.classList.add("show"); return; }
+
+      const btn = document.getElementById("btn-crear");
+      btn.disabled = true; btn.textContent = "Creando...";
+
+      try {
+        const numeroPedido = "P" + Date.now().toString().slice(-6);
+        const hoyStr = new Date().toISOString().split("T")[0];
+        const ref = await addDoc(collection(db, "tareas"), {
+          numero_pedido: numeroPedido,
+          cliente,
+          plataforma: plataforma || null,
+          escuela: escuela || null,
+          id_alumno: idAlumno || null,
+          contrasena: contrasena || null,
+          materia: materia || null,
+          entregable: entregable || null,
+          dia_agenda: diaAgenda || hoyStr,
+          dia_entrega: diaEntrega || null,
+          subir: subir || null,
+          anotaciones: anotaciones || null,
+          precio: precio ? Number(precio) : null,
+          estatus_pago: estatusPago || null,
+          cantidad_pagada: cantidadPagada ? Number(cantidadPagada) : null,
+          // compatibilidad legacy
+          descripcion: materia || entregable || "",
+          dificultad: difSeleccionada,
+          estado: "pendiente",
+          atc_creador_id: currentUser?.uid || "",
+          atc_nombre: currentUser?.nombre || "",
+          fecha_entrega_estimada: diaEntrega || null,
+          creado_en: new Date().toISOString(),
+          fecha_dia: hoyStr,
+        });
+
+        // Asignar
+        const asignado = await asignarAsesor(ref.id, difSeleccionada);
+        sucEl.textContent = asignado
+          ? `✓ Pedido ${numeroPedido} creado y asignado a ${asignado}`
+          : `✓ Pedido ${numeroPedido} creado — en cola (sin asesor disponible)`;
+        sucEl.classList.add("show");
+
+        // Limpiar formulario
+        ["f-cliente","f-id-alumno","f-contrasena","f-materia","f-entregable","f-dia-agenda","f-dia-entrega","f-anotaciones","f-precio","f-cantidad-pagada"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+        ["f-plataforma","f-escuela","f-subir","f-estatus-pago"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+        document.querySelectorAll(".dif-btn").forEach(b => b.classList.remove("selected"));
+        difSeleccionada = null;
+      } catch (e) {
+        errEl.textContent = "Error: " + e.message;
+        errEl.classList.add("show");
+      }
+
+      btn.disabled = false; btn.textContent = "Crear pedido y asignar";
+    });
+
+    // ── Modales ───────────────────────────────────────────────────────────────
+    const estadoLabel = { pendiente:"Pendiente", asignado:"Asignado", en_proceso:"En proceso", completado:"Completado", en_cola:"En cola" };
+    const badgeMap    = { pendiente:"pendiente", asignado:"asignado", en_proceso:"en_proceso", completado:"completado", en_cola:"en_cola" };
+    const EDITABLE    = (e) => !["completado"].includes(e);
+    const REASIGNABLE = (e) => !["completado","en_proceso"].includes(e);
+
+    // Modal editar
+    document.getElementById("btn-edit-cancel").onclick  = () => document.getElementById("modal-editar").classList.add("hidden");
+    document.getElementById("btn-edit-save").onclick    = async () => {
+      const id      = document.getElementById("edit-id").value;
+      const materia = document.getElementById("edit-materia").value.trim();
+      const entregable = document.getElementById("edit-entregable").value.trim();
+      const precio  = document.getElementById("edit-precio").value;
+      const cant    = document.getElementById("edit-cantidad-pagada").value;
+      await updateDoc(doc(db, "tareas", id), {
+        cliente:          document.getElementById("edit-cliente").value.trim(),
+        plataforma:       document.getElementById("edit-plataforma").value || null,
+        escuela:          document.getElementById("edit-escuela").value || null,
+        id_alumno:        document.getElementById("edit-id-alumno").value.trim() || null,
+        contrasena:       document.getElementById("edit-contrasena").value.trim() || null,
+        materia:          materia || null,
+        entregable:       entregable || null,
+        dia_agenda:       document.getElementById("edit-dia-agenda").value || null,
+        dia_entrega:      document.getElementById("edit-dia-entrega").value || null,
+        subir:            document.getElementById("edit-subir").value || null,
+        anotaciones:      document.getElementById("edit-anotaciones").value.trim() || null,
+        precio:           precio ? Number(precio) : null,
+        estatus_pago:     document.getElementById("edit-estatus-pago").value || null,
+        cantidad_pagada:  cant ? Number(cant) : null,
+        dificultad:       document.getElementById("edit-dif").value,
+        descripcion:      materia || entregable || "",
+        fecha_entrega_estimada: document.getElementById("edit-dia-entrega").value || null,
+      });
+      document.getElementById("modal-editar").classList.add("hidden");
+      cargarPedidos();
+    };
+
+    // Modal eliminar
+    document.getElementById("btn-del-cancel").onclick   = () => document.getElementById("modal-eliminar").classList.add("hidden");
+    document.getElementById("btn-del-confirm").onclick  = async () => {
+      const id = document.getElementById("del-id").value;
+      await deleteDoc(doc(db, "tareas", id));
+      document.getElementById("modal-eliminar").classList.add("hidden");
+      cargarPedidos();
+    };
+
+    // Modal reasignar — cargar asesores al abrir
+    document.getElementById("btn-reasig-cancel").onclick = () => document.getElementById("modal-reasignar").classList.add("hidden");
+    document.getElementById("btn-reasig-save").onclick   = async () => {
+      const id  = document.getElementById("reasig-id").value;
+      const sel = document.getElementById("reasig-select");
+      const opt = sel.options[sel.selectedIndex];
+      if (!opt) return;
+      const hoy = new Date().toISOString().split("T")[0];
+      await updateDoc(doc(db, "tareas", id), {
+        asesor_asignado_id: opt.value,
+        asesor_nombre: opt.text,
+        estado: "asignado",
+        fecha_asignacion: hoy
+      });
+      document.getElementById("modal-reasignar").classList.add("hidden");
+      cargarPedidos();
+    };
+
+    async function abrirModalReasignar(tareaId) {
+      document.getElementById("reasig-id").value = tareaId;
+      const sel = document.getElementById("reasig-select");
+      sel.innerHTML = '<option disabled>Cargando...</option>';
+      document.getElementById("modal-reasignar").classList.remove("hidden");
+      const asesores = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+      sel.innerHTML = "";
+      asesores.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.id; opt.textContent = d.data().nombre;
+        sel.appendChild(opt);
+      });
+    }
+
+    // ── Cargar pedidos ────────────────────────────────────────────────────────
+    async function cargarPedidos() {
+      const listEl = document.getElementById("pedidos-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+      try {
+        const snap = await getDocs(query(collection(db, "tareas"), where("atc_creador_id", "==", currentUser?.uid || "")));
+        listEl.innerHTML = "";
+        if (snap.empty) { listEl.innerHTML = '<div class="loading-state">Sin pedidos aún</div>'; return; }
+
+        // Ordenar por fecha creación desc (más recientes primero)
+        const docs = snap.docs.sort((a, b) => (b.data().creado_en || "").localeCompare(a.data().creado_en || ""));
+
+        docs.forEach(d => {
+          const t = d.data(); const id = d.id;
+          const estatusPagoColor = { PAGADO: "var(--green)", PENDIENTE: "var(--orange)", PARCIAL: "var(--cyan)" };
+          const card = document.createElement("div");
+          card.className = "pedido-card";
+          card.innerHTML = `
+            <div class="pedido-header">
+              <span class="pedido-id">#${t.numero_pedido || "—"}</span>
+              <span class="pedido-cliente">${t.cliente}</span>
+              <span class="pedido-badge ${badgeMap[t.estado]||'pendiente'}">${estadoLabel[t.estado]||t.estado}</span>
+            </div>
+            <div class="pedido-desc" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px;color:var(--sub);margin:6px 0">
+              ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${t.plataforma}</b></span>` : ""}
+              ${t.escuela ? `<span>Escuela: <b style="color:var(--text)">${t.escuela}</b></span>` : ""}
+              ${t.id_alumno ? `<span>ID: <b style="color:var(--text)">${t.id_alumno}</b></span>` : ""}
+              ${t.contrasena ? `<span>Pass: <b style="color:var(--text)">${t.contrasena}</b></span>` : ""}
+              ${t.materia ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${t.materia}</b></span>` : ""}
+              ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
+              ${t.dia_agenda ? `<span>Agenda: <b style="color:var(--text)">${t.dia_agenda}</b></span>` : ""}
+              ${t.dia_entrega ? `<span>Entrega: <b style="color:var(--text)">${t.dia_entrega}</b></span>` : ""}
+              ${t.subir ? `<span>Subir: <b style="color:var(--text)">${t.subir}</b></span>` : ""}
+              ${t.precio != null ? `<span>Precio: <b style="color:var(--text)">$${t.precio}</b></span>` : ""}
+              ${t.estatus_pago ? `<span>Pago: <b style="color:${estatusPagoColor[t.estatus_pago]||'var(--text)'}">${t.estatus_pago}</b></span>` : ""}
+              ${t.cantidad_pagada != null ? `<span>Pagado: <b style="color:var(--text)">$${t.cantidad_pagada}</b></span>` : ""}
+            </div>
+            ${t.anotaciones ? `<div style="font-size:11px;color:var(--sub);border-top:1px solid var(--border);padding-top:5px;margin-top:2px">📝 ${t.anotaciones}</div>` : ""}
+            <div class="pedido-meta" style="margin-top:6px">
+              <span>Dif: <b>${t.dificultad}</b></span>
+              <span>Asesor: <b>${t.asesor_nombre || "Sin asignar"}</b></span>
+            </div>
+            <div class="pedido-actions">
+              <button class="btn-p-action primary btn-editar" ${EDITABLE(t.estado)?'':'disabled'}>✏️ Editar</button>
+              <button class="btn-p-action primary btn-reasignar" ${REASIGNABLE(t.estado)?'':'disabled'}>👤 Reasignar</button>
+              <button class="btn-p-action danger btn-eliminar">🗑</button>
+            </div>`;
+
+          card.querySelector(".btn-editar").onclick = () => {
+            if (!EDITABLE(t.estado)) return;
+            document.getElementById("edit-id").value               = id;
+            document.getElementById("edit-cliente").value          = t.cliente || "";
+            document.getElementById("edit-plataforma").value       = t.plataforma || "";
+            document.getElementById("edit-escuela").value          = t.escuela || "";
+            document.getElementById("edit-id-alumno").value        = t.id_alumno || "";
+            document.getElementById("edit-contrasena").value       = t.contrasena || "";
+            document.getElementById("edit-materia").value          = t.materia || "";
+            document.getElementById("edit-entregable").value       = t.entregable || "";
+            document.getElementById("edit-dia-agenda").value       = t.dia_agenda || "";
+            document.getElementById("edit-dia-entrega").value      = t.dia_entrega || t.fecha_entrega_estimada || "";
+            document.getElementById("edit-subir").value            = t.subir || "";
+            document.getElementById("edit-anotaciones").value      = t.anotaciones || "";
+            document.getElementById("edit-precio").value           = t.precio != null ? t.precio : "";
+            document.getElementById("edit-estatus-pago").value     = t.estatus_pago || "";
+            document.getElementById("edit-cantidad-pagada").value  = t.cantidad_pagada != null ? t.cantidad_pagada : "";
+            document.getElementById("edit-dif").value              = t.dificultad || "B";
+            document.getElementById("modal-editar").classList.remove("hidden");
+          };
+
+          card.querySelector(".btn-reasignar").onclick = () => {
+            if (!REASIGNABLE(t.estado)) return;
+            abrirModalReasignar(id);
+          };
+
+          card.querySelector(".btn-eliminar").onclick = () => {
+            document.getElementById("del-id").value   = id;
+            document.getElementById("del-nombre").textContent = t.cliente;
+            document.getElementById("modal-eliminar").classList.remove("hidden");
+          };
+
+          listEl.appendChild(card);
+        });
+      } catch(e) {
+        listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>';
+      }
+    }
+  </script>
+</body>
+</html>

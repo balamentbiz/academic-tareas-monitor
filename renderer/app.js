@@ -395,6 +395,14 @@ el("btn-activity-end").addEventListener("click", function() {
 el("btn-blackboard").addEventListener("click", function() { window.AT.openBlackboard(); });
 el("btn-drive").addEventListener("click", function()      { window.AT.openDrive(); });
 
+// Logout asesor
+var logoutBtn = document.getElementById("btn-logout-asesor");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", function() {
+    if (confirm("¿Cerrar sesión?")) window.AT.authLogout();
+  });
+}
+
 // ── Herramientas toggle ──
 el("tools-toggle").addEventListener("click", function() {
   var body  = el("tools-body");
