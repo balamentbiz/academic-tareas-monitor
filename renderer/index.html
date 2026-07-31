@@ -9,16 +9,15 @@
   <style>
     /* Tarea cards */
     .tarea-card { background: rgba(255,255,255,.04); border: 1px solid var(--border,rgba(255,255,255,.08)); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; }
-    .tarea-card.tipo-A { border-left: 3px solid #ff453a; }
-    .tarea-card.tipo-B { border-left: 3px solid #09a3ef; }
-    .tarea-card.tipo-S { border-left: 3px solid #32d74b; }
+    .tarea-card.tipo-App { border-left: 3px solid #bf5af2; }
+    .tarea-card.tipo-Ap  { border-left: 3px solid #ff453a; }
+    .tarea-card.tipo-A   { border-left: 3px solid #ff9f0a; }
+    .tarea-card.tipo-B   { border-left: 3px solid #09a3ef; }
     .tarea-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-    .tarea-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
-    .tarea-badge.A { background: rgba(255,69,58,.15); color: #ff453a; }
-    .tarea-badge.B { background: rgba(9,163,239,.15); color: #09a3ef; }
-    .tarea-badge.S { background: rgba(50,215,75,.15); color: #32d74b; }
     .tarea-cliente { font-size: 13px; font-weight: 600; flex: 1; color: var(--text,#e6edf3); }
-    .tarea-desc { font-size: 11px; color: var(--sub,rgba(230,237,243,.5)); margin-bottom: 7px; }
+    .tarea-data { display:grid; grid-template-columns:1fr 1fr; gap:3px 12px; font-size:11px; color:var(--sub,rgba(230,237,243,.5)); margin:6px 0; }
+    .tarea-data b { color: var(--text,#e6edf3); }
+    .tarea-nota { font-size:11px; color:var(--sub,rgba(230,237,243,.5)); border-top:1px solid var(--border,rgba(255,255,255,.08)); padding-top:5px; margin-top:2px; }
     .tarea-actions { display: flex; gap: 6px; }
     .btn-aceptar { flex: 1; background: rgba(50,215,75,.15); border: 1px solid rgba(50,215,75,.3); border-radius: 7px; color: #32d74b; font-size: 11px; font-weight: 700; padding: 6px; cursor: pointer; font-family: inherit; }
     .btn-rechazar { flex: 1; background: rgba(255,69,58,.1); border: 1px solid rgba(255,69,58,.25); border-radius: 7px; color: #ff453a; font-size: 11px; font-weight: 700; padding: 6px; cursor: pointer; font-family: inherit; }
@@ -33,6 +32,19 @@
     .act-aceptada-card.tipo-S { border-left: 3px solid #32d74b; }
     .btn-iniciar-act { width: 100%; background: rgba(50,215,75,.2); border: 1px solid rgba(50,215,75,.4); border-radius: 7px; color: #32d74b; font-size: 12px; font-weight: 700; padding: 8px; cursor: pointer; font-family: inherit; margin-top: 6px; }
     .btn-iniciar-act:hover { background: rgba(50,215,75,.3); }
+    .tarea-data, .tarea-data b, .tarea-nota { user-select: text; -webkit-user-select: text; cursor: text; }
+    /* Cronómetro de actividad */
+    .act-crono { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 9px 12px; background: rgba(255,159,10,.07); border: 1px solid rgba(255,159,10,.2); border-radius: 8px; display: none; }
+    .act-crono.visible { display: flex; }
+    .act-crono-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff9f0a; box-shadow: 0 0 6px #ff9f0a; flex-shrink: 0; animation: crono-pulse 1s infinite; }
+    @keyframes crono-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .act-crono-vals { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+    .act-crono-row { display: flex; justify-content: space-between; align-items: center; }
+    .act-crono-lbl { font-size: 9px; font-weight: 700; color: rgba(230,237,243,.45); text-transform: uppercase; letter-spacing: .5px; }
+    .act-crono-val { font-size: 13px; font-weight: 800; font-family: monospace; color: #ff9f0a; }
+    .act-crono.done { background: rgba(50,215,75,.07); border-color: rgba(50,215,75,.2); }
+    .act-crono.done .act-crono-dot { background: #32d74b; box-shadow: 0 0 6px #32d74b; animation: none; }
+    .act-crono.done .act-crono-val { color: #32d74b; }
     /* Modal rechazo */
     .rechazo-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; z-index: 999; }
     .rechazo-modal { background: #161b22; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 24px; width: 280px; }
@@ -42,14 +54,39 @@
     .rechazo-modal-btns { display: flex; gap: 8px; margin-top: 12px; }
     .btn-modal-cancel { flex: 1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: rgba(230,237,243,.6); font-size: 12px; font-weight: 600; padding: 8px; cursor: pointer; font-family: inherit; }
     .btn-modal-confirm { flex: 1; background: rgba(255,69,58,.2); border: 1px solid rgba(255,69,58,.4); border-radius: 8px; color: #ff453a; font-size: 12px; font-weight: 700; padding: 8px; cursor: pointer; font-family: inherit; }
+    /* Actividades asignadas */
+    .acta-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-left: 3px solid #09a3ef; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; margin-bottom: 8px; }
+    .acta-card.p-App { border-left-color: #bf5af2; } .acta-card.p-Ap { border-left-color: #ff453a; } .acta-card.p-A { border-left-color: #ff9f0a; } .acta-card.p-B { border-left-color: #09a3ef; }
+    .acta-header { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .acta-titulo { font-weight: 800; font-size: 12px; color: #e6edf3; flex: 1; }
+    .acta-desc { font-size: 11px; color: rgba(230,237,243,.55); line-height: 1.45; }
+    .acta-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 10px; color: rgba(230,237,243,.5); }
+    .acta-meta b { color: #e6edf3; }
+    .acta-estado { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 9px; }
+    .acta-estado.pendiente { background: rgba(255,159,10,.15); color: #ff9f0a; }
+    .acta-estado.en_proceso { background: rgba(50,215,75,.15); color: #32d74b; }
+    .acta-estado.pausada { background: rgba(255,214,10,.15); color: #ffd60a; }
+    .acta-crono { font-size: 10px; color: rgba(230,237,243,.5); display: flex; gap: 12px; }
+    .acta-crono b { color: #e6edf3; font-family: monospace; }
+    .acta-btns { display: flex; gap: 6px; }
+    .acta-btn { flex: 1; border-radius: 7px; font-family: inherit; font-size: 10px; font-weight: 700; padding: 7px; cursor: pointer; border: 1px solid transparent; }
+    .acta-btn.iniciar  { background: rgba(50,215,75,.15); border-color: rgba(50,215,75,.35); color: #32d74b; }
+    .acta-btn.pausar   { background: rgba(255,159,10,.15); border-color: rgba(255,159,10,.35); color: #ff9f0a; }
+    .acta-btn.terminar { background: rgba(9,163,239,.15); border-color: rgba(9,163,239,.35); color: #09a3ef; }
   </style>
+  <link rel="stylesheet" href="theme.css"/>
 </head>
-<body>
+<body class="at-light">
 
   <div class="titlebar">
     <div class="titlebar-drag"></div>
-    <span class="titlebar-title">Academic Tareas <span id="app-version" style="font-family:var(--font);font-size:10px;font-weight:600;color:rgba(135,177,234,.45);letter-spacing:1px;vertical-align:middle"></span></span>
+    <span class="titlebar-title" style="display:inline-flex;align-items:center;justify-content:center;gap:7px">
+      <img src="assets/logo.png" alt="Academic Tareas" style="width:21px;height:21px;object-fit:contain;border-radius:22%;" onerror="this.style.display='none'"/>
+      <span>ACADEMIC <span style="color:#87b1ea;letter-spacing:3px;font-size:.78em">TAREAS</span></span>
+      <span id="app-version" style="font-family:var(--font);font-size:10px;font-weight:600;color:rgba(16,33,92,.35);letter-spacing:1px;vertical-align:middle"></span>
+    </span>
     <button class="drive-btn" id="btn-drive">+ Extensiones</button>
+    <button id="btn-abrir-monitor" style="display:none;-webkit-app-region:no-drag;background:rgba(191,90,242,.15);border:1px solid rgba(191,90,242,.3);border-radius:6px;color:#bf5af2;font-size:11px;font-weight:700;padding:4px 10px;cursor:pointer;margin-left:4px;font-family:inherit"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M10 20V9M15 20v-9M20 20V5"/></svg> Monitor</button>
     <button id="btn-logout-asesor" style="-webkit-app-region:no-drag;background:none;border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(230,237,243,.4);font-size:10px;padding:3px 8px;cursor:pointer;margin-left:4px;font-family:inherit" title="Cerrar sesión">⎋</button>
   </div>
 
@@ -59,13 +96,13 @@
     <section id="view-idle" class="view">
       <div class="hero-card">
         <div class="hero-glow"></div>
-        <span class="hero-emoji">🎓</span>
+        <span class="hero-emoji"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 5l9 4.5-9 4.5z"/><path d="M6.5 11.5v4c3 2.5 8 2.5 11 0v-4"/></svg></span>
         <h2 class="hero-title">Academic Tareas</h2>
         <p class="hero-sub">Monitor de Productividad</p>
       </div>
       <div class="list-section">
         <div class="list-row">
-          <span class="row-icon" style="background:#09a3ef">👤</span>
+          <span class="row-icon" style="background:#09a3ef"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg></span>
           <div class="row-content">
             <label class="row-label">Tu nombre</label>
             <input id="collaborator-name" class="row-input" type="text" placeholder="Ej. María García"/>
@@ -73,7 +110,7 @@
         </div>
       </div>
       <button id="btn-start" class="btn-primary-lg">▶ Iniciar día</button>
-      <button id="btn-check-update" class="update-check-btn">🔄 Buscar actualizaciones</button>
+      <button id="btn-check-update" class="update-check-btn"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 3.5V8h-4.5"/></svg> Buscar actualizaciones</button>
       <button id="btn-quit-idle" class="quit-btn">✕ Cerrar aplicación</button>
     </section>
 
@@ -92,7 +129,7 @@
       <!-- Contadores en tiempo real -->
       <div class="counters-row">
         <div class="counter-chip">
-          <span class="counter-icon">🖱</span>
+          <span class="counter-icon"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3.5" width="8" height="17" rx="4"/><path d="M12 7v3.5"/></svg></span>
           <span class="counter-val" id="cnt-clicks">0</span>
           <span class="counter-lbl">clics</span>
         </div>
@@ -102,12 +139,12 @@
           <span class="counter-lbl">teclas</span>
         </div>
         <div class="counter-chip">
-          <span class="counter-icon">😴</span>
+          <span class="counter-icon"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>
           <span class="counter-val" id="cnt-idle">0</span>
           <span class="counter-lbl">t. muertos</span>
         </div>
         <div class="counter-chip">
-          <span class="counter-icon">📋</span>
+          <span class="counter-icon"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
           <span class="counter-val" id="cnt-activities">0</span>
           <span class="counter-lbl">actividades</span>
         </div>
@@ -116,17 +153,40 @@
       <!-- NOTIFICACIÓN TAREAS ASIGNADAS -->
       <div class="section-card" id="tareas-notif-section">
         <div class="sc-header">
-          <span class="sc-icon" style="background:rgba(255,159,10,.8)">📋</span>
+          <span class="sc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
           <span class="sc-title">Mis Tareas</span>
           <span class="sc-badge" id="badge-tareas-count" style="background:#ff9f0a;color:#000">0</span>
         </div>
         <div id="mis-tareas-list"><div class="sin-tareas-notif">Cargando...</div></div>
       </div>
 
+      <!-- ACTIVIDADES ASIGNADAS -->
+      <div class="section-card" id="actasig-section" style="border-color:rgba(9,163,239,.25)">
+        <div class="sc-header">
+          <span class="sc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v11a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-6l-2-3h-5a2 2 0 0 0-2 2z"/></svg></span>
+          <span class="sc-title">Actividades</span>
+          <span class="sc-badge" id="badge-actasig-count" style="background:#09a3ef;color:#000">0</span>
+          <button id="btn-asignar-tarea" style="display:none;margin-left:auto;background:rgba(9,163,239,.15);border:1px solid rgba(9,163,239,.4);border-radius:7px;color:#09a3ef;font-family:inherit;font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Asignar</button>
+        </div>
+        <div id="actasig-list"><div class="sin-tareas-notif">Cargando...</div></div>
+      </div>
+
+      <!-- TODOS LOS PEDIDOS (solo gerencia) -->
+      <div class="section-card hidden" id="todos-section" style="border-color:rgba(33,46,103,.25)">
+        <div class="sc-header">
+          <span class="sc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8.5 4.5v9L12 21l-8.5-4.5v-9z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg></span>
+          <span class="sc-title">Todos los pedidos</span>
+          <span class="sc-badge" id="badge-todos-count" style="background:#87b1ea;color:#10215c">0</span>
+          <button id="btn-refresh-todos" style="margin-left:auto;background:rgba(9,163,239,.15);border:1px solid rgba(9,163,239,.4);border-radius:7px;color:#067ab8;font-family:inherit;font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer">↻</button>
+        </div>
+        <input id="buscar-todos" type="text" placeholder="Buscar cliente, materia, asesor..." style="width:100%;padding:9px 12px;font-size:12px;margin-bottom:8px;border-radius:10px"/>
+        <div id="todos-list" style="display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto"><div class="sin-tareas-notif">Cargando...</div></div>
+      </div>
+
       <!-- MIS ACTIVIDADES (tareas aceptadas) -->
       <div class="section-card hidden" id="mis-actividades-section" style="border-color:rgba(50,215,75,.25)">
         <div class="sc-header">
-          <span class="sc-icon" style="background:rgba(50,215,75,.7)">✅</span>
+          <span class="sc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.4 2.4 4.6-5"/></svg></span>
           <span class="sc-title">Mis Actividades</span>
           <span class="sc-badge" id="badge-actividades-count" style="background:#32d74b;color:#000">0</span>
         </div>
@@ -135,7 +195,7 @@
 
       <div class="section-card" id="activity-idle-state">
         <div class="sc-header">
-          <span class="sc-icon" style="background:#5e6ad2">📋</span>
+          <span class="sc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 11h6M9 15h4"/></svg></span>
           <span class="sc-title">Actividades</span>
           <span class="sc-badge" id="activity-count">0</span>
         </div>
@@ -145,7 +205,7 @@
 
       <div class="section-card activity-live hidden" id="activity-running-state">
         <div class="sc-header">
-          <span class="sc-icon green-icon">🟢</span>
+          <span class="sc-icon green-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M10 8.8l5 3.2-5 3.2z" fill="currentColor" stroke="none"/></svg></span>
           <span class="sc-title">En curso</span>
           <span class="sc-timer" id="activity-timer">0s</span>
         </div>
@@ -155,16 +215,16 @@
 
       <div class="section-card">
         <div class="sc-header">
-          <span class="sc-icon" style="background:#ff9f0a">⏸</span>
+          <span class="sc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6.5v11M15 6.5v11"/></svg></span>
           <span class="sc-title">Motivo de pausa</span>
         </div>
         <div class="chip-row" id="reason-chips">
-          <button class="chip" data-val="Comida 🍽">Comida 🍽</button>
-          <button class="chip" data-val="Reunión 🗣">Reunión 🗣</button>
-          <button class="chip" data-val="Descanso ☕">Descanso ☕</button>
-          <button class="chip" data-val="Baño 🚽">Baño 🚽</button>
-          <button class="chip" data-val="Problema 🔧">Problema 🔧</button>
-          <button class="chip" data-val="Llamada 📞">Llamada 📞</button>
+          <button class="chip" data-val="Comida">Comida <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/></svg></button>
+          <button class="chip" data-val="Reunión">Reunión <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"/></svg></button>
+          <button class="chip" data-val="Descanso">Descanso <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h11v6.5A4.5 4.5 0 0 1 11.5 20h-2A4.5 4.5 0 0 1 5 15.5z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8.5 6c0-1 .8-1.2.8-2.2M12 6c0-1 .8-1.2 .8-2.2"/></svg></button>
+          <button class="chip" data-val="Baño">Baño <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5S6 10 6 14.5a6 6 0 0 0 12 0C18 10 12 3.5 12 3.5z"/></svg></button>
+          <button class="chip" data-val="Problema">Problema <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.7M12 17.8v2.7M3.5 12h2.7M17.8 12h2.7M6 6l1.9 1.9M16.1 16.1 18 18M18 6l-1.9 1.9M7.9 16.1 6 18"/></svg></button>
+          <button class="chip" data-val="Llamada">Llamada <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5h2.2l1.5 4-2 1.3a12 12 0 0 0 6.4 6.4l1.3-2 4 1.5v2.2a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></svg></button>
         </div>
         <input id="pause-reason-input" class="field-input" type="text" placeholder="O escribe el motivo..."/>
       </div>
@@ -172,12 +232,12 @@
       <!-- HERRAMIENTAS -->
       <div class="section-card" id="tools-section">
         <div class="sc-header tools-toggle" id="tools-toggle" style="cursor:pointer;user-select:none">
-          <span class="sc-icon" style="background:#5e6ad2">🛠</span>
+          <span class="sc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.7M12 17.8v2.7M3.5 12h2.7M17.8 12h2.7M6 6l1.9 1.9M16.1 16.1 18 18M18 6l-1.9 1.9M7.9 16.1 6 18"/></svg></span>
           <span class="sc-title">Herramientas</span>
           <span id="tools-arrow" style="font-size:10px;color:var(--periwinkle);transition:transform .2s;display:inline-block">▶</span>
         </div>
         <div id="tools-body" style="display:none;margin-top:4px">
-          <button id="btn-blackboard" class="btn-outline-full">🎓 Accede con accesos</button>
+          <button id="btn-blackboard" class="btn-outline-full"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 5l9 4.5-9 4.5z"/><path d="M6.5 11.5v4c3 2.5 8 2.5 11 0v-4"/></svg> Accede con accesos</button>
         </div>
       </div>
 
@@ -194,7 +254,7 @@
         <span class="big-clock orange" id="pause-elapsed">0s</span>
       </div>
       <div class="pause-hero">
-        <span class="pause-emoji">☕</span>
+        <span class="pause-emoji"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h11v6.5A4.5 4.5 0 0 1 11.5 20h-2A4.5 4.5 0 0 1 5 15.5z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8.5 6c0-1 .8-1.2.8-2.2M12 6c0-1 .8-1.2 .8-2.2"/></svg></span>
         <p class="pause-label">Motivo</p>
         <p class="pause-reason" id="pause-reason-display">—</p>
       </div>
@@ -207,14 +267,14 @@
 
     <!-- REPORTE -->
     <section id="view-report" class="view hidden">
-      <div class="report-top"><span>📊</span><div>
+      <div class="report-top"><span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M10 20V9M15 20v-9M20 20V5"/></svg></span><div>
         <h2 class="report-title">Reporte del día</h2>
         <p class="report-sub">Revisa antes de descargar</p>
       </div></div>
       <div class="report-scroll" id="report-summary"></div>
       <div class="list-section">
         <div class="list-row no-border">
-          <span class="row-icon" style="background:#636366">💬</span>
+          <span class="row-icon" style="background:#636366"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"/></svg></span>
           <div class="row-content">
             <label class="row-label">Comentarios</label>
             <textarea id="report-comments" class="row-textarea" placeholder="Notas, logros, bloqueos..."></textarea>
@@ -222,37 +282,66 @@
         </div>
       </div>
       <button id="btn-dl-img" class="btn-primary-lg" style="font-size:15px;padding:14px">
-        🖼 Descargar reporte como imagen
+        <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.7"/><path d="M4.5 17l5-5 4 4 2.5-2.5 3.5 3.5"/></svg> Descargar reporte como imagen
       </button>
       <button id="btn-new-session" class="ghost-btn">+ Nueva sesión</button>
       <button id="btn-quit" class="quit-btn">✕ Cerrar aplicación</button>
-      <button id="btn-uninstall" class="uninstall-btn">🗑 Desinstalar aplicación</button>
+      <button id="btn-uninstall" class="uninstall-btn"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M7 7l.8 12a2 2 0 0 0 2 1.9h4.4a2 2 0 0 0 2-1.9L17 7"/></svg> Desinstalar aplicación</button>
     </section>
 
     <!-- OVERLAY TIEMPO MUERTO -->
     <div id="idle-overlay" class="idle-overlay hidden">
       <div class="idle-card">
-        <div class="idle-emoji">😴</div>
+        <div class="idle-emoji"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div>
         <h2 class="idle-title">Tiempo muerto detectado</h2>
         <p class="idle-sub">Llevas más de <strong>1 minuto</strong> sin actividad.</p>
         <p class="idle-counter-row">Inactivo: <strong id="idle-counter">0:00</strong></p>
         <div style="text-align:left;margin-bottom:16px">
           <p class="idle-reason-label">¿Cuál fue el motivo? <span style="color:#ff453a">*</span></p>
           <div class="chip-row" id="idle-chips">
-            <button class="chip" data-val="Comida 🍽">Comida 🍽</button>
-            <button class="chip" data-val="Reunión 🗣">Reunión 🗣</button>
-            <button class="chip" data-val="Descanso ☕">Descanso ☕</button>
-            <button class="chip" data-val="Baño 🚽">Baño 🚽</button>
-            <button class="chip" data-val="Problema 🔧">Problema 🔧</button>
-            <button class="chip" data-val="Llamada 📞">Llamada 📞</button>
+            <button class="chip" data-val="Comida">Comida <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/></svg></button>
+            <button class="chip" data-val="Reunión">Reunión <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"/></svg></button>
+            <button class="chip" data-val="Descanso">Descanso <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h11v6.5A4.5 4.5 0 0 1 11.5 20h-2A4.5 4.5 0 0 1 5 15.5z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8.5 6c0-1 .8-1.2.8-2.2M12 6c0-1 .8-1.2 .8-2.2"/></svg></button>
+            <button class="chip" data-val="Baño">Baño <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5S6 10 6 14.5a6 6 0 0 0 12 0C18 10 12 3.5 12 3.5z"/></svg></button>
+            <button class="chip" data-val="Problema">Problema <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.7M12 17.8v2.7M3.5 12h2.7M17.8 12h2.7M6 6l1.9 1.9M16.1 16.1 18 18M18 6l-1.9 1.9M7.9 16.1 6 18"/></svg></button>
+            <button class="chip" data-val="Llamada">Llamada <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5h2.2l1.5 4-2 1.3a12 12 0 0 0 6.4 6.4l1.3-2 4 1.5v2.2a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></svg></button>
           </div>
           <textarea id="idle-reason" class="idle-textarea" placeholder="Escribe el motivo (mínimo 10 caracteres)..."></textarea>
           <p id="idle-hint" class="idle-hint">Mínimo 10 caracteres para continuar</p>
         </div>
-        <button id="btn-resume-idle" class="btn-resume-idle">🔴 REANUDAR TRABAJO</button>
+        <button id="btn-resume-idle" class="btn-resume-idle"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg> REANUDAR TRABAJO</button>
       </div>
     </div>
 
+  </div>
+
+  <!-- Modal para asignar tarea (solo gerencia) -->
+  <div class="rechazo-modal-overlay hidden" id="asignar-modal-overlay">
+    <div class="rechazo-modal" style="width:320px;max-height:85vh;overflow-y:auto">
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Asignar actividad</h3>
+      <label style="display:block;font-size:9px;font-weight:700;color:rgba(230,237,243,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Asignar a *</label>
+      <select id="at-usuario" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#e6edf3;font-family:inherit;font-size:12px;padding:8px 10px;outline:none;margin-bottom:10px"><option value="">Cargando...</option></select>
+      <label style="display:block;font-size:9px;font-weight:700;color:rgba(230,237,243,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Título *</label>
+      <input id="at-titulo" placeholder="Ej. Revisar reportes" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#e6edf3;font-family:inherit;font-size:12px;padding:8px 10px;outline:none;margin-bottom:10px"/>
+      <label style="display:block;font-size:9px;font-weight:700;color:rgba(230,237,243,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Descripción</label>
+      <textarea id="at-desc" placeholder="Detalles de lo que se debe hacer..."></textarea>
+      <label style="display:block;font-size:9px;font-weight:700;color:rgba(230,237,243,.5);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px">Prioridad</label>
+      <select id="at-dif" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#e6edf3;font-family:inherit;font-size:12px;padding:8px 10px;outline:none;margin-bottom:10px">
+        <option value="B">B — Baja</option>
+        <option value="A">A — Media</option>
+        <option value="A+">A+ — Alta</option>
+        <option value="A++">A++ — Urgente</option>
+      </select>
+      <label style="display:block;font-size:9px;font-weight:700;color:rgba(230,237,243,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Fecha límite</label>
+      <input id="at-fecha" type="date" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#e6edf3;font-family:inherit;font-size:12px;padding:8px 10px;outline:none;margin-bottom:10px"/>
+      <label style="display:block;font-size:9px;font-weight:700;color:rgba(230,237,243,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Hora límite</label>
+      <input id="at-hora" type="time" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#e6edf3;font-family:inherit;font-size:12px;padding:8px 10px;outline:none"/>
+      <p id="at-error" style="display:none;color:#ff453a;font-size:11px;margin-top:8px"></p>
+      <div class="rechazo-modal-btns">
+        <button class="btn-modal-cancel" id="btn-at-cancel">Cancelar</button>
+        <button class="btn-modal-confirm" id="btn-at-crear" style="background:rgba(255,159,10,.2);border-color:rgba(255,159,10,.4);color:#ff9f0a">Asignar</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal para rechazar tarea -->
@@ -269,8 +358,9 @@
 
   <script src="app.js"></script>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
@@ -281,8 +371,335 @@
       appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
     };
 
-    const fbApp = initializeApp(firebaseConfig);
+    const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db    = getFirestore(fbApp);
+    const auth  = getAuth(fbApp);
+
+    // Esperar a que Firebase restaure la sesión iniciada en el login
+    // (las reglas de Firestore exigen usuario autenticado)
+    await new Promise(resolve => {
+      const unsub = onAuthStateChanged(auth, (u) => { unsub(); resolve(u); });
+    });
+    if (!auth.currentUser && window.AT) { window.AT.authLogout(); }
+
+    // ── Asignar tarea + lista completa de pedidos (solo gerencia) ────────────
+    if (window.AT) {
+      window.AT.getLoggedUser().then(u => {
+        if (u && u.rol === "gerencia") {
+          document.getElementById("btn-asignar-tarea").style.display = "inline-block";
+          document.getElementById("todos-section").classList.remove("hidden");
+          cargarTodosPedidosGer();
+        }
+      });
+    }
+
+    // ── Todos los pedidos (gerencia, solo lectura, con buscador) ─────────────
+    let _todosCacheGer = [];
+    const estadoLabelGer = { pendiente:"Pendiente", asignado:"Asignado", en_proceso:"En proceso", completado:"Completado", en_cola:"En cola" };
+
+    function renderTodosPedidosGer() {
+      const filtro = (document.getElementById("buscar-todos").value || "").toLowerCase().trim();
+      const listEl = document.getElementById("todos-list");
+      const lista = !filtro ? _todosCacheGer : _todosCacheGer.filter(t =>
+        [t.cliente, t.numero_pedido, t.materia, t.plataforma, t.escuela, t.entregable,
+         t.asesor_asignado_nombre, t.atc_nombre, t.estado, t.dia_entrega]
+          .some(v => String(v || "").toLowerCase().includes(filtro))
+      );
+      document.getElementById("badge-todos-count").textContent = lista.length;
+
+      if (!lista.length) {
+        listEl.innerHTML = '<div class="sin-tareas-notif">Sin resultados</div>';
+        return;
+      }
+      listEl.innerHTML = "";
+      lista.forEach(t => {
+        const pagado = t.estatus_pago === "PAGADO";
+        const parcial = !pagado && Number(t.cantidad_pagada) > 0;
+        const card = document.createElement("div");
+        card.style.cssText = "background:rgba(255,255,255,.55);border:1px solid rgba(16,33,92,.10);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:4px";
+        card.innerHTML = `
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:9px;color:rgba(16,33,92,.45);font-family:monospace">#${t.numero_pedido || "—"}</span>
+            <span style="font-weight:800;font-size:12px;color:#10215c;flex:1">${t.cliente || "—"}</span>
+            <span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(9,163,239,.12);color:#067ab8">${estadoLabelGer[t.estado] || t.estado || "—"}</span>
+            <span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:999px;${pagado ? "background:rgba(29,158,75,.14);color:#1d9e4b" : parcial ? "background:rgba(207,117,0,.13);color:#cf7500" : "background:rgba(224,54,44,.10);color:#e0362c"}">${pagado ? "✓ Pagado" : parcial ? "Parcial" : "Sin pago"}</span>
+          </div>
+          <div style="font-size:10.5px;color:rgba(16,33,92,.55);display:flex;flex-wrap:wrap;gap:3px 12px">
+            ${t.materia ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${t.materia}</span>` : ""}
+            ${t.dia_entrega ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${t.dia_entrega}${t.hora_entrega ? " · " + t.hora_entrega : ""}</span>` : ""}
+            ${t.asesor_asignado_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${t.asesor_asignado_nombre}</span>` : ""}
+            ${t.atc_nombre ? `<span>ATC: ${t.atc_nombre}</span>` : ""}
+          </div>`;
+        listEl.appendChild(card);
+      });
+    }
+
+    async function cargarTodosPedidosGer() {
+      const listEl = document.getElementById("todos-list");
+      listEl.innerHTML = '<div class="sin-tareas-notif">Cargando...</div>';
+      try {
+        const snap = await getDocs(collection(db, "tareas"));
+        _todosCacheGer = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .filter(t => !t.es_interna)
+          .sort((a, b) => (b.creado_en || "").localeCompare(a.creado_en || ""));
+        renderTodosPedidosGer();
+      } catch (e) {
+        listEl.innerHTML = '<div class="sin-tareas-notif">Error al cargar pedidos</div>';
+      }
+    }
+
+    document.getElementById("buscar-todos").addEventListener("input", renderTodosPedidosGer);
+    document.getElementById("btn-refresh-todos").addEventListener("click", cargarTodosPedidosGer);
+
+    document.getElementById("btn-asignar-tarea").addEventListener("click", async () => {
+      document.getElementById("asignar-modal-overlay").classList.remove("hidden");
+      document.getElementById("at-error").style.display = "none";
+      const sel = document.getElementById("at-usuario");
+      sel.innerHTML = '<option value="">Cargando usuarios...</option>';
+      try {
+        const snap = await getDocs(collection(db, "usuarios"));
+        const usuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const rolOrden = { asesor: 0, gerencia: 1, atc: 2, director: 3 };
+        const rolLabel = { asesor: "Asesores", gerencia: "Gerencia", atc: "ATC", director: "Director" };
+        usuarios.sort((a, b) => (rolOrden[a.rol] ?? 9) - (rolOrden[b.rol] ?? 9) || (a.nombre || "").localeCompare(b.nombre || ""));
+        sel.innerHTML = '<option value="">— Selecciona un usuario —</option>';
+        let grupoActual = null, og = null;
+        usuarios.forEach(u => {
+          if (u.rol !== grupoActual) {
+            grupoActual = u.rol;
+            og = document.createElement("optgroup");
+            og.label = rolLabel[u.rol] || u.rol || "Otros";
+            sel.appendChild(og);
+          }
+          const opt = document.createElement("option");
+          opt.value = u.id;
+          opt.textContent = u.nombre || u.email || u.id;
+          opt.dataset.nombre = u.nombre || u.email || u.id;
+          og.appendChild(opt);
+        });
+      } catch (e) {
+        sel.innerHTML = '<option value="">Error al cargar usuarios</option>';
+      }
+    });
+
+    document.getElementById("btn-at-cancel").addEventListener("click", () => {
+      document.getElementById("asignar-modal-overlay").classList.add("hidden");
+    });
+
+    document.getElementById("btn-at-crear").addEventListener("click", async () => {
+      const sel    = document.getElementById("at-usuario");
+      const uid    = sel.value;
+      const nombre = sel.selectedOptions[0]?.dataset.nombre || "";
+      const titulo = document.getElementById("at-titulo").value.trim();
+      const errEl  = document.getElementById("at-error");
+
+      if (!uid || !titulo) {
+        errEl.textContent = "Selecciona un usuario y escribe el título.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const btn = document.getElementById("btn-at-crear");
+      btn.disabled = true; btn.textContent = "Asignando...";
+      try {
+        const yo = await window.AT.getLoggedUser();
+        const nowIso = new Date().toISOString();
+        await addDoc(collection(db, "actividades_asignadas"), {
+          titulo,
+          descripcion: document.getElementById("at-desc").value.trim() || "",
+          prioridad: document.getElementById("at-dif").value,
+          fecha_limite: document.getElementById("at-fecha").value || "",
+          hora_limite: document.getElementById("at-hora").value || "",
+          estado: "pendiente",
+          visto: false,
+          tiempo_trabajo_ms: 0,
+          pausas: [],
+          creado_en: nowIso,
+          asignado_a_id: uid,
+          asignado_a_nombre: nombre,
+          creado_por_id: yo?.uid || "",
+          creado_por_nombre: yo?.nombre || "",
+          creado_por_rol: yo?.rol || "gerencia",
+        });
+        document.getElementById("asignar-modal-overlay").classList.add("hidden");
+        document.getElementById("at-titulo").value = "";
+        document.getElementById("at-desc").value = "";
+        document.getElementById("at-fecha").value = "";
+        document.getElementById("at-hora").value = "";
+      } catch (e) {
+        errEl.textContent = "Error: " + e.message;
+        errEl.style.display = "block";
+      }
+      btn.disabled = false; btn.textContent = "Asignar";
+    });
+
+    // ── Actividades asignadas (Iniciar / Pausar / Reanudar / Terminar) ──────
+    const _actaTimers = {};
+    const _actaNotified = new Set();
+
+    function fmtActa(ms) {
+      if (!ms || ms < 0) return "0s";
+      const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
+    }
+
+    function actaTrabajoMs(a) {
+      return (a.tiempo_trabajo_ms || 0) + (a.estado === "en_proceso" ? Date.now() - (a.ultima_reanudacion_ms || Date.now()) : 0);
+    }
+
+    async function actaAccion(a, accion) {
+      const now = Date.now(), iso = new Date().toISOString();
+      let upd = {};
+      if (accion === "iniciar") {
+        upd = { estado: "en_proceso", iniciado_en: iso, ultima_reanudacion_ms: now, tiempo_trabajo_ms: 0,
+                tiempo_respuesta_ms: now - (a.creado_en ? new Date(a.creado_en).getTime() : now) };
+      } else if (accion === "pausar") {
+        upd = { estado: "pausada", tiempo_trabajo_ms: actaTrabajoMs(a),
+                pausas: [...(a.pausas || []), { inicio: iso }] };
+      } else if (accion === "reanudar") {
+        const ps = [...(a.pausas || [])];
+        if (ps.length && !ps[ps.length - 1].fin) ps[ps.length - 1].fin = iso;
+        upd = { estado: "en_proceso", ultima_reanudacion_ms: now, pausas: ps };
+      } else if (accion === "terminar") {
+        const ps = [...(a.pausas || [])];
+        if (ps.length && !ps[ps.length - 1].fin) ps[ps.length - 1].fin = iso;
+        upd = { estado: "terminada", terminado_en: iso, tiempo_trabajo_ms: actaTrabajoMs(a), pausas: ps };
+      }
+      try { await updateDoc(doc(db, "actividades_asignadas", a.id), upd); } catch(e) { console.warn("[acta]", e); }
+      cargarActividadesAsignadas();
+    }
+
+    function renderActaCard(a) {
+      const pCls  = { "A++": "p-App", "A+": "p-Ap", "A": "p-A", "B": "p-B" };
+      const pColor = { "A++": "#bf5af2", "A+": "#ff453a", "A": "#ff9f0a", "B": "#09a3ef" };
+      const pBg    = { "A++": "rgba(191,90,242,.15)", "A+": "rgba(255,69,58,.15)", "A": "rgba(255,159,10,.15)", "B": "rgba(9,163,239,.15)" };
+      const estadoTxt = { pendiente: "⏳ Pendiente", en_proceso: "▶ En proceso", pausada: "⏸ Pausada" };
+      const p = a.prioridad || "B";
+
+      const card = document.createElement("div");
+      card.className = "acta-card " + (pCls[p] || "p-B");
+      card.innerHTML = `
+        <div class="acta-header">
+          <span class="acta-estado" style="background:${pBg[p]};color:${pColor[p]}">${p}</span>
+          <span class="acta-titulo">${a.titulo || "—"}</span>
+          <span class="acta-estado ${a.estado}">${estadoTxt[a.estado] || a.estado}</span>
+        </div>
+        ${a.descripcion ? `<div class="acta-desc">${a.descripcion}</div>` : ""}
+        <div class="acta-meta">
+          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> <b>${a.fecha_limite}${a.hora_limite ? " · " + a.hora_limite : ""}</b></span>` : ""}
+          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> <b>${a.creado_por_nombre}</b></span>` : ""}
+        </div>
+        <div class="acta-crono">
+          <span>⏱ Trabajo: <b id="acta-t-${a.id}">${fmtActa(actaTrabajoMs(a))}</b></span>
+          ${a.tiempo_respuesta_ms ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> Resp: <b>${fmtActa(a.tiempo_respuesta_ms)}</b></span>` : ""}
+        </div>
+        <div class="acta-btns" id="acta-btns-${a.id}"></div>`;
+
+      const btnsEl = card.querySelector(`#acta-btns-${a.id}`);
+      const mkBtn = (cls, txt, accion) => {
+        const b = document.createElement("button");
+        b.className = "acta-btn " + cls;
+        b.textContent = txt;
+        b.addEventListener("click", () => actaAccion(a, accion));
+        btnsEl.appendChild(b);
+      };
+      if (a.estado === "pendiente") {
+        mkBtn("iniciar", "▶ Iniciar", "iniciar");
+      } else if (a.estado === "en_proceso") {
+        mkBtn("pausar", "⏸ Pausar", "pausar");
+        mkBtn("terminar", "✔ Terminar", "terminar");
+        _actaTimers[a.id] = setInterval(() => {
+          const el = document.getElementById(`acta-t-${a.id}`);
+          if (el) el.textContent = fmtActa(actaTrabajoMs(a)); else clearInterval(_actaTimers[a.id]);
+        }, 1000);
+      } else if (a.estado === "pausada") {
+        mkBtn("iniciar", "▶ Reanudar", "reanudar");
+        mkBtn("terminar", "✔ Terminar", "terminar");
+      }
+      return card;
+    }
+
+    let _actaLastKey = null; // evita re-render (y parpadeo) si nada cambió
+
+    async function cargarActividadesAsignadas() {
+      const listEl  = document.getElementById("actasig-list");
+      const badgeEl = document.getElementById("badge-actasig-count");
+
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+
+      let acts = [];
+      try {
+        const snap = await getDocs(query(
+          collection(db, "actividades_asignadas"),
+          where("asignado_a_id", "==", user.uid)
+        ));
+        acts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .filter(a => a.estado !== "terminada")
+          .sort((a, b) => (a.creado_en || "").localeCompare(b.creado_en || ""));
+      } catch (e) {
+        listEl.innerHTML = '<div class="sin-tareas-notif">Error al cargar actividades</div>';
+        return;
+      }
+
+      // Si los datos son idénticos al último render, no tocar el DOM
+      // (los cronómetros en curso siguen corriendo con sus intervalos)
+      const key = JSON.stringify(acts.map(a => [a.id, a.estado, a.visto, a.tiempo_trabajo_ms, a.ultima_reanudacion_ms, a.titulo]));
+      if (key === _actaLastKey) return;
+      _actaLastKey = key;
+
+      Object.values(_actaTimers).forEach(clearInterval);
+      Object.keys(_actaTimers).forEach(k => delete _actaTimers[k]);
+
+      badgeEl.textContent = acts.length;
+
+      // Notificar las no vistas y marcarlas
+      acts.filter(a => !a.visto && !_actaNotified.has(a.id)).forEach(a => {
+        _actaNotified.add(a.id);
+        try {
+          new Notification("Nueva actividad asignada", {
+            body: `${a.titulo || "Actividad"}${a.creado_por_nombre ? " — de " + a.creado_por_nombre : ""}. Revísala en tu panel de Actividades.`,
+          });
+        } catch (_) {}
+        updateDoc(doc(db, "actividades_asignadas", a.id), { visto: true, notificado_en: new Date().toISOString() }).catch(() => {});
+      });
+
+      if (!acts.length) {
+        listEl.innerHTML = '<div class="sin-tareas-notif">✓ Sin actividades pendientes</div>';
+        return;
+      }
+      listEl.innerHTML = "";
+      acts.forEach(a => listEl.appendChild(renderActaCard(a)));
+    }
+
+    setInterval(cargarActividadesAsignadas, 30000);
+    cargarActividadesAsignadas();
+
+    // ── Actividades extras para el reporte del día (usado por app.js) ────────
+    window.obtenerExtrasReporte = async function() {
+      const user = await window.AT.getLoggedUser();
+      if (!user) return [];
+      const hoy = new Date().toISOString().split("T")[0];
+      const snap = await getDocs(query(
+        collection(db, "actividades_asignadas"),
+        where("asignado_a_id", "==", user.uid)
+      ));
+      const horaDe = iso => iso ? new Date(iso).toLocaleTimeString("es-MX") : "—";
+      return snap.docs.map(d => d.data())
+        .filter(a => (a.estado === "terminada" && (a.terminado_en || "").startsWith(hoy)) || (a.estado && a.estado !== "terminada"))
+        .sort((a, b) => (a.creado_en || "").localeCompare(b.creado_en || ""))
+        .map(a => ({
+          titulo:       a.titulo || "Actividad",
+          prioridad:    a.prioridad || "B",
+          estado:       a.estado,
+          asignada_por: a.creado_por_nombre || "",
+          iniciado:     a.iniciado_en ? horaDe(a.iniciado_en) : "—",
+          terminado:    a.terminado_en ? horaDe(a.terminado_en) : "—",
+          trabajo_ms:   (a.tiempo_trabajo_ms || 0) + (a.estado === "en_proceso" && a.ultima_reanudacion_ms ? Date.now() - a.ultima_reanudacion_ms : 0),
+          respuesta_ms: a.tiempo_respuesta_ms || 0,
+          pausas:       (a.pausas || []).length,
+        }));
+    };
 
     // ── Modal de rechazo ──────────────────────────────────────────────────────
     let _rechazarCallback = null;
@@ -313,71 +730,209 @@
     const actBadge    = document.getElementById("badge-actividades-count");
     let actividadesCount = 0;
 
+    // ── Helpers cronómetro ────────────────────────────────────────────────────
+    function fmtCrono(ms) {
+      if (!ms || ms < 0) return "0s";
+      const s = Math.floor(ms / 1000);
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
+    }
+
     function agregarActividadAceptada(tarea) {
       actividadesCount++;
       actBadge.textContent = actividadesCount;
       actSection.classList.remove("hidden");
 
       const card = document.createElement("div");
-      card.className = "act-aceptada-card tipo-" + (tarea.dificultad || "B");
+      const difClsMapAct   = { "A++": "App", "A+": "Ap", "A": "A", "B": "B" };
+      const difColorMapAct = { "A++": "#bf5af2", "A+": "#ff453a", "A": "#ff9f0a", "B": "#09a3ef" };
+      const difBgMapAct    = { "A++": "rgba(191,90,242,.15)", "A+": "rgba(255,69,58,.15)", "A": "rgba(255,159,10,.15)", "B": "rgba(9,163,239,.15)" };
+      const difAct = tarea.dificultad || "B";
+      card.className = "act-aceptada-card tipo-" + (difClsMapAct[difAct] || "B");
       card.dataset.id = tarea.id;
+
+      // Tiempo de respuesta: desde creado_en hasta ahora (cuánto tardaron en aceptar)
+      const creadoMs = tarea.creado_en ? new Date(tarea.creado_en).getTime() : Date.now();
+
       card.innerHTML = `
         <div class="tarea-header">
-          <span class="tarea-badge ${tarea.dificultad||'B'}">Tipo ${tarea.dificultad||'?'}</span>
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${difBgMapAct[difAct]||difBgMapAct.B};color:${difColorMapAct[difAct]||difColorMapAct.B}">${difAct}</span>
           <span class="tarea-cliente">${tarea.cliente||'Sin cliente'}</span>
         </div>
-        <div class="tarea-desc">${(tarea.descripcion||"").slice(0,60)}${(tarea.descripcion||"").length>60?"…":""}</div>
-        <button class="btn-iniciar-act" data-nombre="${(tarea.cliente||'tarea').replace(/"/g,'')}" data-id="${tarea.id}">▶ Iniciar actividad</button>`;
+        <div class="tarea-data">
+          ${tarea.plataforma  ? `<span>Plataforma: <b>${tarea.plataforma}</b></span>`          : ""}
+          ${tarea.escuela     ? `<span>Escuela: <b>${tarea.escuela}</b></span>`                : ""}
+          ${tarea.id_alumno   ? `<span>ID: <b>${tarea.id_alumno}</b></span>`                   : ""}
+          ${tarea.contrasena  ? `<span>Contraseña: <b>${tarea.contrasena}</b></span>`          : ""}
+          ${tarea.materia     ? `<span style="grid-column:1/-1">Materia: <b>${tarea.materia}</b></span>`       : ""}
+          ${tarea.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${tarea.entregable}</b></span>` : ""}
+          ${tarea.dia_entrega ? `<span>Entrega: <b>${tarea.dia_entrega}</b></span>`             : ""}
+          ${tarea.subir       ? `<span>Subir: <b>${tarea.subir}</b></span>`                    : ""}
+        </div>
+        ${tarea.anotaciones ? `<div class="tarea-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${tarea.anotaciones}</div>` : ""}
+
+        <!-- Cronómetro (oculto hasta iniciar) -->
+        <div class="act-crono" id="crono-${tarea.id}">
+          <div class="act-crono-dot"></div>
+          <div class="act-crono-vals">
+            <div class="act-crono-row">
+              <span class="act-crono-lbl">⏱ Tiempo trabajando</span>
+              <span class="act-crono-val" id="crono-trabajo-${tarea.id}">0s</span>
+            </div>
+            <div class="act-crono-row">
+              <span class="act-crono-lbl"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> Tiempo de respuesta</span>
+              <span class="act-crono-val" id="crono-resp-${tarea.id}" style="font-size:11px;color:rgba(230,237,243,.5)">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="acta-btns" id="actbtns-${tarea.id}" style="margin-top:8px"></div>`;
       actList.appendChild(card);
 
-      // Iniciar actividad → cambia a "Completar tarea"
-      card.querySelector(".btn-iniciar-act").addEventListener("click", async function() {
-        const nombre  = this.dataset.nombre;
-        const tareaId = this.dataset.id;
+      const btnsEl    = card.querySelector(`#actbtns-${tarea.id}`);
+      const cronoEl   = card.querySelector(`#crono-${tarea.id}`);
+      const trabajoEl = card.querySelector(`#crono-trabajo-${tarea.id}`);
+      const respEl    = card.querySelector(`#crono-resp-${tarea.id}`);
+      const nombreAct = (tarea.cliente || "tarea").replace(/"/g, "");
 
-        // Iniciar en el tracker existente
+      // Estado restaurado desde Firestore (sobrevive recargas)
+      let _acumMs   = tarea.tiempo_trabajo_ms || 0;
+      let _resumeMs = tarea.timer_ultima_reanudacion_ms || tarea.timer_iniciado_ms || null;
+      let _estado   = tarea.timer_iniciado_ms && tarea.estado !== "completado" ? (tarea.timer_pausado ? "pausada" : "corriendo") : "sin_iniciar";
+      let _pausas   = Array.isArray(tarea.timer_pausas) ? [...tarea.timer_pausas] : [];
+      let _cronoInterval = null;
+
+      const trabajoActual = () => _acumMs + (_estado === "corriendo" && _resumeMs ? Date.now() - _resumeMs : 0);
+      const pintarCrono   = () => { trabajoEl.textContent = fmtCrono(trabajoActual()); };
+      const arrancarTick  = () => { clearInterval(_cronoInterval); _cronoInterval = setInterval(pintarCrono, 1000); };
+      const cerrarPausa   = () => { if (_pausas.length && !_pausas[_pausas.length-1].fin) _pausas[_pausas.length-1].fin = new Date().toISOString(); };
+      const mkB = (cls, txt, fn) => { const b = document.createElement("button"); b.className = "acta-btn " + cls; b.textContent = txt; b.onclick = fn; btnsEl.appendChild(b); };
+
+      function pintarBotones() {
+        btnsEl.innerHTML = "";
+        if (_estado === "sin_iniciar") {
+          mkB("iniciar", "▶ Iniciar actividad", iniciarAct);
+        } else if (_estado === "corriendo") {
+          mkB("pausar", "⏸ Pausar", pausarAct);
+          mkB("terminar", "■ Completar", completarAct);
+        } else if (_estado === "pausada") {
+          mkB("iniciar", "▶ Reanudar", reanudarAct);
+          mkB("terminar", "■ Completar", completarAct);
+        }
+      }
+
+      async function iniciarAct() {
+        _estado = "corriendo"; _resumeMs = Date.now(); _acumMs = 0; _pausas = [];
+        const tiempoRespMs = _resumeMs - creadoMs;
+        respEl.textContent = fmtCrono(tiempoRespMs);
+        cronoEl.classList.add("visible");
+        arrancarTick(); pintarBotones();
+
+        // Iniciar en el tracker de sesión
         const actInput = document.getElementById("activity-name");
         const actBtn   = document.getElementById("btn-activity-start");
-        if (actInput && actBtn) {
-          actInput.value = nombre;
-          actBtn.click();
+        if (actInput && actBtn) { actInput.value = nombreAct; actBtn.click(); }
+
+        try {
+          await updateDoc(doc(db, "tareas", tarea.id), {
+            timer_iniciado_iso: new Date().toISOString(),
+            timer_iniciado_ms:  _resumeMs,
+            timer_ultima_reanudacion_ms: _resumeMs,
+            timer_pausado: false,
+            timer_pausas: [],
+            tiempo_trabajo_ms: 0,
+            tiempo_respuesta_ms: tiempoRespMs,
+          });
+        } catch(e) { console.warn("[timer]", e); }
+      }
+
+      async function pausarAct() {
+        _acumMs = trabajoActual(); _estado = "pausada";
+        _pausas.push({ inicio: new Date().toISOString(), fin: null });
+        clearInterval(_cronoInterval); pintarCrono(); pintarBotones();
+        cronoEl.querySelector(".act-crono-dot").style.animation = "none";
+        try {
+          await updateDoc(doc(db, "tareas", tarea.id), { timer_pausado: true, tiempo_trabajo_ms: _acumMs, timer_pausas: _pausas });
+        } catch(e) { console.warn("[timer pausa]", e); }
+      }
+
+      async function reanudarAct() {
+        _estado = "corriendo"; _resumeMs = Date.now(); cerrarPausa();
+        cronoEl.querySelector(".act-crono-dot").style.animation = "";
+        arrancarTick(); pintarBotones();
+        try {
+          await updateDoc(doc(db, "tareas", tarea.id), { timer_pausado: false, timer_ultima_reanudacion_ms: _resumeMs, timer_pausas: _pausas });
+        } catch(e) { console.warn("[timer reanudar]", e); }
+      }
+
+      async function completarAct() {
+        const totalMs = trabajoActual();
+        _estado = "hecho"; cerrarPausa();
+        clearInterval(_cronoInterval);
+        btnsEl.innerHTML = "";
+
+        const completadoMs = Date.now();
+        const tiempoRespMs = tarea.tiempo_respuesta_ms || (tarea.timer_iniciado_ms ? tarea.timer_iniciado_ms - creadoMs : null);
+
+        trabajoEl.textContent = fmtCrono(totalMs);
+        cronoEl.classList.add("done");
+        cronoEl.querySelector(".act-crono-dot").style.animation = "none";
+
+        const cuotaValor = { "A++": 0.333, "A+": 0.25, "A": 0.167, "B": 0.125 };
+        try {
+          // 1. Marcar completada + guardar tiempos en Firestore
+          await updateDoc(doc(db, "tareas", tarea.id), {
+            estado: "completado",
+            fecha_completacion:  new Date().toISOString().split("T")[0],
+            listo_para_cobrar:   true,
+            timer_completado_iso: new Date().toISOString(),
+            timer_completado_ms:  completadoMs,
+            tiempo_trabajo_ms:    totalMs,
+            tiempo_respuesta_ms:  tiempoRespMs,
+            timer_pausado:        false,
+            timer_pausas:         _pausas,
+          });
+
+          // 2. Restar cuota del asesor
+          const usuario2 = await window.AT.getLoggedUser();
+          if (usuario2) {
+            const hoy = new Date().toISOString().split("T")[0];
+            const cuotaDocRef = doc(db, "cuota_diaria", usuario2.uid + "_" + hoy);
+            const cuotaSnap   = await getDoc(cuotaDocRef);
+            const cuotaActual = cuotaSnap.exists() ? (cuotaSnap.data().cuota_actual || 0) : 0;
+            const tareas_completadas = cuotaSnap.exists() ? ((cuotaSnap.data().tareas_completadas || 0) + 1) : 1;
+            const resta       = cuotaValor[tarea.dificultad] || 0.167;
+            await setDoc(cuotaDocRef, {
+              asesor_id: usuario2.uid, fecha: hoy,
+              cuota_actual: Math.max(0, cuotaActual - resta),
+              tareas_completadas
+            }, { merge: true });
+          }
+        } catch(e) { console.error("Error al completar tarea:", e); }
+
+        // 3. Terminar actividad en el tracker
+        const endBtn = document.getElementById("btn-activity-end");
+        if (endBtn && !document.getElementById("activity-running-state").classList.contains("hidden")) {
+          endBtn.click();
         }
 
-        // Cambiar botón a "Completar"
-        this.textContent = "■ Completar tarea";
-        this.style.background = "rgba(9,163,239,.2)";
-        this.style.borderColor = "rgba(9,163,239,.4)";
-        this.style.color = "#09a3ef";
-        this.onclick = async () => {
-          const cuotaValor = { A: 1.0, B: 0.166, S: 0.33 };
-          try {
-            // 1. Marcar tarea como completada
-            await updateDoc(doc(db, "tareas", tareaId), { estado: "completado" });
-
-            // 2. Restar cuota del asesor para que vuelva a recibir tareas
-            const usuario2 = await window.AT.getLoggedUser();
-            if (usuario2) {
-              const hoy = new Date().toISOString().split("T")[0];
-              const cuotaDocRef = doc(db, "cuota_diaria", usuario2.uid + "_" + hoy);
-              const cuotaSnap = await getDoc(cuotaDocRef);
-              const cuotaActual = cuotaSnap.exists() ? (cuotaSnap.data().cuota_actual || 0) : 0;
-              const resta = cuotaValor[tarea.dificultad] || 0.166;
-              const nuevaCuota = Math.max(0, cuotaActual - resta);
-              await setDoc(cuotaDocRef, { asesor_id: usuario2.uid, fecha: hoy, cuota_actual: nuevaCuota }, { merge: true });
-            }
-          } catch(e) { console.error("Error al completar tarea:", e); }
-
-          // 3. Terminar actividad en el tracker
-          const endBtn = document.getElementById("btn-activity-end");
-          if (endBtn && !document.getElementById("activity-running-state").classList.contains("hidden")) {
-            endBtn.click();
-          }
+        setTimeout(() => {
           card.remove();
           actividadesCount = Math.max(0, actividadesCount - 1);
           actBadge.textContent = actividadesCount;
           if (!actList.querySelector(".act-aceptada-card")) actSection.classList.add("hidden");
-        };
-      });
+        }, 1500);
+      }
+
+      // Restaurar visual si venía corriendo o en pausa
+      if (_estado !== "sin_iniciar") {
+        cronoEl.classList.add("visible");
+        if (tarea.tiempo_respuesta_ms) respEl.textContent = fmtCrono(tarea.tiempo_respuesta_ms);
+        pintarCrono();
+        if (_estado === "corriendo") arrancarTick();
+        else cronoEl.querySelector(".act-crono-dot").style.animation = "none";
+      }
+      pintarBotones();
     }
 
     // ── Cargar tareas asignadas ───────────────────────────────────────────────
@@ -419,14 +974,28 @@
         listEl.innerHTML = "";
         tareas.forEach(t => {
           const card = document.createElement("div");
-          card.className = "tarea-card tipo-" + (t.dificultad || "B");
+          const difClsMap = { "A++": "App", "A+": "Ap", "A": "A", "B": "B" };
+          const difColorMap = { "A++": "#bf5af2", "A+": "#ff453a", "A": "#ff9f0a", "B": "#09a3ef" };
+          const difBgMap    = { "A++": "rgba(191,90,242,.15)", "A+": "rgba(255,69,58,.15)", "A": "rgba(255,159,10,.15)", "B": "rgba(9,163,239,.15)" };
+          const dif = t.dificultad || "B";
+          card.className = "tarea-card tipo-" + (difClsMap[dif] || "B");
           card.innerHTML = `
             <div class="tarea-header">
-              <span class="tarea-badge ${t.dificultad||'B'}">Tipo ${t.dificultad||'?'}</span>
+              <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${difBgMap[dif]||difBgMap.B};color:${difColorMap[dif]||difColorMap.B}">${dif}</span>
               <span class="tarea-cliente">${t.cliente||'Sin cliente'}</span>
             </div>
-            <div class="tarea-desc">${(t.descripcion||"").slice(0,80)}${(t.descripcion||"").length>80?"…":""}</div>
-            <div class="tarea-actions">
+            <div class="tarea-data">
+              ${t.plataforma  ? `<span>Plataforma: <b>${t.plataforma}</b></span>`          : ""}
+              ${t.escuela     ? `<span>Escuela: <b>${t.escuela}</b></span>`                : ""}
+              ${t.id_alumno   ? `<span>ID: <b>${t.id_alumno}</b></span>`                   : ""}
+              ${t.contrasena  ? `<span>Contraseña: <b>${t.contrasena}</b></span>`          : ""}
+              ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${t.materia}</b></span>`       : ""}
+              ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${t.entregable}</b></span>` : ""}
+              ${t.dia_entrega ? `<span>Entrega: <b>${t.dia_entrega}</b></span>`             : ""}
+              ${t.subir       ? `<span>Subir: <b>${t.subir}</b></span>`                    : ""}
+            </div>
+            ${t.anotaciones ? `<div class="tarea-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${t.anotaciones}</div>` : ""}
+            <div class="tarea-actions" style="margin-top:8px">
               <button class="btn-aceptar" data-id="${t.id}">✓ Aceptar</button>
               <button class="btn-rechazar" data-id="${t.id}">✕ Rechazar</button>
             </div>`;
@@ -474,14 +1043,14 @@
               });
 
               // Restar cuota al rechazar (liberar capacidad del asesor)
-              const cuotaValor = { A: 1.0, B: 0.166, S: 0.33 };
+              const cuotaValor = { "A++": 0.333, "A+": 0.25, "A": 0.167, "B": 0.125 };
               const usuario3 = await window.AT.getLoggedUser();
               if (usuario3 && tareaRechazada) {
                 const hoy = new Date().toISOString().split("T")[0];
                 const cuotaDocRef = doc(db, "cuota_diaria", usuario3.uid + "_" + hoy);
                 const cuotaSnap = await getDoc(cuotaDocRef);
                 const cuotaActual = cuotaSnap.exists() ? (cuotaSnap.data().cuota_actual || 0) : 0;
-                const resta = cuotaValor[tareaRechazada.dificultad] || 0.166;
+                const resta = cuotaValor[tareaRechazada.dificultad] || 0.167;
                 await setDoc(cuotaDocRef, { asesor_id: usuario3.uid, fecha: hoy, cuota_actual: Math.max(0, cuotaActual - resta) }, { merge: true });
               }
               card.remove();
@@ -501,6 +1070,616 @@
     }
 
     cargarMisTareas();
+  </script>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PANEL DE MONITOREO — Solo visible para gerencia
+       ════════════════════════════════════════════════════════════════════ -->
+  <style>
+    /* ── Monitor overlay — tema claro de marca ─────────────────────────── */
+    #monitor-overlay {
+      position: fixed; inset: 0; z-index: 3000;
+      overflow-y: auto;
+      font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #10215c;
+      background:
+        radial-gradient(700px 380px at 88% -6%, rgba(9,163,239,.16), transparent 60%),
+        radial-gradient(620px 420px at -8% 26%, rgba(135,177,234,.35), transparent 60%),
+        linear-gradient(165deg,#dbe6fa 0%,#eef2fb 40%,#f6f6f6 65%,#d9e3f8 100%);
+    }
+    .mon-titlebar {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(255,255,255,.72); backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15);
+      border-bottom: 1px solid rgba(16,33,92,.10);
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px 0 80px; height: 48px;
+      -webkit-app-region: drag;
+    }
+    .mon-titlebar button { -webkit-app-region: no-drag; }
+    .btn-volver {
+      background: linear-gradient(135deg,#212e67,#10215c); border: none;
+      border-radius: 999px; color: #fff;
+      font-size: 12px; font-weight: 800; padding: 8px 16px; cursor: pointer;
+      font-family: inherit; transition: all .15s;
+      box-shadow: 0 5px 14px rgba(16,33,92,.30);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-volver:hover { filter: brightness(1.12); }
+    .btn-volver:active { transform: scale(.96); }
+    .mon-title { flex: 1; text-align: center; font-size: 13px; font-weight: 800; color: #10215c; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+    .mon-title img { width: 20px; height: 20px; object-fit: contain; border-radius: 22%; }
+    .btn-mon-refresh {
+      background: rgba(9,163,239,.10); border: 1px solid rgba(9,163,239,.35);
+      border-radius: 999px; color: #067ab8; font-size: 11px; font-weight: 800;
+      padding: 7px 14px; cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .btn-mon-refresh:hover { background: rgba(9,163,239,.18); }
+    /* ── Monitor tabs ──────────────────────────────────────────────────── */
+    .mon-tabs {
+      display: flex; gap: 6px; padding: 8px 16px;
+      background: rgba(255,255,255,.45); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(16,33,92,.08);
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .mon-tabs::-webkit-scrollbar { display: none; }
+    .mtab {
+      background: none; border: 1px solid transparent; border-radius: 999px;
+      color: rgba(16,33,92,.55); font-family: inherit; font-size: 11px;
+      font-weight: 800; padding: 7px 14px; cursor: pointer; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px; transition: all .15s;
+    }
+    .mtab .mi { width: 13px; height: 13px; flex-shrink: 0; }
+    .mtab:hover { color: #10215c; background: rgba(255,255,255,.6); }
+    .mtab.active { color: #10215c; background: rgba(255,255,255,.95); border-color: rgba(255,255,255,.8); box-shadow: 0 5px 14px rgba(16,33,92,.13); }
+    .mtab.active .mi { color: #09a3ef; }
+    /* ── Monitor panels ────────────────────────────────────────────────── */
+    .mpanel { display: none; padding: 14px 16px; }
+    .mpanel.active { display: block; }
+    /* ── KPI grid ──────────────────────────────────────────────────────── */
+    .mon-kpi-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px;
+    }
+    .mon-kpi {
+      background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.75);
+      border-radius: 12px; padding: 12px;
+      box-shadow: 0 8px 20px rgba(16,33,92,.09);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    .mon-kpi-lbl { font-size: 9px; font-weight: 800; color: rgba(16,33,92,.5); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+    .mon-kpi-val { font-size: 20px; font-weight: 800; color: #10215c; }
+    /* ── Section title ─────────────────────────────────────────────────── */
+    .mon-sec { font-size: 10px; font-weight: 800; color: rgba(16,33,92,.55); text-transform: uppercase; letter-spacing: .7px; margin: 12px 0 6px; }
+    /* ── Asesor cards (monitor) ────────────────────────────────────────── */
+    .mon-asesor {
+      background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.75);
+      border-radius: 12px; padding: 10px 12px; margin-bottom: 6px;
+      box-shadow: 0 6px 16px rgba(16,33,92,.08);
+    }
+    .mon-asesor-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .mon-avatar {
+      width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#212e67,#10215c);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: #fff; flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(16,33,92,.3);
+    }
+    .mon-asesor-name { font-size: 12px; font-weight: 800; color: #10215c; flex: 1; }
+    .mon-estado { font-size: 10px; font-weight: 800; }
+    .mon-estado.activo    { color: #1d9e4b; }
+    .mon-estado.idle      { color: #cf7500; }
+    .mon-estado.offline   { color: rgba(16,33,92,.35); }
+    .mon-estado.completó  { color: #067ab8; }
+    .mon-cuota-bar-bg { flex: 1; height: 5px; background: rgba(16,33,92,.10); border-radius: 3px; overflow: hidden; }
+    .mon-cuota-bar-fill { height: 100%; border-radius: 3px; background: #09a3ef; }
+    .mon-cuota-bar-fill.done { background: #1d9e4b; }
+    .mon-cuota-wrap { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .mon-cuota-pct { font-size: 10px; font-weight: 800; color: rgba(16,33,92,.5); min-width: 32px; text-align: right; }
+    .mon-asesor-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+    .mon-stat { font-size: 10px; color: rgba(16,33,92,.45); }
+    .mon-stat span { color: #10215c; font-weight: 800; }
+    /* ── Pedidos table ─────────────────────────────────────────────────── */
+    .mon-filter-row { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+    .mon-filter {
+      background: rgba(255,255,255,.5); border: 1px solid rgba(16,33,92,.14);
+      border-radius: 999px; color: rgba(16,33,92,.55); font-size: 10px;
+      font-weight: 800; padding: 5px 12px; cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .mon-filter.active { background: rgba(9,163,239,.13); border-color: rgba(9,163,239,.45); color: #067ab8; }
+    #monitor-overlay .pedido-card {
+      background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.75);
+      border-radius: 11px; padding: 9px 11px; margin-bottom: 5px;
+      box-shadow: 0 5px 14px rgba(16,33,92,.07);
+    }
+    #monitor-overlay .pedido-card.urgente  { border-left: 3px solid #e0362c; }
+    #monitor-overlay .pedido-card.hoy      { border-left: 3px solid #cf7500; }
+    #monitor-overlay .pedido-card.ok       { border-left: 3px solid rgba(16,33,92,.12); }
+    .pedido-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .pedido-num { font-size: 9px; font-weight: 800; color: rgba(16,33,92,.35); }
+    .pedido-cliente { font-size: 12px; font-weight: 800; color: #10215c; flex: 1; }
+    .pedido-meta { font-size: 10px; color: rgba(16,33,92,.5); margin-bottom: 4px; }
+    .pedido-bottom { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .pago-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+    .pago-badge.pagado   { background: rgba(29,158,75,.14); color: #1d9e4b; }
+    .pago-badge.parcial  { background: rgba(207,117,0,.13); color: #cf7500; }
+    .pago-badge.pendiente { background: rgba(224,54,44,.11); color: #e0362c; }
+    .estado-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: rgba(16,33,92,.08); color: rgba(16,33,92,.6); }
+    /* ── Dif badges monitor ────────────────────────────────────────────── */
+    .dif-m { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+    .dif-m.App { background: rgba(125,62,201,.13); color: #7d3ec9; }
+    .dif-m.Ap  { background: rgba(224,54,44,.11); color: #e0362c; }
+    .dif-m.A   { background: rgba(207,117,0,.13); color: #cf7500; }
+    .dif-m.B   { background: rgba(9,163,239,.13); color: #067ab8; }
+    /* ── ATC cards ─────────────────────────────────────────────────────── */
+    #monitor-overlay .atc-card {
+      background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.75);
+      border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;
+      box-shadow: 0 6px 16px rgba(16,33,92,.08);
+    }
+    #monitor-overlay .atc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .atc-name { font-size: 13px; font-weight: 800; color: #10215c; flex: 1; }
+    .atc-count { font-size: 18px; font-weight: 800; color: #067ab8; }
+    .atc-pedido-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-top: 1px solid rgba(16,33,92,.07); font-size: 11px; color: rgba(16,33,92,.65); }
+    .atc-alerta { background: rgba(224,54,44,.07); border: 1px solid rgba(224,54,44,.2); border-radius: 8px; padding: 6px 10px; margin-top: 6px; font-size: 10px; color: #e0362c; }
+    /* ── Cola urgencia ─────────────────────────────────────────────────── */
+    .cola-card {
+      background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.75);
+      border-radius: 11px; padding: 9px 11px; margin-bottom: 5px;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 5px 14px rgba(16,33,92,.07);
+    }
+    .cola-info { flex: 1; }
+    .cola-cliente-m { font-size: 12px; font-weight: 800; color: #10215c; }
+    .cola-desc-m { font-size: 10px; color: rgba(16,33,92,.5); }
+    .cola-tiempo { font-size: 9px; color: rgba(16,33,92,.4); margin-top: 2px; }
+    /* ── Empty/loading ─────────────────────────────────────────────────── */
+    .mon-loading { text-align: center; color: rgba(16,33,92,.45); font-size: 12px; padding: 30px; }
+    .mon-empty   { text-align: center; color: rgba(16,33,92,.35); font-size: 11px; padding: 20px; }
+    .mon-spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(9,163,239,.25); border-top-color: #09a3ef;
+      border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 6px;
+    }
+  </style>
+
+  <!-- Monitor overlay HTML -->
+  <div id="monitor-overlay" style="display:none">
+    <div class="mon-titlebar">
+      <button class="btn-volver" id="btn-cerrar-monitor">← Volver a mi sesión</button>
+      <span class="mon-title"><img src="assets/logo.png" alt=""/>Panel de Monitoreo — Gerencia</span>
+      <button class="btn-mon-refresh" id="btn-mon-refresh">↻ Actualizar</button>
+    </div>
+
+    <div class="mon-tabs">
+      <button class="mtab active" data-mtab="resumen"><svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19a8.5 8.5 0 1 1 15 0"/><path d="M12 13l4-4"/><circle cx="12" cy="13" r="1.6" fill="currentColor"/></svg>Resumen</button>
+      <button class="mtab" data-mtab="asesores"><svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.7-3 2.9-4.5 5.5-4.5s4.8 1.5 5.5 4.5"/><circle cx="17" cy="10" r="2.5"/><path d="M16.5 14.8c2.2.3 3.7 1.7 4.2 4.2"/></svg>Asesores</button>
+      <button class="mtab" data-mtab="pedidos"><svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>Pedidos</button>
+      <button class="mtab" data-mtab="atc"><svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="12" rx="2"/><path d="M9 20.5h6M12 16.5v4"/></svg>ATC</button>
+      <button class="mtab" data-mtab="cola"><svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Cola</button>
+    </div>
+
+    <!-- ── RESUMEN ──────────────────────────────────────────────────── -->
+    <div id="mpanel-resumen" class="mpanel active">
+      <div class="mon-kpi-grid" id="mon-kpis">
+        <div class="mon-kpi"><div class="mon-kpi-lbl">Asesores activos</div><div class="mon-kpi-val" id="mkpi-activos" style="color:#1d9e4b">—</div></div>
+        <div class="mon-kpi"><div class="mon-kpi-lbl">En cola</div><div class="mon-kpi-val" id="mkpi-cola" style="color:#cf7500">—</div></div>
+        <div class="mon-kpi"><div class="mon-kpi-lbl">En proceso</div><div class="mon-kpi-val" id="mkpi-proceso" style="color:#067ab8">—</div></div>
+        <div class="mon-kpi"><div class="mon-kpi-lbl">Completadas hoy</div><div class="mon-kpi-val" id="mkpi-comp" style="color:#1d9e4b">—</div></div>
+        <div class="mon-kpi"><div class="mon-kpi-lbl">Ingresos hoy</div><div class="mon-kpi-val" id="mkpi-ingresos" style="color:#7d3ec9">—</div></div>
+        <div class="mon-kpi"><div class="mon-kpi-lbl">Por cobrar</div><div class="mon-kpi-val" id="mkpi-cobrar" style="color:#e0362c">—</div></div>
+      </div>
+      <div class="mon-sec"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> Pedidos urgentes (entrega hoy o vencidos)</div>
+      <div id="mon-urgentes"><div class="mon-loading"><div class="mon-spinner"></div><br>Cargando...</div></div>
+    </div>
+
+    <!-- ── ASESORES ─────────────────────────────────────────────────── -->
+    <div id="mpanel-asesores" class="mpanel">
+      <div id="mon-asesores-list"><div class="mon-loading"><div class="mon-spinner"></div><br>Cargando...</div></div>
+    </div>
+
+    <!-- ── PEDIDOS ──────────────────────────────────────────────────── -->
+    <div id="mpanel-pedidos" class="mpanel">
+      <div class="mon-filter-row">
+        <button class="mon-filter active" data-f="todos">Todos</button>
+        <button class="mon-filter" data-f="en_cola">Cola</button>
+        <button class="mon-filter" data-f="asignado">Asignado</button>
+        <button class="mon-filter" data-f="en_proceso">En proceso</button>
+        <button class="mon-filter" data-f="completado">Completado hoy</button>
+      </div>
+      <div id="mon-pedidos-list"><div class="mon-loading"><div class="mon-spinner"></div><br>Cargando...</div></div>
+    </div>
+
+    <!-- ── ATC ──────────────────────────────────────────────────────── -->
+    <div id="mpanel-atc" class="mpanel">
+      <div class="mon-kpi-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:14px">
+        <div class="mon-kpi"><div class="mon-kpi-lbl">Pedidos creados hoy</div><div class="mon-kpi-val" id="mkpi-atc-total" style="color:#067ab8">—</div></div>
+        <div class="mon-kpi"><div class="mon-kpi-lbl">Campos faltantes</div><div class="mon-kpi-val" id="mkpi-atc-alertas" style="color:#e0362c">—</div></div>
+      </div>
+      <div id="mon-atc-list"><div class="mon-loading"><div class="mon-spinner"></div><br>Cargando...</div></div>
+    </div>
+
+    <!-- ── COLA ─────────────────────────────────────────────────────── -->
+    <div id="mpanel-cola" class="mpanel">
+      <div id="mon-cola-list"><div class="mon-loading"><div class="mon-spinner"></div><br>Cargando...</div></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
+      authDomain: "academic-tareas-monitor.firebaseapp.com",
+      projectId: "academic-tareas-monitor",
+      storageBucket: "academic-tareas-monitor.firebasestorage.app",
+      messagingSenderId: "131741560355",
+      appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
+    };
+
+    // Reutilizar la app principal YA AUTENTICADA (una instancia aparte no
+    // comparte la sesión y Firestore rechaza sus consultas)
+    const fbMon = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const dbMon = getFirestore(fbMon);
+    const authMon = getAuth(fbMon);
+    // Esperar a que la sesión esté restaurada antes de consultar
+    await new Promise(resolve => {
+      const unsub = onAuthStateChanged(authMon, () => { unsub(); resolve(); });
+    });
+
+    // Solo mostrar el botón de monitor si el rol es gerencia
+    if (window.AT) {
+      window.AT.getLoggedUser().then(u => {
+        if (u && u.rol === "gerencia") {
+          document.getElementById("btn-abrir-monitor").style.display = "inline-block";
+        }
+      });
+    }
+
+    // Toggle overlay
+    document.getElementById("btn-abrir-monitor").addEventListener("click", () => {
+      document.getElementById("monitor-overlay").style.display = "block";
+      cargarTodo();
+    });
+    document.getElementById("btn-cerrar-monitor").addEventListener("click", () => {
+      document.getElementById("monitor-overlay").style.display = "none";
+    });
+    document.getElementById("btn-mon-refresh").addEventListener("click", cargarTodo);
+
+    // Tabs
+    document.querySelectorAll(".mtab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".mtab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".mpanel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("mpanel-" + tab.dataset.mtab).classList.add("active");
+      });
+    });
+
+    // ── Helpers ─────────────────────────────────────────────────────────
+    function avatarL(n) { return (n||"?").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2); }
+    function difCls(d)   { return { "A++":"App", "A+":"Ap", "A":"A", "B":"B" }[d] || "B"; }
+    function mxn(n)      { return n != null ? "$" + Number(n).toLocaleString("es-MX") : "—"; }
+    function hhmm(iso)   { if (!iso) return "—"; try { return new Date(iso).toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"}); } catch{return "—";} }
+
+    function pagoBadge(precio, cantPagada, estatusPago) {
+      if (estatusPago === "pagado") return '<span class="pago-badge pagado">✓ Pagado</span>';
+      if (!precio) return '<span class="pago-badge pendiente">Sin precio</span>';
+      if (cantPagada > 0) return `<span class="pago-badge parcial">Parcial ${mxn(cantPagada)}/${mxn(precio)}</span>`;
+      return '<span class="pago-badge pendiente">Pendiente ' + mxn(precio) + '</span>';
+    }
+
+    function urgenciaClass(diaEntrega) {
+      if (!diaEntrega) return "ok";
+      const hoy = new Date().toISOString().split("T")[0];
+      const man = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+      if (diaEntrega < hoy) return "urgente";
+      if (diaEntrega <= man) return "hoy";
+      return "ok";
+    }
+
+    // ── Datos en caché ───────────────────────────────────────────────────
+    let _cache = {};
+
+    async function cargarTodo() {
+      const hoy = new Date().toISOString().split("T")[0];
+      setLoadingAll();
+      try {
+        const [
+          snapAsesor, snapGerencia, snapAtc,
+          snapCuotas,
+          snapActivas, snapCompletadas
+        ] = await Promise.all([
+          getDocs(query(collection(dbMon, "usuarios"), where("rol", "==", "asesor"))),
+          getDocs(query(collection(dbMon, "usuarios"), where("rol", "==", "gerencia"))),
+          getDocs(query(collection(dbMon, "usuarios"), where("rol", "==", "atc"))),
+          getDocs(query(collection(dbMon, "cuota_diaria"), where("fecha", "==", hoy))),
+          getDocs(query(collection(dbMon, "tareas"), where("estado", "in", ["en_cola","asignado","en_proceso"]))),
+          getDocs(query(collection(dbMon, "tareas"), where("estado", "==", "completado"), where("fecha_completacion", "==", hoy)))
+        ]);
+
+        // Mapas para acceso rápido
+        const cuotaMap = {};
+        snapCuotas.forEach(d => { cuotaMap[d.data().asesor_id] = d.data(); });
+
+        const trabajadores = [...snapAsesor.docs, ...snapGerencia.docs];
+        const atcUsers = snapAtc.docs;
+
+        _cache = { hoy, trabajadores, atcUsers, cuotaMap, activas: snapActivas.docs, completadas: snapCompletadas.docs };
+
+        renderResumen();
+        renderAsesores();
+        renderPedidos("todos");
+        renderAtc();
+        renderCola();
+
+      } catch(e) {
+        console.error("Error monitor:", e);
+        // Mostrar el error en los paneles en lugar de dejar el spinner infinito
+        ["mon-urgentes","mon-asesores-list","mon-pedidos-list","mon-atc-list","mon-cola-list"].forEach(id => {
+          const elx = document.getElementById(id);
+          if (elx) elx.innerHTML = '<div class="mon-empty"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> Error al cargar: ' + (e.message || e) + '<br>Intenta con ↻ Actualizar</div>';
+        });
+      }
+    }
+
+    function setLoadingAll() {
+      ["mon-urgentes","mon-asesores-list","mon-pedidos-list","mon-atc-list","mon-cola-list"].forEach(id => {
+        document.getElementById(id).innerHTML = '<div class="mon-loading"><div class="mon-spinner"></div><br>Cargando...</div>';
+      });
+    }
+
+    // ── RESUMEN ─────────────────────────────────────────────────────────
+    function renderResumen() {
+      const { trabajadores, cuotaMap, activas, completadas } = _cache;
+
+      let activos = 0;
+      trabajadores.forEach(d => { if ((d.data().estado_hoy||"offline") === "activo") activos++; });
+
+      const enCola    = activas.filter(d => d.data().estado === "en_cola").length;
+      const enProceso = activas.filter(d => d.data().estado === "en_proceso").length;
+
+      let ingresos = 0, porCobrar = 0;
+      completadas.forEach(d => {
+        const t = d.data();
+        ingresos += Number(t.precio) || 0;
+      });
+      activas.forEach(d => {
+        const t = d.data();
+        const precio = Number(t.precio) || 0;
+        const pagado = Number(t.cantidad_pagada) || 0;
+        if (t.estatus_pago !== "pagado" && precio > 0) porCobrar += (precio - pagado);
+      });
+
+      document.getElementById("mkpi-activos").textContent  = activos;
+      document.getElementById("mkpi-cola").textContent     = enCola;
+      document.getElementById("mkpi-proceso").textContent  = enProceso;
+      document.getElementById("mkpi-comp").textContent     = completadas.length;
+      document.getElementById("mkpi-ingresos").textContent = mxn(ingresos);
+      document.getElementById("mkpi-cobrar").textContent   = mxn(porCobrar);
+
+      // Pedidos urgentes (entrega hoy o vencidos, no completados)
+      const hoy = _cache.hoy;
+      const urgentes = activas.filter(d => {
+        const t = d.data();
+        const cls = urgenciaClass(t.dia_entrega);
+        return cls === "urgente" || cls === "hoy";
+      });
+
+      const urgEl = document.getElementById("mon-urgentes");
+      if (!urgentes.length) { urgEl.innerHTML = '<div class="mon-empty">✓ Sin pedidos urgentes</div>'; return; }
+      urgEl.innerHTML = urgentes.map(d => {
+        const t = d.data();
+        const cls = urgenciaClass(t.dia_entrega);
+        const dc  = difCls(t.dificultad);
+        return `<div class="pedido-card ${cls}">
+          <div class="pedido-top">
+            <span class="dif-m ${dc}">${t.dificultad||"?"}</span>
+            <span class="pedido-cliente">${t.cliente||"—"}</span>
+            <span style="font-size:10px;font-weight:700;color:${cls==='urgente'?'#ff453a':'#ff9f0a'}">${cls==='urgente'?'<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> VENCIDO':'<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2.5H4.5z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg> HOY'}</span>
+          </div>
+          <div class="pedido-meta"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${t.materia||t.descripcion||"—"} · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${t.asesor_nombre||"Sin asignar"} · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${t.dia_entrega||"—"}</div>
+          <div class="pedido-bottom">
+            ${pagoBadge(t.precio, t.cantidad_pagada, t.estatus_pago)}
+            <span class="estado-badge">${t.estado||"—"}</span>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    // ── ASESORES ─────────────────────────────────────────────────────────
+    function renderAsesores() {
+      const { trabajadores, cuotaMap } = _cache;
+      const el = document.getElementById("mon-asesores-list");
+      if (!trabajadores.length) { el.innerHTML = '<div class="mon-empty">Sin trabajadores</div>'; return; }
+
+      el.innerHTML = trabajadores.map(d => {
+        const u = d.data();
+        const cd = cuotaMap[d.id] || {};
+        const cuotaMax = u.cuota_max != null ? u.cuota_max : 1.0;
+        const cuotaActual = cd.cuota_actual || 0;
+        const pct = Math.min(100, Math.round((cuotaActual / cuotaMax) * 100));
+        const estado = u.estado_hoy || "offline";
+        const estadoLabel = { activo: "● Activo", inactivo: "● Inactivo", completó: "✓ Cuota completa", offline: "○ Desconectado" }[estado] || "○ Desconectado";
+        const rolBadge = u.rol === "gerencia"
+          ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(191,90,242,.15);color:#bf5af2">GERENCIA</span>` : "";
+
+        const tipos = (u.tipos_habilitados||[]).map(t => {
+          const dc = difCls(t);
+          return `<span class="dif-m ${dc}">${t}</span>`;
+        }).join(" ");
+
+        return `<div class="mon-asesor">
+          <div class="mon-asesor-top">
+            <div class="mon-avatar">${avatarL(u.nombre)}</div>
+            <div style="flex:1">
+              <div class="mon-asesor-name">${u.nombre} ${rolBadge}</div>
+              <div class="mon-estado ${estado}">${estadoLabel}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;font-weight:700;color:#09a3ef">${pct}%</div>
+              <div style="font-size:9px;color:rgba(16,33,92,.45)">${cuotaActual.toFixed(2)}/${cuotaMax}</div>
+            </div>
+          </div>
+          <div class="mon-cuota-wrap">
+            <div class="mon-cuota-bar-bg"><div class="mon-cuota-bar-fill ${pct>=100?'done':''}" style="width:${pct}%"></div></div>
+          </div>
+          <div class="mon-asesor-stats">
+            <div class="mon-stat">Completadas: <span>${cd.tareas_completadas||0}</span></div>
+            <div class="mon-stat">T. muertos: <span>${u.tiempos_muertos_hoy||0} min</span></div>
+            <div class="mon-stat">Recibidas: <span>${cd.total_tareas||0}</span></div>
+          </div>
+          ${tipos ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:5px">${tipos}</div>` : ""}
+        </div>`;
+      }).join("");
+    }
+
+    // ── PEDIDOS ──────────────────────────────────────────────────────────
+    let _filtroActivo = "todos";
+    function renderPedidos(filtro) {
+      _filtroActivo = filtro;
+      const { activas, completadas } = _cache;
+      const el = document.getElementById("mon-pedidos-list");
+
+      let tareas = [];
+      if (filtro === "todos") {
+        tareas = [...activas.map(d => ({id:d.id,...d.data()})), ...completadas.map(d => ({id:d.id,...d.data()}))];
+      } else if (filtro === "completado") {
+        tareas = completadas.map(d => ({id:d.id,...d.data()}));
+      } else {
+        tareas = activas.filter(d => d.data().estado === filtro).map(d => ({id:d.id,...d.data()}));
+      }
+
+      // Ordenar: urgentes primero, luego por entrega
+      tareas.sort((a, b) => {
+        const ua = urgenciaClass(a.dia_entrega);
+        const ub = urgenciaClass(b.dia_entrega);
+        const order = { urgente: 0, hoy: 1, ok: 2 };
+        return (order[ua]||2) - (order[ub]||2);
+      });
+
+      if (!tareas.length) { el.innerHTML = '<div class="mon-empty">Sin pedidos en esta categoría</div>'; return; }
+
+      el.innerHTML = tareas.map(t => {
+        const cls = urgenciaClass(t.dia_entrega);
+        const dc  = difCls(t.dificultad);
+        return `<div class="pedido-card ${cls}">
+          <div class="pedido-top">
+            ${t.numero_pedido ? `<span class="pedido-num">#${t.numero_pedido}</span>` : ""}
+            <span class="dif-m ${dc}">${t.dificultad||"?"}</span>
+            <span class="pedido-cliente">${t.cliente||"—"}</span>
+          </div>
+          <div class="pedido-meta">
+            ${t.plataforma ? `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="12" rx="2"/><path d="M9 20.5h6M12 16.5v4"/></svg> ${t.plataforma}` : ""}
+            ${t.escuela ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 5l9 4.5-9 4.5z"/><path d="M6.5 11.5v4c3 2.5 8 2.5 11 0v-4"/></svg> ${t.escuela}` : ""}
+            ${t.materia ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${t.materia}` : ""}
+          </div>
+          <div class="pedido-meta">
+            <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${t.asesor_nombre||"Sin asignar"}
+            ${t.dia_entrega ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${t.dia_entrega}` : ""}
+            ${cls==="urgente" ? ' · <span style="color:#ff453a;font-weight:700"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> VENCIDO</span>' : cls==="hoy" ? ' · <span style="color:#ff9f0a;font-weight:700"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2.5H4.5z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg> HOY</span>' : ""}
+          </div>
+          <div class="pedido-bottom">
+            ${pagoBadge(t.precio, t.cantidad_pagada, t.estatus_pago)}
+            <span class="estado-badge">${t.estado||"—"}</span>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    // Filtros de pedidos
+    document.querySelectorAll(".mon-filter").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".mon-filter").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderPedidos(btn.dataset.f);
+      });
+    });
+
+    // ── ATC ──────────────────────────────────────────────────────────────
+    function renderAtc() {
+      const { atcUsers, activas, hoy } = _cache;
+      const el = document.getElementById("mon-atc-list");
+
+      // Pedidos creados hoy (usar fecha_dia)
+      const todosActivos = activas.map(d => ({id:d.id,...d.data()}));
+
+      if (!atcUsers.length) { el.innerHTML = '<div class="mon-empty">Sin usuarios ATC registrados</div>'; return; }
+
+      let totalHoy = 0;
+      let totalAlertas = 0;
+
+      const html = atcUsers.map(d => {
+        const u = d.data();
+        const uid = d.id;
+        // Pedidos que creó este ATC hoy
+        const misHoy = todosActivos.filter(t => t.atc_creador_id === uid && t.fecha_dia === hoy);
+        // Alertas de calidad: campos críticos vacíos
+        const alertas = misHoy.filter(t => !t.precio || !t.dificultad || !t.dia_entrega || !t.materia);
+        totalHoy += misHoy.length;
+        totalAlertas += alertas.length;
+
+        const pedidosHtml = misHoy.slice(0,5).map(t => {
+          const dc = difCls(t.dificultad);
+          return `<div class="atc-pedido-row">
+            <span class="dif-m ${dc}">${t.dificultad||"?"}</span>
+            <span style="flex:1">${t.cliente||"—"} · ${t.materia||t.descripcion||"—"}</span>
+            <span style="color:rgba(16,33,92,.45)">${hhmm(t.creado_en)}</span>
+          </div>`;
+        }).join("");
+
+        const alertaHtml = alertas.length
+          ? `<div class="atc-alerta"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> ${alertas.length} pedido${alertas.length>1?"s":""} con campos incompletos (precio, dificultad, entrega o materia)</div>`
+          : "";
+
+        return `<div class="atc-card">
+          <div class="atc-header">
+            <div class="mon-avatar" style="background:#5e6ad2">${avatarL(u.nombre)}</div>
+            <div class="atc-name">${u.nombre}</div>
+            <div>
+              <div class="atc-count">${misHoy.length}</div>
+              <div style="font-size:8px;color:rgba(16,33,92,.45);text-align:right">pedidos hoy</div>
+            </div>
+          </div>
+          ${pedidosHtml || '<div style="font-size:10px;color:rgba(16,33,92,.35);padding:4px 0">Sin pedidos hoy</div>'}
+          ${misHoy.length > 5 ? `<div style="font-size:9px;color:rgba(16,33,92,.45);text-align:center;padding:4px">+ ${misHoy.length-5} más</div>` : ""}
+          ${alertaHtml}
+        </div>`;
+      }).join("");
+
+      document.getElementById("mkpi-atc-total").textContent   = totalHoy;
+      document.getElementById("mkpi-atc-alertas").textContent  = totalAlertas;
+      el.innerHTML = html;
+    }
+
+    // ── COLA ─────────────────────────────────────────────────────────────
+    function renderCola() {
+      const { activas } = _cache;
+      const el = document.getElementById("mon-cola-list");
+      const cola = activas.filter(d => d.data().estado === "en_cola")
+                          .map(d => ({id:d.id,...d.data()}));
+
+      if (!cola.length) { el.innerHTML = '<div class="mon-empty">✓ Cola vacía</div>'; return; }
+
+      el.innerHTML = cola.map(t => {
+        const dc = difCls(t.dificultad);
+        // Tiempo en cola aproximado
+        let tiempoStr = "";
+        if (t.creado_en) {
+          const mins = Math.round((Date.now() - new Date(t.creado_en).getTime()) / 60000);
+          tiempoStr = mins < 60 ? `${mins} min` : `${Math.round(mins/60)} h`;
+        }
+        return `<div class="cola-card">
+          <span class="dif-m ${dc}">${t.dificultad||"?"}</span>
+          <div class="cola-info">
+            <div class="cola-cliente-m">${t.cliente||"—"}</div>
+            <div class="cola-desc-m">${t.materia||t.descripcion||"—"} ${t.escuela ? "· "+t.escuela : ""}</div>
+            ${t.razon_rechazo ? `<div class="cola-tiempo" style="color:#ff453a">Rechazado: ${t.razon_rechazo}</div>` : ""}
+            ${tiempoStr ? `<div class="cola-tiempo">En cola: ${tiempoStr}</div>` : ""}
+          </div>
+          ${t.dia_entrega ? `<div style="font-size:9px;font-weight:700;color:${urgenciaClass(t.dia_entrega)==='urgente'?'#ff453a':urgenciaClass(t.dia_entrega)==='hoy'?'#ff9f0a':'rgba(16,33,92,.45)'}"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${t.dia_entrega}</div>` : ""}
+        </div>`;
+      }).join("");
+    }
   </script>
 </body>
 </html>

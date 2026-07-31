@@ -16,7 +16,9 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--bg); font-family: var(--font); color: var(--text); overflow-x: hidden; }
+    .hidden { display: none !important; }
 
+    /* ── Titlebar ─────────────────────────────────────────────────────── */
     .titlebar {
       -webkit-app-region: drag;
       background: rgba(22,27,34,.9);
@@ -27,77 +29,129 @@
       border-bottom: 1px solid var(--border);
       position: sticky; top: 0; z-index: 100;
     }
-    .titlebar-left { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; }
+    .titlebar-left  { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; }
     .titlebar-title { font-size: 13px; font-weight: 700; color: var(--text); -webkit-app-region: drag; flex:1; text-align:center; }
     .titlebar-right { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; }
     .role-badge { background: rgba(191,90,242,.15); border: 1px solid rgba(191,90,242,.3); color: var(--purple); border-radius: 6px; font-size: 10px; font-weight: 700; padding: 3px 8px; text-transform: uppercase; letter-spacing: .5px; }
-    .user-name { font-size: 12px; color: var(--sub); }
+    .user-name  { font-size: 12px; color: var(--sub); }
     .btn-logout { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 11px; padding: 4px 10px; cursor: pointer; font-family: var(--font); transition: all .2s; }
     .btn-logout:hover { border-color: var(--red); color: var(--red); }
 
-    .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    /* ── Tabs ─────────────────────────────────────────────────────────── */
+    .tabs { display: flex; gap: 4px; background: rgba(255,255,255,.03); border-bottom: 1px solid var(--border); padding: 8px 16px 0; }
+    .tab  { background: none; border: none; border-bottom: 2px solid transparent; color: var(--sub); font-family: var(--font); font-size: 12px; font-weight: 600; padding: 6px 12px 8px; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 5px; }
+    .tab:hover  { color: var(--text); }
+    .tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .tab-badge  { background: var(--orange); color: #000; border-radius: 10px; font-size: 9px; font-weight: 800; padding: 1px 5px; min-width: 16px; text-align: center; }
+    .tab-badge.green { background: var(--green); }
+    .tab-panel  { display: none; }
+    .tab-panel.active { display: block; }
 
-    /* KPI Cards */
-    .kpi-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    /* ── Common layout ────────────────────────────────────────────────── */
+    .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .section-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+
+    /* ── KPI ──────────────────────────────────────────────────────────── */
+    .kpi-row  { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
     .kpi-label { font-size: 10px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
     .kpi-value { font-size: 22px; font-weight: 700; }
-    .kpi-value.cyan { color: var(--cyan); }
-    .kpi-value.green { color: var(--green); }
+    .kpi-value.cyan   { color: var(--cyan); }
+    .kpi-value.green  { color: var(--green); }
     .kpi-value.orange { color: var(--orange); }
-    .kpi-value.red { color: var(--red); }
+    .kpi-value.red    { color: var(--red); }
 
-    /* Sección */
-    .section-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
-
-    /* Tabla asesores */
+    /* ── Asesores monitoreo ───────────────────────────────────────────── */
     .asesores-list { display: flex; flex-direction: column; gap: 8px; }
-    .asesor-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .asesor-card   { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
     .asesor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
     .asesor-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--indigo); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
-    .asesor-info { flex: 1; }
-    .asesor-name { font-size: 13px; font-weight: 600; }
+    .asesor-info   { flex: 1; }
+    .asesor-name   { font-size: 13px; font-weight: 600; }
     .asesor-status { font-size: 11px; }
-    .asesor-status.active { color: var(--green); }
-    .asesor-status.idle { color: var(--orange); }
-    .asesor-status.offline { color: var(--sub); }
+    .asesor-status.active    { color: var(--green); }
+    .asesor-status.idle      { color: var(--orange); }
+    .asesor-status.offline   { color: var(--sub); }
     .asesor-status.completed { color: var(--cyan); }
     .cuota-bar-wrap { display: flex; align-items: center; gap: 8px; }
-    .cuota-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; }
+    .cuota-bar-bg   { flex: 1; height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; }
     .cuota-bar-fill { height: 100%; border-radius: 3px; background: var(--cyan); transition: width .5s; }
     .cuota-bar-fill.done { background: var(--green); }
-    .cuota-pct { font-size: 11px; font-weight: 700; color: var(--sub); min-width: 36px; text-align: right; }
+    .cuota-pct  { font-size: 11px; font-weight: 700; color: var(--sub); min-width: 36px; text-align: right; }
     .asesor-stats { display: flex; gap: 12px; margin-top: 8px; }
-    .asesor-stat { font-size: 10px; color: var(--sub); }
+    .asesor-stat  { font-size: 10px; color: var(--sub); }
     .asesor-stat span { color: var(--text); font-weight: 600; }
 
-    /* Cola */
-    .cola-list { display: flex; flex-direction: column; gap: 6px; }
-    .cola-item { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
-    .cola-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
-    .cola-badge.A { background: rgba(255,69,58,.15); color: var(--red); }
-    .cola-badge.B { background: rgba(9,163,239,.15); color: var(--cyan); }
-    .cola-badge.S { background: rgba(50,215,75,.15); color: var(--green); }
-    .cola-info { flex: 1; }
+    /* ── Cola ─────────────────────────────────────────────────────────── */
+    .cola-list  { display: flex; flex-direction: column; gap: 6px; }
+    .cola-item  { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .cola-info  { flex: 1; }
     .cola-cliente { font-size: 12px; font-weight: 600; }
-    .cola-desc { font-size: 11px; color: var(--sub); }
-    .cola-empty { text-align: center; color: var(--sub); font-size: 12px; padding: 16px; }
+    .cola-desc    { font-size: 11px; color: var(--sub); }
+    .cola-empty   { text-align: center; color: var(--sub); font-size: 12px; padding: 16px; }
 
-    /* Loading */
+    /* ── Dificultad badges ────────────────────────────────────────────── */
+    .dif-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+    .dif-badge.App, .cola-badge.App { background: rgba(191,90,242,.15); color: var(--purple); }
+    .dif-badge.Ap,  .cola-badge.Ap  { background: rgba(255,69,58,.15);  color: var(--red); }
+    .dif-badge.A,   .cola-badge.A   { background: rgba(255,159,10,.15); color: var(--orange); }
+    .dif-badge.B,   .cola-badge.B   { background: rgba(9,163,239,.15);  color: var(--cyan); }
+    .cola-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+
+    /* ── Mis Tareas ───────────────────────────────────────────────────── */
+    .tarea-card { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; }
+    .tarea-card.tipo-App { border-left: 3px solid var(--purple); }
+    .tarea-card.tipo-Ap  { border-left: 3px solid var(--red); }
+    .tarea-card.tipo-A   { border-left: 3px solid var(--orange); }
+    .tarea-card.tipo-B   { border-left: 3px solid var(--cyan); }
+    .tarea-header  { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .tarea-cliente { font-size: 13px; font-weight: 600; flex: 1; }
+    .tarea-meta    { font-size: 11px; color: var(--sub); margin-bottom: 6px; }
+    .tarea-actions { display: flex; gap: 6px; margin-top: 6px; }
+    .btn-aceptar  { flex: 1; background: rgba(50,215,75,.15); border: 1px solid rgba(50,215,75,.3); border-radius: 7px; color: var(--green); font-size: 11px; font-weight: 700; padding: 6px; cursor: pointer; font-family: var(--font); }
+    .btn-rechazar { flex: 1; background: rgba(255,69,58,.1); border: 1px solid rgba(255,69,58,.25); border-radius: 7px; color: var(--red); font-size: 11px; font-weight: 700; padding: 6px; cursor: pointer; font-family: var(--font); }
+    .sin-tareas   { text-align: center; color: var(--sub); font-size: 12px; padding: 24px; }
+
+    /* ── Mis Actividades ──────────────────────────────────────────────── */
+    .act-card { background: rgba(50,215,75,.05); border: 1px solid rgba(50,215,75,.2); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; }
+    .act-card.tipo-App { border-left: 3px solid var(--purple); }
+    .act-card.tipo-Ap  { border-left: 3px solid var(--red); }
+    .act-card.tipo-A   { border-left: 3px solid var(--orange); }
+    .act-card.tipo-B   { border-left: 3px solid var(--cyan); }
+    .btn-iniciar-act { width: 100%; background: rgba(50,215,75,.2); border: 1px solid rgba(50,215,75,.4); border-radius: 7px; color: var(--green); font-size: 12px; font-weight: 700; padding: 8px; cursor: pointer; font-family: var(--font); margin-top: 6px; }
+
+    /* ── Modal rechazo ────────────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .rechazo-modal { background: #161b22; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 24px; width: 280px; }
+    .rechazo-modal h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+    .rechazo-modal textarea { width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 12px; padding: 8px 10px; resize: none; height: 70px; outline: none; }
+    .rechazo-modal textarea:focus { border-color: var(--cyan); }
+    .modal-btns { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-modal-cancel  { flex: 1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: var(--sub); font-size: 12px; font-weight: 600; padding: 8px; cursor: pointer; font-family: var(--font); }
+    .btn-modal-confirm { flex: 1; background: rgba(255,69,58,.2); border: 1px solid rgba(255,69,58,.4); border-radius: 8px; color: var(--red); font-size: 12px; font-weight: 700; padding: 8px; cursor: pointer; font-family: var(--font); }
+
+    /* ── Mi cuota personal ────────────────────────────────────────────── */
+    .mi-cuota-card { background: rgba(191,90,242,.06); border: 1px solid rgba(191,90,242,.2); border-radius: 10px; padding: 12px 14px; }
+    .mi-cuota-top  { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .mi-cuota-label { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: .5px; flex:1; }
+    .mi-cuota-val   { font-size: 20px; font-weight: 700; color: var(--purple); }
+
+    /* ── Refresh btn ──────────────────────────────────────────────────── */
+    .btn-refresh { background: rgba(9,163,239,.1); border: 1px solid rgba(9,163,239,.25); border-radius: 8px; color: var(--cyan); font-size: 12px; font-weight: 600; padding: 8px 16px; cursor: pointer; font-family: var(--font); transition: all .2s; }
+    .btn-refresh:hover { background: rgba(9,163,239,.2); }
+
+    /* ── Loading ──────────────────────────────────────────────────────── */
     .loading-state { text-align: center; color: var(--sub); font-size: 13px; padding: 40px 0; }
     .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(9,163,239,.3); border-top-color: var(--cyan); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Refresh btn */
-    .btn-refresh { background: rgba(9,163,239,.1); border: 1px solid rgba(9,163,239,.25); border-radius: 8px; color: var(--cyan); font-size: 12px; font-weight: 600; padding: 8px 16px; cursor: pointer; font-family: var(--font); transition: all .2s; }
-    .btn-refresh:hover { background: rgba(9,163,239,.2); }
   </style>
 </head>
 <body>
 
+  <!-- ── Titlebar ──────────────────────────────────────────────────────── -->
   <div class="titlebar">
     <div class="titlebar-left">
-      <span class="role-badge">Gerencia</span>
+      <span class="role-badge">👑 Gerencia</span>
     </div>
     <span class="titlebar-title">🎓 Academic Tareas</span>
     <div class="titlebar-right">
@@ -106,51 +160,114 @@
     </div>
   </div>
 
-  <div class="content">
+  <!-- ── Tabs ──────────────────────────────────────────────────────────── -->
+  <div class="tabs">
+    <button class="tab active" data-tab="monitoreo">📊 Monitoreo</button>
+    <button class="tab" data-tab="tareas">
+      📋 Mis Tareas
+      <span class="tab-badge" id="badge-tareas">0</span>
+    </button>
+    <button class="tab" data-tab="actividades">
+      ✅ Mis Actividades
+      <span class="tab-badge green" id="badge-actividades" style="display:none">0</span>
+    </button>
+  </div>
 
-    <!-- KPIs -->
-    <div class="kpi-row">
-      <div class="kpi-card">
-        <div class="kpi-label">Asesores activos</div>
-        <div class="kpi-value cyan" id="kpi-activos">—</div>
+  <!-- ══ PANEL: MONITOREO ═══════════════════════════════════════════════ -->
+  <div id="panel-monitoreo" class="tab-panel active">
+    <div class="content">
+
+      <!-- Mi cuota personal -->
+      <div class="mi-cuota-card">
+        <div class="mi-cuota-top">
+          <div class="mi-cuota-label">Mi cuota hoy</div>
+          <div class="mi-cuota-val" id="mi-cuota-pct">—</div>
+        </div>
+        <div class="cuota-bar-wrap">
+          <div class="cuota-bar-bg">
+            <div class="cuota-bar-fill" id="mi-cuota-bar" style="width:0%;background:var(--purple)"></div>
+          </div>
+        </div>
+        <div id="mi-cuota-info" style="font-size:10px;color:var(--sub);margin-top:6px"></div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Tareas en cola</div>
-        <div class="kpi-value orange" id="kpi-cola">—</div>
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Asesores activos</div>
+          <div class="kpi-value cyan"   id="kpi-activos">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tareas en cola</div>
+          <div class="kpi-value orange" id="kpi-cola">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Completadas hoy</div>
+          <div class="kpi-value green"  id="kpi-completadas">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tasa de rechazo</div>
+          <div class="kpi-value red"    id="kpi-rechazo">—</div>
+        </div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Completadas hoy</div>
-        <div class="kpi-value green" id="kpi-completadas">—</div>
+
+      <!-- Asesores -->
+      <div>
+        <div class="section-title">Asesores</div>
+        <div id="asesores-list" class="asesores-list">
+          <div class="loading-state"><div class="spinner"></div><br>Cargando...</div>
+        </div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Tasa de rechazo</div>
-        <div class="kpi-value red" id="kpi-rechazo">—</div>
+
+      <!-- Cola de espera -->
+      <div>
+        <div class="section-title">Cola de espera</div>
+        <div id="cola-list" class="cola-list">
+          <div class="loading-state"><div class="spinner"></div><br>Cargando...</div>
+        </div>
       </div>
+
+      <button class="btn-refresh" id="btn-refresh">↻ Actualizar datos</button>
     </div>
+  </div>
 
-    <!-- Asesores -->
-    <div>
-      <div class="section-title">Asesores</div>
-      <div id="asesores-list" class="asesores-list">
+  <!-- ══ PANEL: MIS TAREAS ═════════════════════════════════════════════ -->
+  <div id="panel-tareas" class="tab-panel">
+    <div class="content">
+      <div class="section-title">Tareas asignadas a mí</div>
+      <div id="mis-tareas-list">
         <div class="loading-state"><div class="spinner"></div><br>Cargando...</div>
       </div>
+      <button class="btn-refresh" id="btn-refresh-tareas">↻ Actualizar tareas</button>
     </div>
+  </div>
 
-    <!-- Cola de espera -->
-    <div>
-      <div class="section-title">Cola de espera</div>
-      <div id="cola-list" class="cola-list">
-        <div class="loading-state"><div class="spinner"></div><br>Cargando...</div>
+  <!-- ══ PANEL: MIS ACTIVIDADES ════════════════════════════════════════ -->
+  <div id="panel-actividades" class="tab-panel">
+    <div class="content">
+      <div class="section-title">Tareas en proceso</div>
+      <div id="mis-actividades-list">
+        <div class="sin-tareas">Sin actividades en proceso</div>
       </div>
     </div>
+  </div>
 
-    <button class="btn-refresh" id="btn-refresh">↻ Actualizar datos</button>
-
+  <!-- ── Modal rechazo ─────────────────────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="rechazo-overlay">
+    <div class="rechazo-modal">
+      <h3>¿Por qué rechazas esta tarea?</h3>
+      <textarea id="rechazo-razon" placeholder="Escribe el motivo..."></textarea>
+      <div class="modal-btns">
+        <button class="btn-modal-cancel"  id="btn-modal-cancel">Cancelar</button>
+        <button class="btn-modal-confirm" id="btn-modal-confirm">Rechazar</button>
+      </div>
+    </div>
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { initializeApp, getApps, getApp }  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
@@ -161,59 +278,122 @@
       appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
     };
 
-    const fbApp = initializeApp(firebaseConfig);
+    const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db    = getFirestore(fbApp);
+    const auth  = getAuth(fbApp);
 
-    // Mostrar nombre usuario
+    // Esperar a que Firebase restaure la sesión iniciada en el login
+    // (las reglas de Firestore exigen usuario autenticado)
+    await new Promise(resolve => {
+      const unsub = onAuthStateChanged(auth, (u) => { unsub(); resolve(u); });
+    });
+    if (!auth.currentUser && window.AT) { window.AT.authLogout(); }
+
+    const CUOTA_DEFAULT = { "A++": 0.333, "A+": 0.25, "A": 0.167, "B": 0.125 };
+
+    // Obtener usuario actual
+    let currentUser = null;
     if (window.AT) {
       window.AT.getLoggedUser().then(u => {
-        if (u) document.getElementById("user-name").textContent = u.nombre;
+        if (u) {
+          currentUser = u;
+          document.getElementById("user-name").textContent = u.nombre;
+          cargarDatos();
+          cargarMisTareas();
+          cargarMiCuota();
+        }
       });
     }
 
     // Logout
-    document.getElementById("btn-logout").addEventListener("click", () => {
-      window.AT.authLogout();
+    document.getElementById("btn-logout").addEventListener("click", () => window.AT.authLogout());
+
+    // ── Tab navigation ───────────────────────────────────────────────────
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+        if (tab.dataset.tab === "tareas") cargarMisTareas();
+        if (tab.dataset.tab === "monitoreo") { cargarDatos(); cargarMiCuota(); }
+      });
     });
 
+    // ── Helpers ─────────────────────────────────────────────────────────
     function avatarLetters(nombre) {
-      return (nombre || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2);
+      return (nombre || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
     }
-
+    function difClass(dif) {
+      return { "A++": "App", "A+": "Ap", "A": "A", "B": "B" }[dif] || "B";
+    }
     function statusLabel(estado) {
-      const map = { activo: "● Activo", inactivo: "● Inactivo", completó: "✓ Completó cuota", offline: "○ Desconectado" };
-      return map[estado] || "○ Desconectado";
+      return { activo: "● Activo", inactivo: "● Inactivo", completó: "✓ Completó cuota", offline: "○ Desconectado" }[estado] || "○ Desconectado";
     }
     function statusClass(estado) {
-      const map = { activo: "active", inactivo: "idle", completó: "completed" };
-      return map[estado] || "offline";
+      return { activo: "active", inactivo: "idle", completó: "completed" }[estado] || "offline";
     }
 
+    // ── Mi cuota personal ────────────────────────────────────────────────
+    async function cargarMiCuota() {
+      if (!currentUser) return;
+      try {
+        const hoy = new Date().toISOString().split("T")[0];
+        const cdSnap = await getDoc(doc(db, "cuota_diaria", currentUser.uid + "_" + hoy));
+        const cd = cdSnap.exists() ? cdSnap.data() : {};
+        const uSnap = await getDoc(doc(db, "usuarios", currentUser.uid));
+        const cuotaMax = uSnap.exists() ? (uSnap.data().cuota_max || 1.0) : 1.0;
+        const cuotaActual = cd.cuota_actual || 0;
+        const pct = Math.min(100, Math.round((cuotaActual / cuotaMax) * 100));
+        document.getElementById("mi-cuota-pct").textContent = pct + "%";
+        document.getElementById("mi-cuota-bar").style.width = pct + "%";
+        if (pct >= 100) document.getElementById("mi-cuota-bar").style.background = "var(--green)";
+        const tareas = cd.total_tareas || 0;
+        const completadas = cd.tareas_completadas || 0;
+        document.getElementById("mi-cuota-info").textContent =
+          `${tareas} tarea${tareas !== 1 ? "s" : ""} recibidas · ${completadas} completadas · Máx: ${cuotaMax}`;
+      } catch(e) { console.error("Error cargando mi cuota:", e); }
+    }
+
+    // ── Monitoreo dashboard ──────────────────────────────────────────────
     async function cargarDatos() {
       try {
-        // ── Asesores ──
-        const snap = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+        const [snapAsesor, snapGerencia] = await Promise.all([
+          getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor"))),
+          getDocs(query(collection(db, "usuarios"), where("rol", "==", "gerencia")))
+        ]);
+        const todosDocs = [...snapAsesor.docs, ...snapGerencia.docs];
         const hoy = new Date().toISOString().split("T")[0];
         const asesorEl = document.getElementById("asesores-list");
         asesorEl.innerHTML = "";
         let activos = 0;
 
-        for (const docu of snap.docs) {
+        for (const docu of todosDocs) {
           const u = docu.data();
-          // Leer cuota del día
           const cuotaSnap = await getDocs(query(collection(db, "cuota_diaria"),
             where("asesor_id", "==", docu.id), where("fecha", "==", hoy)));
           const cuota = cuotaSnap.empty ? { cuota_actual: 0, tareas_completadas: 0 } : cuotaSnap.docs[0].data();
-          const pct = Math.min(100, Math.round((cuota.cuota_actual || 0) * 100));
+          const cuotaMax = u.cuota_max != null ? u.cuota_max : 1.0;
+          const pct = Math.min(100, Math.round(((cuota.cuota_actual || 0) / cuotaMax) * 100));
           const estado = u.estado_hoy || "offline";
           if (estado === "activo") activos++;
+
+          const tipos = (u.tipos_habilitados || []).map(t => {
+            const dc = difClass(t);
+            const colors = { App: "var(--purple)", Ap: "var(--red)", A: "var(--orange)", B: "var(--cyan)" };
+            return `<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.06);color:${colors[dc]||'var(--sub)'}">${t}</span>`;
+          }).join(" ");
+
+          const rolBadge = u.rol === "gerencia"
+            ? `<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(191,90,242,.15);color:var(--purple);margin-left:4px">GERENCIA</span>`
+            : "";
 
           asesorEl.innerHTML += `
             <div class="asesor-card">
               <div class="asesor-header">
                 <div class="asesor-avatar">${avatarLetters(u.nombre)}</div>
                 <div class="asesor-info">
-                  <div class="asesor-name">${u.nombre}</div>
+                  <div class="asesor-name">${u.nombre}${rolBadge}</div>
                   <div class="asesor-status ${statusClass(estado)}">${statusLabel(estado)}</div>
                 </div>
               </div>
@@ -225,14 +405,16 @@
               </div>
               <div class="asesor-stats">
                 <div class="asesor-stat">Tareas: <span>${cuota.tareas_completadas || 0}</span></div>
-                <div class="asesor-stat">T. Muertos: <span>${u.tiempos_muertos_hoy || 0} min</span></div>
+                <div class="asesor-stat">Cuota: <span>${(cuota.cuota_actual||0).toFixed(2)} / ${cuotaMax}</span></div>
               </div>
+              ${tipos ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${tipos}</div>` : ""}
             </div>`;
         }
-        if (snap.empty) asesorEl.innerHTML = '<div class="cola-empty">Sin asesores registrados</div>';
+
+        if (!todosDocs.length) asesorEl.innerHTML = '<div class="cola-empty">Sin asesores registrados</div>';
         document.getElementById("kpi-activos").textContent = activos;
 
-        // ── Cola ──
+        // Cola
         const colaSnap = await getDocs(query(collection(db, "tareas"), where("estado", "==", "en_cola"), orderBy("creado_en")));
         const colaEl = document.getElementById("cola-list");
         colaEl.innerHTML = "";
@@ -243,18 +425,19 @@
         } else {
           colaSnap.forEach(docu => {
             const t = docu.data();
+            const dc = difClass(t.dificultad);
             colaEl.innerHTML += `
               <div class="cola-item">
-                <span class="cola-badge ${t.dificultad}">${t.dificultad}</span>
+                <span class="cola-badge ${dc}">${t.dificultad||"?"}</span>
                 <div class="cola-info">
-                  <div class="cola-cliente">${t.cliente}</div>
-                  <div class="cola-desc">${(t.descripcion||"").slice(0,50)}${t.descripcion?.length > 50 ? "…" : ""}</div>
+                  <div class="cola-cliente">${t.cliente||"—"}</div>
+                  <div class="cola-desc">${(t.materia||t.descripcion||"").slice(0,50)}</div>
                 </div>
               </div>`;
           });
         }
 
-        // ── KPIs completadas/rechazo ──
+        // KPIs completadas / rechazo
         const compSnap = await getDocs(query(collection(db, "tareas"), where("estado", "==", "completado"), where("fecha_completacion", ">=", hoy)));
         document.getElementById("kpi-completadas").textContent = compSnap.size;
 
@@ -262,13 +445,249 @@
         const total = compSnap.size + rechSnap.size;
         document.getElementById("kpi-rechazo").textContent = total > 0 ? Math.round((rechSnap.size / total) * 100) + "%" : "0%";
 
-      } catch (e) {
-        console.error("Error cargando datos:", e);
+      } catch(e) { console.error("Error cargando dashboard:", e); }
+    }
+
+    document.getElementById("btn-refresh").addEventListener("click", () => { cargarDatos(); cargarMiCuota(); });
+
+    // ── Modal rechazo ─────────────────────────────────────────────────────
+    let _rechazarCallback = null;
+    const rechazoOverlay = document.getElementById("rechazo-overlay");
+    const rechazoRazon   = document.getElementById("rechazo-razon");
+
+    document.getElementById("btn-modal-cancel").addEventListener("click", () => {
+      rechazoOverlay.classList.add("hidden");
+      _rechazarCallback = null;
+    });
+    document.getElementById("btn-modal-confirm").addEventListener("click", async () => {
+      const razon = rechazoRazon.value.trim() || "Sin motivo";
+      rechazoOverlay.classList.add("hidden");
+      if (_rechazarCallback) await _rechazarCallback(razon);
+      _rechazarCallback = null;
+    });
+    function mostrarModalRechazo(callback) {
+      rechazoRazon.value = "";
+      _rechazarCallback = callback;
+      rechazoOverlay.classList.remove("hidden");
+      setTimeout(() => rechazoRazon.focus(), 50);
+    }
+
+    // ── Mis Actividades ───────────────────────────────────────────────────
+    const actListEl   = document.getElementById("mis-actividades-list");
+    const actBadgeEl  = document.getElementById("badge-actividades");
+    let actCount = 0;
+
+    function agregarActividad(tarea) {
+      actCount++;
+      actBadgeEl.style.display = "inline-block";
+      actBadgeEl.textContent = actCount;
+
+      const dc = difClass(tarea.dificultad);
+      const card = document.createElement("div");
+      card.className = "act-card tipo-" + dc;
+      card.dataset.id = tarea.id;
+      card.innerHTML = `
+        <div class="tarea-header">
+          <span class="dif-badge ${dc}">${tarea.dificultad||"?"}</span>
+          <span class="tarea-cliente">${tarea.cliente||"Sin cliente"}</span>
+        </div>
+        <div class="tarea-meta">${tarea.materia||tarea.descripcion||""} · ${tarea.escuela||""}</div>
+        <button class="btn-iniciar-act" data-id="${tarea.id}" data-nombre="${(tarea.cliente||'tarea').replace(/"/g,'')}">▶ Iniciar actividad</button>`;
+
+      // Quitar placeholder
+      const placeholder = actListEl.querySelector(".sin-tareas");
+      if (placeholder) placeholder.remove();
+      actListEl.appendChild(card);
+
+      card.querySelector(".btn-iniciar-act").addEventListener("click", async function() {
+        const tareaId = this.dataset.id;
+        const nombre  = this.dataset.nombre;
+
+        // Iniciar en el activity tracker
+        if (window.AT) {
+          try { await window.AT.startActivity({ name: nombre }); } catch(e) {}
+        }
+
+        this.textContent = "■ Completar tarea";
+        this.style.background = "rgba(9,163,239,.2)";
+        this.style.borderColor = "rgba(9,163,239,.4)";
+        this.style.color = "var(--cyan)";
+
+        this.onclick = async () => {
+          try {
+            await updateDoc(doc(db, "tareas", tareaId), {
+              estado: "completado",
+              fecha_completacion: new Date().toISOString().split("T")[0]
+            });
+
+            // Restar cuota (liberar capacidad)
+            if (currentUser) {
+              const hoy = new Date().toISOString().split("T")[0];
+              const cuotaDocRef = doc(db, "cuota_diaria", currentUser.uid + "_" + hoy);
+              const cuotaSnap   = await getDoc(cuotaDocRef);
+              const cuotaActual = cuotaSnap.exists() ? (cuotaSnap.data().cuota_actual || 0) : 0;
+              const tareas_completadas = cuotaSnap.exists() ? ((cuotaSnap.data().tareas_completadas || 0) + 1) : 1;
+              const costo = CUOTA_DEFAULT[tarea.dificultad] || 0.167;
+              await setDoc(cuotaDocRef, {
+                asesor_id: currentUser.uid,
+                fecha: hoy,
+                cuota_actual: Math.max(0, cuotaActual - costo),
+                tareas_completadas
+              }, { merge: true });
+            }
+          } catch(e) { console.error("Error al completar:", e); }
+
+          if (window.AT) { try { await window.AT.endActivity(); } catch(e) {} }
+
+          card.remove();
+          actCount = Math.max(0, actCount - 1);
+          actBadgeEl.textContent = actCount;
+          if (actCount === 0) {
+            actBadgeEl.style.display = "none";
+            actListEl.innerHTML = '<div class="sin-tareas">Sin actividades en proceso</div>';
+          }
+          cargarMiCuota();
+        };
+      });
+    }
+
+    // ── Cargar mis tareas ─────────────────────────────────────────────────
+    let _cargando = false;
+    async function cargarMisTareas() {
+      if (_cargando) return;
+      _cargando = true;
+      const listEl   = document.getElementById("mis-tareas-list");
+      const badgeEl  = document.getElementById("badge-tareas");
+      listEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><br>Cargando...</div>';
+
+      try {
+        if (!currentUser) { listEl.innerHTML = '<div class="sin-tareas">No autenticado</div>'; return; }
+
+        const snap = await getDocs(query(
+          collection(db, "tareas"),
+          where("asesor_asignado_id", "==", currentUser.uid)
+        ));
+
+        const tareas = [];
+        snap.forEach(d => {
+          const t = d.data();
+          if (["asignado"].includes(t.estado)) tareas.push({ id: d.id, ...t });
+        });
+
+        badgeEl.textContent = tareas.length;
+
+        if (tareas.length === 0) {
+          listEl.innerHTML = '<div class="sin-tareas">✓ Sin tareas pendientes</div>';
+          return;
+        }
+
+        listEl.innerHTML = "";
+        tareas.forEach(t => {
+          const dc = difClass(t.dificultad);
+          const card = document.createElement("div");
+          card.className = "tarea-card tipo-" + dc;
+          card.innerHTML = `
+            <div class="tarea-header">
+              <span class="dif-badge ${dc}">${t.dificultad||"?"}</span>
+              <span class="tarea-cliente">${t.cliente||"Sin cliente"}</span>
+            </div>
+            <div class="tarea-meta">
+              ${t.materia ? `📚 ${t.materia}` : ""}
+              ${t.escuela ? ` · 🏫 ${t.escuela}` : ""}
+              ${t.dia_entrega ? ` · 📅 ${t.dia_entrega}` : ""}
+            </div>
+            ${t.entregable ? `<div class="tarea-meta">📎 ${t.entregable}</div>` : ""}
+            <div class="tarea-actions">
+              <button class="btn-aceptar"  data-id="${t.id}">✓ Aceptar</button>
+              <button class="btn-rechazar" data-id="${t.id}">✕ Rechazar</button>
+            </div>`;
+          listEl.appendChild(card);
+        });
+
+        // Aceptar
+        listEl.querySelectorAll(".btn-aceptar").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.textContent = "...";
+            const card  = btn.closest(".tarea-card");
+            const tId   = btn.dataset.id;
+            const tarea = tareas.find(x => x.id === tId);
+            card.querySelector(".btn-rechazar").disabled = true;
+
+            await updateDoc(doc(db, "tareas", tId), { estado: "en_proceso" });
+            card.remove();
+            const rest = listEl.querySelectorAll(".tarea-card").length;
+            badgeEl.textContent = rest;
+            if (!rest) listEl.innerHTML = '<div class="sin-tareas">✓ Sin tareas pendientes</div>';
+            if (tarea) {
+              agregarActividad(tarea);
+              // Cambiar al tab de actividades
+              document.querySelector('[data-tab="actividades"]').click();
+            }
+          });
+        });
+
+        // Rechazar
+        listEl.querySelectorAll(".btn-rechazar").forEach(btn => {
+          btn.addEventListener("click", () => {
+            if (btn.disabled) return;
+            mostrarModalRechazo(async (razon) => {
+              btn.disabled = true;
+              const card   = btn.closest(".tarea-card");
+              const tarea  = tareas.find(x => x.id === btn.dataset.id);
+              await updateDoc(doc(db, "tareas", btn.dataset.id), {
+                estado: "en_cola",
+                asesor_asignado_id: null,
+                asesor_nombre: null,
+                razon_rechazo: razon
+              });
+
+              // Restar cuota al rechazar
+              if (currentUser && tarea) {
+                const hoy = new Date().toISOString().split("T")[0];
+                const cuotaDocRef = doc(db, "cuota_diaria", currentUser.uid + "_" + hoy);
+                const cuotaSnap   = await getDoc(cuotaDocRef);
+                const cuotaActual = cuotaSnap.exists() ? (cuotaSnap.data().cuota_actual || 0) : 0;
+                const costo = CUOTA_DEFAULT[tarea.dificultad] || 0.167;
+                await setDoc(cuotaDocRef, {
+                  asesor_id: currentUser.uid,
+                  fecha: hoy,
+                  cuota_actual: Math.max(0, cuotaActual - costo)
+                }, { merge: true });
+              }
+
+              card.remove();
+              const rest = listEl.querySelectorAll(".tarea-card").length;
+              badgeEl.textContent = rest;
+              if (!rest) listEl.innerHTML = '<div class="sin-tareas">✓ Sin tareas pendientes</div>';
+            });
+          });
+        });
+
+      } catch(e) {
+        listEl.innerHTML = '<div class="sin-tareas">Error al cargar tareas</div>';
+        console.error(e);
+      } finally {
+        _cargando = false;
       }
     }
 
-    document.getElementById("btn-refresh").addEventListener("click", cargarDatos);
-    cargarDatos();
+    document.getElementById("btn-refresh-tareas").addEventListener("click", cargarMisTareas);
+
+    // Auto-refresh tareas cada 30 segundos
+    setInterval(() => {
+      const tabActivo = document.querySelector(".tab.active")?.dataset?.tab;
+      if (tabActivo === "tareas") cargarMisTareas();
+      else {
+        // Actualizar solo el badge silenciosamente
+        if (currentUser) {
+          getDocs(query(collection(db, "tareas"), where("asesor_asignado_id", "==", currentUser.uid), where("estado", "==", "asignado")))
+            .then(snap => { document.getElementById("badge-tareas").textContent = snap.size; })
+            .catch(() => {});
+        }
+      }
+    }, 30000);
   </script>
 </body>
 </html>

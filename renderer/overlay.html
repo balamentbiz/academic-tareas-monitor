@@ -150,11 +150,14 @@
     }
     .resume-btn.ready:active{transform:scale(.95)}
   </style>
+  <link rel="stylesheet" href="theme.css"/>
 </head>
-<body>
+<body class="at-light">
 <div class="overlay">
   <div class="card">
-    <span class="emoji">😴</span>
+    <span class="at-mark-sway" style="margin-bottom:12px">
+      <img src="assets/logo.png" alt="Academic Tareas" style="width:64px;height:64px;object-fit:contain;border-radius:22%;" onerror="this.style.display='none'"/>
+    </span>
     <h2 class="title">TIEMPO MUERTO</h2>
     <p class="subtitle">Llevas más de <strong>1 minuto</strong> sin actividad.</p>
     <p class="timer-row">Inactivo: <span class="timer-val" id="counter">0:00</span></p>
@@ -162,18 +165,18 @@
     <div style="text-align:left">
       <p class="reason-label">¿Cuál fue el motivo? <span>*</span></p>
       <div class="chips" id="chips">
-        <button class="chip" data-val="Comida 🍽">Comida 🍽</button>
-        <button class="chip" data-val="Reunión 🗣">Reunión 🗣</button>
-        <button class="chip" data-val="Descanso ☕">Descanso ☕</button>
-        <button class="chip" data-val="Baño 🚽">Baño 🚽</button>
-        <button class="chip" data-val="Problema técnico 🔧">Problema técnico 🔧</button>
-        <button class="chip" data-val="Llamada 📞">Llamada 📞</button>
+        <button class="chip" data-val="Comida">Comida <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/></svg></button>
+        <button class="chip" data-val="Reunión">Reunión <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"/></svg></button>
+        <button class="chip" data-val="Descanso">Descanso <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h11v6.5A4.5 4.5 0 0 1 11.5 20h-2A4.5 4.5 0 0 1 5 15.5z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8.5 6c0-1 .8-1.2.8-2.2M12 6c0-1 .8-1.2 .8-2.2"/></svg></button>
+        <button class="chip" data-val="Baño">Baño <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5S6 10 6 14.5a6 6 0 0 0 12 0C18 10 12 3.5 12 3.5z"/></svg></button>
+        <button class="chip" data-val="Problema técnico">Problema técnico <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.7M12 17.8v2.7M3.5 12h2.7M17.8 12h2.7M6 6l1.9 1.9M16.1 16.1 18 18M18 6l-1.9 1.9M7.9 16.1 6 18"/></svg></button>
+        <button class="chip" data-val="Llamada">Llamada <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5h2.2l1.5 4-2 1.3a12 12 0 0 0 6.4 6.4l1.3-2 4 1.5v2.2a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></svg></button>
       </div>
       <textarea id="reason" placeholder="Escribe el motivo aquí (mínimo 10 caracteres)..."></textarea>
       <p class="hint" id="hint">Mínimo 10 caracteres para continuar</p>
     </div>
 
-    <button class="resume-btn" id="resume-btn">🔴 REANUDAR TRABAJO</button>
+    <button class="resume-btn" id="resume-btn"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg> REANUDAR TRABAJO</button>
   </div>
 </div>
 

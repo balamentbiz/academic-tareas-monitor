@@ -1,0 +1,391 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACADEMIC TAREAS — Design System v2 "Glass"
+   Paleta de marca: #212e67 · #10215c · #87b1ea · #f6f6f6 · #09a3ef
+   Estética: glassmorphism claro, degradados suaves, botones pill,
+   iconografía vectorial, animaciones rápidas.
+   Este archivo se carga AL FINAL y re-tematiza todas las vistas (body.at-light)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quicksand:wght@500;600;700;800&display=swap');
+
+/* ── 1. Variables de marca ──────────────────────────────────────────────── */
+body.at-light {
+  --navy:       #212e67;
+  --navy-deep:  #10215c;
+  --periwinkle: #87b1ea;
+  /* --white se usa en las vistas como color de TEXTO sobre fondos oscuros;
+     en el tema claro pasa a ser el navy de marca para mantener legibilidad */
+  --white:      #10215c;
+  --cyan:       #09a3ef;
+
+  --bg:        #eef2fb;
+  --card:      rgba(255,255,255,.62);
+  --card2:     rgba(255,255,255,.78);
+  --border:    rgba(16,33,92,.10);
+  --text:      #10215c;
+  --sub:       rgba(16,33,92,.55);
+  --text3:     rgba(16,33,92,.38);
+  --cyan-dim:  rgba(9,163,239,.12);
+  --cyan-glow: rgba(9,163,239,.28);
+  --green:     #1d9e4b;
+  --orange:    #cf7500;
+  --red:       #e0362c;
+  --purple:    #7d3ec9;
+  --indigo:    #4553c4;
+  --gold:      #a97a00;
+
+  --glass:        rgba(255,255,255,.55);
+  --glass-strong: rgba(255,255,255,.75);
+  --glass-border: rgba(255,255,255,.70);
+  --shadow-card:  0 10px 30px rgba(16,33,92,.10), 0 2px 8px rgba(16,33,92,.06);
+  --shadow-pop:   0 24px 60px rgba(16,33,92,.22);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+  --font: 'Quicksand', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --display: 'Bebas Neue', sans-serif;
+}
+
+/* ── 2. Fondo con degradado de marca + resplandores ─────────────────────── */
+html:has(body.at-light) { background: #eef2fb; }
+body.at-light {
+  font-family: var(--font);
+  color: var(--text);
+  background:
+    radial-gradient(900px 500px at 85% -10%, rgba(9,163,239,.16), transparent 60%),
+    radial-gradient(800px 520px at -10% 30%, rgba(135,177,234,.35), transparent 60%),
+    radial-gradient(700px 600px at 50% 110%, rgba(33,46,103,.14), transparent 55%),
+    linear-gradient(165deg, #dbe6fa 0%, #eef2fb 38%, #f6f6f6 62%, #d9e3f8 100%);
+  background-attachment: fixed;
+}
+
+/* ── 3. Tipografía y textos ─────────────────────────────────────────────── */
+body.at-light h1, body.at-light h2, body.at-light h3, body.at-light h4 { color: var(--text); }
+body.at-light ::selection { background: rgba(9,163,239,.25); }
+body.at-light ::-webkit-scrollbar { width: 8px; height: 8px; }
+body.at-light ::-webkit-scrollbar-track { background: transparent; }
+body.at-light ::-webkit-scrollbar-thumb { background: rgba(16,33,92,.18); border-radius: 8px; }
+body.at-light ::-webkit-scrollbar-thumb:hover { background: rgba(9,163,239,.5); }
+
+/* ── 4. Superficies glass — tarjetas ────────────────────────────────────── */
+body.at-light [class*="card"] {
+  background: var(--card);
+  border-color: var(--glass-border);
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  backdrop-filter: blur(18px) saturate(1.15);
+  transition: box-shadow .25s ease, transform .25s ease;
+}
+body.at-light .pedido-card:hover,
+body.at-light .mt-card:hover,
+body.at-light .acta-card:hover,
+body.at-light .cobro-card:hover,
+body.at-light .stat-card:hover {
+  box-shadow: 0 16px 40px rgba(16,33,92,.16), 0 3px 10px rgba(16,33,92,.08);
+  transform: translateY(-2px);
+}
+/* Bordes de acento (izquierdos) se conservan */
+body.at-light .acta-card,
+body.at-light .mt-card,
+body.at-light .cobro-card { border-width: 1px; border-style: solid; }
+
+/* Excepciones: chips/badges que contienen "card" en el nombre no existen; ok */
+
+/* ── 5. Barras superiores (titlebar, sesión, tabs) ──────────────────────── */
+body.at-light .titlebar,
+body.at-light .sesion-bar {
+  background: rgba(255,255,255,.55);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border-bottom: 1px solid rgba(16,33,92,.08);
+  color: var(--text);
+}
+body.at-light .titlebar-title { color: var(--navy-deep); font-family: var(--display); letter-spacing: 2.5px; }
+body.at-light .user-name { color: var(--sub); }
+body.at-light .btn-logout { border-color: rgba(16,33,92,.18); color: var(--sub); border-radius: 999px; }
+body.at-light .btn-logout:hover { color: var(--red); border-color: rgba(224,54,44,.4); background: rgba(224,54,44,.06); }
+body.at-light .role-badge {
+  background: linear-gradient(135deg, var(--navy), var(--navy-deep));
+  color: #fff; border: none; border-radius: 999px; padding: 3px 12px;
+  box-shadow: 0 3px 10px rgba(16,33,92,.35);
+}
+
+body.at-light .tabs {
+  background: rgba(255,255,255,.42);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(16,33,92,.07);
+  padding: 8px 14px;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+body.at-light .tabs::-webkit-scrollbar { display: none; }
+body.at-light .tab {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 8px 16px;
+  color: var(--sub);
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: all .18s var(--spring);
+}
+body.at-light .tab:hover { color: var(--navy-deep); background: rgba(255,255,255,.6); }
+body.at-light .tab.active {
+  color: var(--navy-deep);
+  background: rgba(255,255,255,.92);
+  border-color: var(--glass-border);
+  box-shadow: 0 6px 18px rgba(16,33,92,.14);
+}
+body.at-light .tab .ti { width: 15px; height: 15px; flex-shrink: 0; opacity: .8; }
+body.at-light .tab.active .ti { opacity: 1; color: var(--cyan); }
+body.at-light .tab-badge { box-shadow: 0 2px 6px rgba(224,54,44,.4); }
+
+/* ── 6. Formularios ─────────────────────────────────────────────────────── */
+body.at-light input,
+body.at-light select,
+body.at-light textarea {
+  background: rgba(255,255,255,.72) !important;
+  border: 1px solid rgba(16,33,92,.14) !important;
+  color: var(--navy-deep) !important;
+  border-radius: 12px;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+body.at-light input::placeholder,
+body.at-light textarea::placeholder { color: rgba(16,33,92,.35) !important; }
+body.at-light input:focus,
+body.at-light select:focus,
+body.at-light textarea:focus {
+  border-color: var(--cyan) !important;
+  box-shadow: 0 0 0 3px var(--cyan-dim), 0 4px 12px rgba(9,163,239,.10);
+  background: #fff !important;
+}
+body.at-light select option, body.at-light select optgroup { background: #fff !important; color: var(--navy-deep) !important; }
+body.at-light label { color: var(--sub) !important; }
+body.at-light .field label { color: var(--sub); }
+body.at-light input[type="date"]::-webkit-calendar-picker-indicator,
+body.at-light input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(.25) sepia(1) saturate(4) hue-rotate(190deg); }
+
+/* ── 7. Botones — feedback rápido y estilo pill ─────────────────────────── */
+body.at-light button {
+  font-family: var(--font);
+  transition: transform .1s ease, box-shadow .2s ease, background .2s ease, filter .2s ease, color .2s ease;
+}
+body.at-light button:hover { filter: brightness(1.04); }
+body.at-light button:active { transform: scale(.96); filter: brightness(.97); }
+body.at-light button:disabled { opacity: .45; transform: none; }
+
+/* CTA primario — degradado de marca */
+body.at-light .btn-submit,
+body.at-light .btn-login,
+body.at-light .btn-modal-pri,
+body.at-light .btn-mc-crear,
+body.at-light .btn-guardar-pago {
+  background: linear-gradient(135deg, var(--cyan) 0%, #2b6fe0 55%, var(--navy) 130%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  box-shadow: 0 8px 22px rgba(9,163,239,.38), inset 0 1px 0 rgba(255,255,255,.25);
+}
+body.at-light .btn-submit:hover,
+body.at-light .btn-login:hover,
+body.at-light .btn-modal-pri:hover { box-shadow: 0 12px 28px rgba(9,163,239,.5), inset 0 1px 0 rgba(255,255,255,.25); }
+
+/* Botón "materia completa" y asignar — punteado de marca */
+body.at-light .btn-mat-completa-inline,
+body.at-light #btn-abrir-asignar {
+  background: rgba(9,163,239,.07) !important;
+  border: 1.5px dashed rgba(9,163,239,.5) !important;
+  color: #0b6fb8 !important;
+  border-radius: 16px;
+}
+body.at-light .btn-mat-completa-inline:hover,
+body.at-light #btn-abrir-asignar:hover { background: rgba(9,163,239,.13) !important; }
+
+/* Secundarios */
+body.at-light .btn-modal-sec,
+body.at-light .btn-modal-cancel,
+body.at-light .btn-mc-cancel {
+  background: rgba(16,33,92,.06) !important;
+  border: 1px solid rgba(16,33,92,.14) !important;
+  color: var(--sub) !important;
+  border-radius: 999px;
+}
+
+/* ── 8. Modales y overlays ──────────────────────────────────────────────── */
+body.at-light .modal-overlay,
+body.at-light .mc-overlay,
+body.at-light .rechazo-modal-overlay {
+  background: rgba(16,33,92,.32);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+body.at-light .modal,
+body.at-light .mc-modal,
+body.at-light .rechazo-modal {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(28px) saturate(1.2);
+  backdrop-filter: blur(28px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-pop);
+  color: var(--text);
+}
+body.at-light .rechazo-modal h3 { color: var(--navy-deep); }
+
+/* Overrides de estilos inline oscuros (modal asignar en index) */
+body.at-light #asignar-modal-overlay label { color: var(--sub) !important; }
+
+/* ── 9. Estados, listas y detalles ──────────────────────────────────────── */
+body.at-light .loading-state,
+body.at-light .empty-cobros,
+body.at-light .sin-tareas-notif { color: var(--sub); }
+body.at-light .pf-label { color: var(--text3); }
+body.at-light .pf-val { color: var(--navy-deep); }
+body.at-light .acta-titulo, body.at-light .mt-cliente, body.at-light .sc-title { color: var(--navy-deep); }
+body.at-light .acta-desc { color: var(--sub); }
+body.at-light .acta-meta b, body.at-light .acta-crono b, body.at-light .mt-crono-val { color: var(--navy-deep); }
+
+/* Iconos de sección (index) → chips vectoriales de marca */
+body.at-light .sc-icon {
+  background: linear-gradient(135deg, var(--navy), var(--navy-deep)) !important;
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(16,33,92,.30);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+body.at-light .sc-icon svg { width: 13px; height: 13px; }
+
+/* Icono vectorial inline — hereda color y tamaño del texto */
+.vi { width: 1em; height: 1em; vertical-align: -0.15em; display: inline-block; flex-shrink: 0; }
+
+/* Logo de marca */
+.at-logo { display: inline-flex; align-items: center; gap: 9px; -webkit-app-region: drag; }
+.at-logo svg { display: block; }
+.at-logo-word { display: flex; flex-direction: column; line-height: 1; }
+.at-logo-word .w1 { font-family: var(--display); font-size: 15px; letter-spacing: 3px; color: var(--navy-deep, #10215c); }
+.at-logo-word .w2 { font-size: 7.5px; font-weight: 800; letter-spacing: 4.5px; color: var(--periwinkle, #87b1ea); margin-top: 2px; }
+
+/* ── 10. Cronómetros / badges de estado ─────────────────────────────────── */
+body.at-light .mt-crono { background: rgba(207,117,0,.07); border: 1px solid rgba(207,117,0,.22); }
+body.at-light .mt-crono.done { background: rgba(29,158,75,.08); border-color: rgba(29,158,75,.25); }
+body.at-light .acta-estado.pendiente { background: rgba(207,117,0,.12); color: var(--orange); }
+body.at-light .acta-estado.en_proceso { background: rgba(29,158,75,.12); color: var(--green); }
+body.at-light .acta-estado.pausada { background: rgba(169,122,0,.12); color: var(--gold); }
+
+/* ── 11. Panel de monitoreo (index/gerencia) ────────────────────────────── */
+body.at-light #monitor-overlay { background: var(--bg); }
+body.at-light .mon-titlebar { background: rgba(255,255,255,.6); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(16,33,92,.08); }
+
+/* ── 12. Layout responsivo — se adapta a cualquier pantalla ─────────────── */
+/* Las listas de tarjetas se vuelven grillas fluidas: en un ultrawide se
+   llenan columnas; en angosto colapsan a una sola. */
+body.at-light .pedidos-list,
+body.at-light #actasig-list,
+body.at-light #mistareas-list,
+body.at-light #dir-mistareas-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* Contenido centrado con ancho máximo cómodo */
+@media (min-width: 900px) {
+  body.at-light .content { max-width: 1180px; margin: 0 auto; width: 100%; }
+  body.at-light .tabs { justify-content: center; }
+}
+@media (min-width: 1500px) {
+  body.at-light .content { max-width: 1420px; }
+}
+@media (min-width: 1900px) { /* ultrawide */
+  body.at-light .content { max-width: 1720px; }
+  body.at-light .pedidos-list,
+  body.at-light #actasig-list,
+  body.at-light #mistareas-list,
+  body.at-light #dir-mistareas-list { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+}
+
+/* Interfaz compacta (asesor/gerencia) centrada cuando hay espacio */
+@media (min-width: 700px) {
+  body.at-light #app { max-width: 620px; margin: 0 auto; width: 100%; }
+}
+
+/* Pantallas angostas / monitor vertical / móvil */
+@media (max-width: 640px) {
+  body.at-light .pedidos-list,
+  body.at-light #actasig-list,
+  body.at-light #mistareas-list,
+  body.at-light #dir-mistareas-list { grid-template-columns: 1fr; }
+  /* Grillas inline de 2-3 columnas dentro de formularios colapsan a 1 */
+  body.at-light .form-card > div[style*="grid-template-columns"],
+  body.at-light .mc-section div[style*="grid-template-columns"] {
+    display: flex !important; flex-direction: column; gap: 10px;
+  }
+  body.at-light .content { padding: 12px; }
+  body.at-light .tabs { padding: 6px 8px; }
+  body.at-light .tab { padding: 7px 12px; font-size: 12px; }
+}
+
+/* Altura corta (laptop pequeña / ventana reducida) */
+@media (max-height: 640px) {
+  body.at-light .content { padding-top: 10px; }
+}
+
+/* ── 12.b Animaciones micro ─────────────────────────────────────────────── */
+@keyframes at-panel-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes at-card-in  { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+
+body.at-light .tab-panel.active { animation: at-panel-in .25s ease both; }
+body.at-light .mpanel.active    { animation: at-panel-in .25s ease both; }
+
+body.at-light .pedido-card,
+body.at-light .mt-card,
+body.at-light .acta-card,
+body.at-light .cobro-card,
+body.at-light .mon-kpi,
+body.at-light .mon-asesor,
+body.at-light .cola-card { animation: at-card-in .32s var(--spring) both; }
+
+/* Entrada escalonada de las primeras tarjetas */
+body.at-light .pedidos-list > *:nth-child(1), body.at-light #actasig-list > *:nth-child(1) { animation-delay: .00s; }
+body.at-light .pedidos-list > *:nth-child(2), body.at-light #actasig-list > *:nth-child(2) { animation-delay: .04s; }
+body.at-light .pedidos-list > *:nth-child(3), body.at-light #actasig-list > *:nth-child(3) { animation-delay: .08s; }
+body.at-light .pedidos-list > *:nth-child(4), body.at-light #actasig-list > *:nth-child(4) { animation-delay: .12s; }
+body.at-light .pedidos-list > *:nth-child(5), body.at-light #actasig-list > *:nth-child(5) { animation-delay: .16s; }
+body.at-light .pedidos-list > *:nth-child(6), body.at-light #actasig-list > *:nth-child(6) { animation-delay: .20s; }
+
+/* Badges que aparecen con rebote sutil */
+@keyframes at-badge-pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+body.at-light .tab-badge { animation: at-badge-pop .25s var(--spring) both; }
+
+/* ── 13. Overlay de tiempo muerto (todas las pantallas) ─────────────────── */
+body.at-light .overlay {
+  background: rgba(223,232,249,.72);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  backdrop-filter: blur(22px) saturate(1.1);
+}
+body.at-light .overlay .card {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-pop);
+}
+body.at-light .overlay .card::before {
+  background: radial-gradient(circle, rgba(9,163,239,.14) 0%, transparent 65%);
+}
+body.at-light .overlay .title { color: var(--navy-deep); }
+body.at-light .overlay .subtitle { color: rgba(16,33,92,.65); }
+body.at-light .overlay .subtitle strong { color: var(--orange); }
+body.at-light .overlay .timer-row { color: var(--text3); }
+body.at-light .overlay .reason-label { color: var(--text3); }
+body.at-light .overlay .chip {
+  background: rgba(255,255,255,.8);
+  border-color: rgba(16,33,92,.16);
+  color: var(--navy);
+}
+body.at-light .overlay .chip.selected {
+  background: var(--cyan); border-color: var(--cyan); color: #fff;
+}
+body.at-light .overlay .hint { color: var(--text3); }
+body.at-light .overlay .hint.ok { color: var(--green); }
+body.at-light .overlay .resume-btn { border-radius: 999px; }
+.at-mark-sway { display:inline-block; animation: sway 2s ease infinite; filter: drop-shadow(0 6px 18px rgba(9,163,239,.35)); }

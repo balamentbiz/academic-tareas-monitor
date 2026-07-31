@@ -33,4 +33,8 @@ contextBridge.exposeInMainWorld("AT", {
   authSuccess:      (user) => ipcRenderer.invoke("auth-success", user),
   authLogout:       ()     => ipcRenderer.invoke("auth-logout"),
   getLoggedUser:    ()     => ipcRenderer.invoke("get-logged-user"),
+
+  // ── Google Sheets sync ────────────────────────────────────────────────────
+  // url: webhook URL de Apps Script; payload: datos del pedido
+  syncPedido:       (d)    => ipcRenderer.invoke("sync-pedido", d),
 });

@@ -12,6 +12,7 @@
     "appId": "com.academictareas.monitor",
     "productName": "Academic Tareas Monitor",
     "copyright": "Academic Tareas",
+    "artifactName": "Academic-Tareas-Monitor-${version}-${arch}.${ext}",
     "icon": "assets/icon.icns",
     "files": [
       "main.js",
@@ -29,11 +30,20 @@
           "arch": [
             "arm64"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
         }
       ],
       "icon": "assets/icon.icns",
       "notarize": false,
-      "hardenedRuntime": false
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "dmg": {
       "title": "Academic Tareas Monitor",
@@ -67,6 +77,7 @@
       "icon": "assets/icon.ico"
     },
     "nsis": {
+      "artifactName": "Academic-Tareas-Monitor-Setup-${version}.${ext}",
       "guid": "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
       "oneClick": false,
       "allowToChangeInstallationDirectory": false,

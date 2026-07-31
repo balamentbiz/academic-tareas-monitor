@@ -95,24 +95,32 @@
     .cola-empty { text-align: center; color: var(--sub); font-size: 12px; padding: 16px; }
 
     /* Pedidos */
-    .pedidos-list { display: flex; flex-direction: column; gap: 8px; }
-    .pedido-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
-    .pedido-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .pedidos-list { display: flex; flex-direction: column; gap: 10px; }
+    .pedido-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+    .pedido-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .pedido-id { font-size: 10px; color: var(--sub); font-family: monospace; }
-    .pedido-cliente { font-size: 13px; font-weight: 600; flex: 1; }
+    .pedido-cliente { font-size: 14px; font-weight: 700; flex: 1; }
     .pedido-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
     .pedido-badge.en_cola    { background: rgba(255,159,10,.1);  color: var(--orange); }
     .pedido-badge.asignado   { background: rgba(9,163,239,.15);  color: var(--cyan); }
     .pedido-badge.en_proceso { background: rgba(94,106,210,.15); color: #7c8cf8; }
     .pedido-badge.completado { background: rgba(50,215,75,.15);  color: var(--green); }
     .pedido-badge.pendiente  { background: rgba(255,159,10,.1);  color: var(--orange); }
-    .pedido-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
-    .pedido-meta span { font-size: 10px; color: var(--sub); }
-    .pedido-meta b { color: var(--text); }
-    .pedido-actions { display: flex; gap: 6px; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
-    .btn-p-action { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 11px; font-weight: 600; padding: 5px 8px; cursor: pointer; font-family: inherit; }
+    .pedido-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-bottom: 8px; }
+    .pedido-field { font-size: 11px; }
+    .pedido-field .pf-label { color: var(--sub); font-size: 10px; text-transform: uppercase; letter-spacing: .3px; }
+    .pedido-field .pf-val   { color: var(--text); font-weight: 600; }
+    .pedido-full { grid-column: 1 / -1; }
+    .pedido-sep { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+    .pago-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .pago-badge.PAGADO   { background: rgba(50,215,75,.15);  color: var(--green); }
+    .pago-badge.PENDIENTE { background: rgba(255,159,10,.1); color: var(--orange); }
+    .pago-badge.PARCIAL  { background: rgba(9,163,239,.15);  color: var(--cyan); }
+    .pedido-actions { display: flex; gap: 6px; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+    .btn-p-action { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 11px; font-weight: 600; padding: 6px 8px; cursor: pointer; font-family: inherit; }
     .btn-p-action:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
     .btn-p-action.primary:hover { border-color: rgba(255,214,10,.5); color: var(--gold); background: rgba(255,214,10,.08); }
+    .btn-p-action.danger:hover  { border-color: rgba(255,69,58,.5);  color: var(--red);  background: rgba(255,69,58,.08); }
 
     /* Usuarios */
     .usuarios-list { display: flex; flex-direction: column; gap: 8px; }
@@ -188,13 +196,63 @@
     .dif-badge.Ap  { background: rgba(255,69,58,.15);  color: var(--red); }
     .dif-badge.A   { background: rgba(255,159,10,.15); color: var(--orange); }
     .dif-badge.B   { background: rgba(9,163,239,.15);  color: var(--cyan); }
+    /* Mis tareas */
+    .mt-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .mt-card.dif-App { border-left: 3px solid #bf5af2; }
+    .mt-card.dif-Ap  { border-left: 3px solid var(--red); }
+    .mt-card.dif-A   { border-left: 3px solid var(--orange); }
+    .mt-card.dif-B   { border-left: 3px solid var(--cyan); }
+    .mt-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .mt-cliente { font-size: 13px; font-weight: 700; flex: 1; }
+    .mt-data { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; font-size: 11px; color: var(--sub); margin-bottom: 6px; }
+    .mt-data b { color: var(--text); user-select: text; -webkit-user-select: text; }
+    .mt-nota { font-size: 11px; color: var(--sub); border-top: 1px solid var(--border); padding-top: 6px; margin-bottom: 6px; }
+    .mt-crono { display: none; align-items: center; gap: 10px; padding: 9px 12px; background: rgba(255,159,10,.07); border: 1px solid rgba(255,159,10,.2); border-radius: 8px; margin-bottom: 8px; }
+    .mt-crono.visible { display: flex; }
+    .mt-crono-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff9f0a; box-shadow: 0 0 6px #ff9f0a; flex-shrink: 0; animation: mt-pulse 1s infinite; }
+    @keyframes mt-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .mt-crono-vals { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .mt-crono-row { display: flex; justify-content: space-between; }
+    .mt-crono-lbl { font-size: 9px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; }
+    .mt-crono-val { font-size: 13px; font-weight: 800; font-family: monospace; color: #ff9f0a; }
+    .mt-crono.done { background: rgba(50,215,75,.07); border-color: rgba(50,215,75,.2); }
+    .mt-crono.done .mt-crono-dot { background: #32d74b; box-shadow: 0 0 6px #32d74b; animation: none; }
+    .mt-crono.done .mt-crono-val { color: #32d74b; }
+    .btn-mt-iniciar { width: 100%; background: rgba(50,215,75,.15); border: 1px solid rgba(50,215,75,.3); border-radius: 8px; color: #32d74b; font-family: var(--font); font-size: 12px; font-weight: 700; padding: 9px; cursor: pointer; transition: all .2s; }
+    .btn-mt-iniciar:hover { background: rgba(50,215,75,.25); }
+
+    /* Actividades asignadas */
+    .tab-badge { background:#ff453a; color:#fff; border-radius:9px; font-size:9px; font-weight:800; padding:1px 6px; margin-left:5px; display:none; }
+    .acta-card { background:rgba(255,255,255,.03); border:1px solid var(--border); border-left:3px solid var(--cyan); border-radius:12px; padding:13px 15px; display:flex; flex-direction:column; gap:9px; }
+    .acta-card.p-App { border-left-color:#bf5af2; } .acta-card.p-Ap { border-left-color:#ff453a; } .acta-card.p-A { border-left-color:#ff9f0a; } .acta-card.p-B { border-left-color:#09a3ef; }
+    .acta-header { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .acta-titulo { font-weight:800; font-size:14px; color:var(--text); flex:1; }
+    .acta-desc { font-size:12px; color:var(--sub); line-height:1.5; }
+    .acta-meta { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--sub); }
+    .acta-meta b { color:var(--text); }
+    .acta-estado { font-size:10px; font-weight:800; padding:2px 9px; border-radius:10px; }
+    .acta-estado.pendiente { background:rgba(255,159,10,.15); color:#ff9f0a; }
+    .acta-estado.en_proceso { background:rgba(50,215,75,.15); color:#32d74b; }
+    .acta-estado.pausada { background:rgba(255,214,10,.15); color:#ffd60a; }
+    .acta-crono { font-size:12px; color:var(--sub); display:flex; gap:16px; }
+    .acta-crono b { color:var(--text); font-variant-numeric:tabular-nums; }
+    .acta-btns { display:flex; gap:8px; }
+    .acta-btn { flex:1; border-radius:8px; font-family:inherit; font-size:12px; font-weight:700; padding:9px; cursor:pointer; border:1px solid transparent; transition:all .15s; }
+    .acta-btn.iniciar  { background:rgba(50,215,75,.15); border-color:rgba(50,215,75,.35); color:#32d74b; }
+    .acta-btn.pausar   { background:rgba(255,159,10,.15); border-color:rgba(255,159,10,.35); color:#ff9f0a; }
+    .acta-btn.terminar { background:rgba(9,163,239,.15); border-color:rgba(9,163,239,.35); color:#09a3ef; }
+    .acta-btn:active { transform:scale(.97); }
   </style>
+  <link rel="stylesheet" href="theme.css"/>
 </head>
-<body>
+<body class="at-light">
 
   <div class="titlebar">
-    <div class="titlebar-left"><span class="role-badge">⭐ Director</span></div>
-    <span class="titlebar-title">🎓 Academic Tareas</span>
+    <div class="titlebar-left"><span class="role-badge"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l2.3 4.9 5.2.7-3.8 3.7.9 5.2-4.6-2.5-4.6 2.5.9-5.2L4.5 9.6l5.2-.7z"/></svg> Director</span></div>
+    <span class="titlebar-title" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">
+      <img src="assets/logo.png" alt="Academic Tareas" style="width:24px;height:24px;object-fit:contain;border-radius:22%;" onerror="this.style.display='none'"/>
+      <span>ACADEMIC <span style="color:#87b1ea;letter-spacing:4px;font-size:.78em">TAREAS</span></span>
+    </span>
     <div class="titlebar-right">
       <span class="user-name" id="user-name">—</span>
       <button class="btn-logout" id="btn-logout">Salir</button>
@@ -202,10 +260,12 @@
   </div>
 
   <div class="tabs">
-    <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
-    <div class="tab" data-tab="pedidos">📋 Pedidos</div>
-    <div class="tab" data-tab="usuarios">👥 Usuarios</div>
-    <div class="tab" data-tab="cuotas">⚙ Cuotas</div>
+    <div class="tab active" data-tab="dashboard"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 19a8.5 8.5 0 1 1 15 0"/><path d="M12 13l4-4"/><circle cx="12" cy="13" r="1.6" fill="currentColor"/></svg>Dashboard</div>
+    <div class="tab" data-tab="pedidos"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>Pedidos</div>
+    <div class="tab" data-tab="usuarios"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.7-3 2.9-4.5 5.5-4.5s4.8 1.5 5.5 4.5"/><circle cx="17" cy="10" r="2.5"/><path d="M16.5 14.8c2.2.3 3.7 1.7 4.2 4.2"/></svg>Usuarios</div>
+    <div class="tab" data-tab="cuotas"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.7M12 17.8v2.7M3.5 12h2.7M17.8 12h2.7M6 6l1.9 1.9M16.1 16.1 18 18M18 6l-1.9 1.9M7.9 16.1 6 18"/></svg>Cuotas</div>
+    <div class="tab" data-tab="mistareas"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.4-6.5-10A6.5 6.5 0 0 1 18.5 11c0 4.6-6.5 10-6.5 10z"/><circle cx="12" cy="11" r="2.3"/></svg>Mis tareas<span class="tab-badge" id="badge-mistareas">0</span></div>
+    <div class="tab" data-tab="actasig"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v11a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-6l-2-3h-5a2 2 0 0 0-2 2z"/></svg>Actividades<span class="tab-badge" id="badge-actasig">0</span></div>
   </div>
 
   <div class="content">
@@ -231,6 +291,7 @@
 
     <!-- ── PEDIDOS ── -->
     <div class="tab-panel" id="panel-pedidos">
+      <input id="buscar-pedidos-dir" type="text" placeholder="Buscar por cliente, # pedido, materia, plataforma, asesor, estado..." style="width:100%;margin-bottom:12px;padding:11px 14px;font-size:13px"/>
       <div id="pedidos-list" class="pedidos-list">
         <div class="loading-state"><span class="spinner"></span>Cargando pedidos...</div>
       </div>
@@ -243,6 +304,21 @@
         <button class="btn-primary" id="btn-crear-usuario">+ Crear usuario</button>
       </div>
       <div id="usuarios-list" class="usuarios-list">
+        <div class="loading-state"><span class="spinner"></span>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ── MIS TAREAS ── -->
+    <div class="tab-panel" id="panel-mistareas">
+      <div id="dir-mistareas-list" class="pedidos-list" style="display:flex;flex-direction:column;gap:8px">
+        <div class="loading-state"><span class="spinner"></span>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ── ACTIVIDADES ASIGNADAS ── -->
+    <div class="tab-panel" id="panel-actasig">
+      <button id="btn-abrir-asignar" style="width:100%;margin-bottom:12px;background:rgba(255,214,10,.12);border:1.5px dashed rgba(255,214,10,.45);border-radius:10px;color:var(--gold);font-family:inherit;font-size:13px;font-weight:700;padding:12px;cursor:pointer"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Asignar actividad a un usuario</button>
+      <div id="actasig-list" style="display:flex;flex-direction:column;gap:10px">
         <div class="loading-state"><span class="spinner"></span>Cargando...</div>
       </div>
     </div>
@@ -297,14 +373,67 @@
           <div class="loading-state"><span class="spinner"></span>Cargando asesores...</div>
         </div>
       </div>
+
+      <!-- Google Sheets integration -->
+      <div style="margin-top:16px">
+        <div class="section-title"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 7l1.5-1.5a3.5 3.5 0 0 1 5 5L16 12M8 12l-1.5 1.5a3.5 3.5 0 0 0 5 5L13 17"/></svg> Integración Google Sheets</div>
+        <div style="background:rgba(9,163,239,.06);border:1px solid rgba(9,163,239,.15);border-radius:10px;padding:14px">
+          <div style="font-size:11px;color:var(--sub);margin-bottom:10px">
+            Pega aquí la URL del webhook de Google Apps Script para sincronizar pedidos automáticamente al Sheet.
+          </div>
+          <input id="sheets-webhook-url" type="text" placeholder="https://script.google.com/macros/s/.../exec"
+            style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px 10px;outline:none;margin-bottom:8px"/>
+          <div style="display:flex;gap:8px">
+            <button id="btn-save-webhook" style="flex:1;background:rgba(9,163,239,.15);border:1px solid rgba(9,163,239,.3);border-radius:7px;color:var(--cyan);font-size:12px;font-weight:700;padding:8px;cursor:pointer;font-family:inherit">
+              Guardar URL
+            </button>
+            <button id="btn-test-webhook" style="flex:1;background:rgba(50,215,75,.1);border:1px solid rgba(50,215,75,.25);border-radius:7px;color:var(--green);font-size:12px;font-weight:700;padding:8px;cursor:pointer;font-family:inherit">
+              ✓ Probar conexión
+            </button>
+            <button id="btn-sync-all" style="flex:1;background:rgba(191,90,242,.1);border:1px solid rgba(191,90,242,.25);border-radius:7px;color:var(--purple);font-size:12px;font-weight:700;padding:8px;cursor:pointer;font-family:inherit">
+              ↑ Sync completo
+            </button>
+          </div>
+          <div id="msg-webhook" style="font-size:11px;margin-top:8px;color:var(--sub)"></div>
+        </div>
+      </div>
     </div>
 
   </div>
 
   <!-- Modal: Crear usuario -->
+  <!-- Modal Asignar Tarea -->
+  <div class="modal-overlay hidden" id="modal-asignar-tarea">
+    <div class="modal">
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Asignar actividad</h3>
+      <label>Asignar a *</label>
+      <select id="at-usuario"><option value="">Cargando usuarios...</option></select>
+      <label>Título de la actividad *</label>
+      <input id="at-titulo" placeholder="Ej. Revisar reportes de la semana"/>
+      <label>Descripción / instrucciones</label>
+      <textarea id="at-desc" placeholder="Detalles de lo que se debe hacer..." style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px 10px;outline:none;resize:none;height:70px"></textarea>
+      <label>Prioridad / dificultad</label>
+      <select id="at-dif">
+        <option value="B">B — Baja</option>
+        <option value="A">A — Media</option>
+        <option value="A+">A+ — Alta</option>
+        <option value="A++">A++ — Urgente</option>
+      </select>
+      <label>Fecha límite</label>
+      <input id="at-fecha" type="date"/>
+      <label>Hora límite</label>
+      <input id="at-hora" type="time"/>
+      <p id="at-error" style="display:none;color:#ff453a;font-size:11px;margin-top:10px"></p>
+      <div class="modal-btns">
+        <button class="btn-modal-sec" id="btn-at-cancel">Cancelar</button>
+        <button class="btn-modal-pri" id="btn-at-crear">Asignar actividad</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay hidden" id="modal-crear-usuario">
     <div class="modal">
-      <h3>👤 Crear nuevo usuario</h3>
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Crear nuevo usuario</h3>
       <label>Nombre completo</label>
       <input type="text" id="nu-nombre" placeholder="Ej. Ana López"/>
       <label>Correo electrónico</label>
@@ -326,10 +455,45 @@
     </div>
   </div>
 
+  <!-- Modal: Editar usuario -->
+  <div class="modal-overlay hidden" id="modal-editar-usuario">
+    <div class="modal">
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar usuario</h3>
+      <input type="hidden" id="eu-uid"/>
+      <label>Nombre completo</label>
+      <input type="text" id="eu-nombre" placeholder="Nombre"/>
+      <label>Correo electrónico</label>
+      <input type="email" id="eu-email" placeholder="correo@ejemplo.com"/>
+      <label style="margin-top:14px">Nueva contraseña</label>
+      <input type="password" id="eu-pass" placeholder="Dejar vacío para no cambiar (mín. 6 caracteres)"/>
+      <p style="font-size:10px;color:var(--sub);margin-top:4px">Si escribes una contraseña se enviará un correo de restablecimiento al email del usuario.</p>
+      <div id="eu-msg"></div>
+      <div class="modal-btns">
+        <button class="btn-modal-sec" id="btn-eu-cancel">Cancelar</button>
+        <button class="btn-modal-pri" id="btn-eu-save">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Eliminar usuario -->
+  <div class="modal-overlay hidden" id="modal-eliminar-usuario">
+    <div class="modal">
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M7 7l.8 12a2 2 0 0 0 2 1.9h4.4a2 2 0 0 0 2-1.9L17 7"/></svg> Eliminar usuario</h3>
+      <input type="hidden" id="del-uid"/>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:8px">¿Eliminar a <b id="del-u-nombre" style="color:var(--text)"></b>?</p>
+      <p style="font-size:11px;color:var(--sub);line-height:1.5">El usuario perderá acceso inmediatamente y no podrá iniciar sesión. Sus tareas asignadas quedarán en el sistema.</p>
+      <div id="del-u-msg"></div>
+      <div class="modal-btns">
+        <button class="btn-modal-sec" id="btn-del-u-cancel">Cancelar</button>
+        <button class="btn-modal-del" id="btn-del-u-confirm">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Cambiar rol -->
   <div class="modal-overlay hidden" id="modal-cambiar-rol">
     <div class="modal">
-      <h3>🔄 Cambiar rol</h3>
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 3.5V8h-4.5"/></svg> Cambiar rol</h3>
       <input type="hidden" id="cr-uid"/>
       <p style="font-size:12px;color:var(--sub);margin-bottom:12px">Usuario: <b id="cr-nombre" style="color:var(--text)"></b></p>
       <label>Nuevo rol</label>
@@ -346,30 +510,118 @@
     </div>
   </div>
 
-  <!-- Modal: Editar dificultad de pedido -->
-  <div class="modal-overlay hidden" id="modal-edit-dif">
+  <!-- Modal: Eliminar pedido -->
+  <div class="modal-overlay hidden" id="modal-eliminar-pedido">
     <div class="modal">
-      <h3>✏️ Cambiar dificultad</h3>
-      <input type="hidden" id="ed-id"/>
-      <p style="font-size:12px;color:var(--sub);margin-bottom:12px">Pedido: <b id="ed-cliente" style="color:var(--text)"></b></p>
-      <label>Dificultad</label>
-      <select id="ed-dif">
-        <option value="A++">A++ — Muy difícil (programación, diseño, conta compleja)</option>
-        <option value="A+">A+ — Difícil (conta, SPSS, fórmulas)</option>
-        <option value="A">A — Media (relleno, videos, infografías)</option>
-        <option value="B">B — Fácil (cursos, foros, exámenes)</option>
-      </select>
+      <h3 style="color:#e0362c">Eliminar pedido</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:8px">¿Eliminar el pedido <b id="del-p-nombre" style="color:var(--text)"></b>?</p>
+      <p style="font-size:11px;color:#e0362c;margin-bottom:4px">Esta acción no se puede deshacer.</p>
       <div class="modal-btns">
-        <button class="btn-modal-sec" id="btn-ed-cancel">Cancelar</button>
-        <button class="btn-modal-pri" id="btn-ed-save">Guardar</button>
+        <button class="btn-modal-sec" id="btn-del-p-cancel">Cancelar</button>
+        <button class="btn-modal-del" id="btn-del-p-confirm">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar pedido completo -->
+  <div class="modal-overlay hidden" id="modal-edit-pedido">
+    <div class="modal" style="width:400px">
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar pedido completo</h3>
+      <input type="hidden" id="ep-id"/>
+
+      <label># Cliente</label>
+      <input type="text" id="ep-cliente"/>
+
+      <label>Plataforma</label>
+      <select id="ep-plataforma">
+        <option value="">— Seleccionar —</option>
+        <option>BLACKBOARD</option><option>COURSERA</option><option>CAMBRIDGE</option>
+        <option>EXÁMEN</option><option>DOCTORADO</option><option>TAREA</option><option>PUBLICA</option>
+      </select>
+
+      <label>Escuela</label>
+      <select id="ep-escuela">
+        <option value="">— Seleccionar —</option>
+        <option>UNITEC</option><option>UVM</option><option>UTC</option><option>UTEL</option>
+        <option>TEC</option><option>IPN</option><option>RC</option><option>UNADM</option>
+        <option>CUT</option><option>CNCI</option><option>UNIDEP</option><option>UNRC</option>
+        <option>UNAM</option><option>CUCEA</option><option>MARISTAS</option><option>SAE</option>
+        <option>LA SALLE</option><option>ULA</option><option>TEC MILENIO</option>
+        <option>CULV</option><option>ITESO</option><option>N/A</option>
+      </select>
+
+      <label>ID / Usuario</label>
+      <input type="text" id="ep-id-alumno"/>
+
+      <label>Contraseña</label>
+      <input type="text" id="ep-contrasena"/>
+
+      <label>Materia</label>
+      <input type="text" id="ep-materia"/>
+
+      <label>Entregable</label>
+      <input type="text" id="ep-entregable"/>
+
+      <label>Día Agenda</label>
+      <input type="date" id="ep-dia-agenda"/>
+
+      <label>Día Entrega</label>
+      <input type="date" id="ep-dia-entrega"/>
+
+      <label>Subir / No Subir</label>
+      <select id="ep-subir">
+        <option value="">— Seleccionar —</option>
+        <option>SUBIR</option><option>NO SUBIR</option>
+      </select>
+
+      <label>Anotaciones</label>
+      <textarea id="ep-anotaciones" rows="2" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px 10px;outline:none;resize:none"></textarea>
+
+      <label>Precio</label>
+      <input type="number" id="ep-precio" min="0" step="1"/>
+
+      <label>Estatus pago</label>
+      <select id="ep-estatus-pago">
+        <option value="">— Seleccionar —</option>
+        <option>PAGADO</option><option>PENDIENTE</option><option>PARCIAL</option>
+      </select>
+
+      <label>Cantidad pagada</label>
+      <input type="number" id="ep-cantidad-pagada" min="0" step="1"/>
+
+      <label>Dificultad</label>
+      <select id="ep-dif">
+        <option value="A++">A++ — Muy difícil</option>
+        <option value="A+">A+ — Difícil</option>
+        <option value="A">A — Media</option>
+        <option value="B">B — Fácil</option>
+      </select>
+
+      <label>Asesor asignado</label>
+      <select id="ep-asesor">
+        <option value="">Sin asignar</option>
+      </select>
+
+      <label>Estado</label>
+      <select id="ep-estado">
+        <option value="en_cola">En cola</option>
+        <option value="asignado">Asignado</option>
+        <option value="en_proceso">En proceso</option>
+        <option value="completado">Completado</option>
+      </select>
+
+      <div id="ep-msg"></div>
+      <div class="modal-btns">
+        <button class="btn-modal-sec" id="btn-ep-cancel">Cancelar</button>
+        <button class="btn-modal-pri" id="btn-ep-save">Guardar cambios</button>
       </div>
     </div>
   </div>
 
   <script type="module">
-    import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { initializeApp, deleteApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA2RHwsKfotTyD7OLzK1vNkCK9aX2MFZMI",
@@ -380,8 +632,16 @@
       appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
     };
 
-    const fbApp = initializeApp(firebaseConfig);
+    const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db    = getFirestore(fbApp);
+    const mainAuth = getAuth(fbApp);
+
+    // Esperar a que Firebase restaure la sesión iniciada en el login
+    // (las reglas de Firestore exigen usuario autenticado)
+    await new Promise(resolve => {
+      const unsub = onAuthStateChanged(mainAuth, (u) => { unsub(); resolve(u); });
+    });
+    if (!mainAuth.currentUser && window.AT) { window.AT.authLogout(); }
 
     let currentUser = null;
 
@@ -407,7 +667,7 @@
         document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
         tab.classList.add("active");
         document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
-        const actions = { dashboard: cargarDashboard, pedidos: cargarPedidos, usuarios: cargarUsuarios, cuotas: cargarCuotas };
+        const actions = { dashboard: cargarDashboard, pedidos: cargarPedidos, usuarios: cargarUsuarios, cuotas: cargarCuotas, mistareas: cargarMisTareasDir, actasig: cargarActividadesAsignadas };
         if (actions[tab.dataset.tab]) actions[tab.dataset.tab]();
       });
     });
@@ -416,7 +676,12 @@
     async function cargarDashboard() {
       const hoy = new Date().toISOString().split("T")[0];
       try {
-        const snap = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+        // Incluir asesores y gerencia (gerencia también tiene cuotas)
+        const [snapA, snapG] = await Promise.all([
+          getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor"))),
+          getDocs(query(collection(db, "usuarios"), where("rol", "==", "gerencia")))
+        ]);
+        const snap = { docs: [...snapA.docs, ...snapG.docs] };
         const listEl = document.getElementById("dash-asesores");
         listEl.innerHTML = "";
         let activos = 0;
@@ -490,21 +755,482 @@
     document.getElementById("btn-refresh").addEventListener("click", cargarDashboard);
     cargarDashboard();
 
+    // ── MIS TAREAS (tareas asignadas al director) ─────────────────────────────
+    const _dirMtTimers = {};
+
+    function fmtDirMt(ms) {
+      if (!ms || ms < 0) return "0s";
+      const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
+    }
+
+    // ── Buscador de pedidos (filtra las tarjetas ya cargadas) ───────────────
+    document.getElementById("buscar-pedidos-dir").addEventListener("input", function() {
+      const filtro = this.value.toLowerCase().trim();
+      document.querySelectorAll("#pedidos-list .pedido-card").forEach(card => {
+        card.style.display = !filtro || card.textContent.toLowerCase().includes(filtro) ? "" : "none";
+      });
+    });
+
+    // ── Actividades asignadas (Iniciar / Pausar / Reanudar / Terminar) ──────
+    const _actaTimers = {};
+    const _actaNotified = new Set();
+
+    function fmtActa(ms) {
+      if (!ms || ms < 0) return "0s";
+      const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
+    }
+
+    function actaTrabajoMs(a) {
+      return (a.tiempo_trabajo_ms || 0) + (a.estado === "en_proceso" ? Date.now() - (a.ultima_reanudacion_ms || Date.now()) : 0);
+    }
+
+    async function actaAccion(a, accion) {
+      const now = Date.now(), iso = new Date().toISOString();
+      let upd = {};
+      if (accion === "iniciar") {
+        upd = { estado: "en_proceso", iniciado_en: iso, ultima_reanudacion_ms: now, tiempo_trabajo_ms: 0,
+                tiempo_respuesta_ms: now - (a.creado_en ? new Date(a.creado_en).getTime() : now) };
+      } else if (accion === "pausar") {
+        upd = { estado: "pausada", tiempo_trabajo_ms: actaTrabajoMs(a),
+                pausas: [...(a.pausas || []), { inicio: iso }] };
+      } else if (accion === "reanudar") {
+        const ps = [...(a.pausas || [])];
+        if (ps.length && !ps[ps.length - 1].fin) ps[ps.length - 1].fin = iso;
+        upd = { estado: "en_proceso", ultima_reanudacion_ms: now, pausas: ps };
+      } else if (accion === "terminar") {
+        const ps = [...(a.pausas || [])];
+        if (ps.length && !ps[ps.length - 1].fin) ps[ps.length - 1].fin = iso;
+        upd = { estado: "terminada", terminado_en: iso, tiempo_trabajo_ms: actaTrabajoMs(a), pausas: ps };
+      }
+      try { await updateDoc(doc(db, "actividades_asignadas", a.id), upd); } catch(e) { console.warn("[acta]", e); }
+      cargarActividadesAsignadas();
+      pollActividadesAsignadas();
+    }
+
+    function renderActaCard(a) {
+      const pCls  = { "A++": "p-App", "A+": "p-Ap", "A": "p-A", "B": "p-B" };
+      const pColor = { "A++": "#bf5af2", "A+": "#ff453a", "A": "#ff9f0a", "B": "#09a3ef" };
+      const pBg    = { "A++": "rgba(191,90,242,.15)", "A+": "rgba(255,69,58,.15)", "A": "rgba(255,159,10,.15)", "B": "rgba(9,163,239,.15)" };
+      const estadoTxt = { pendiente: "⏳ Pendiente", en_proceso: "▶ En proceso", pausada: "⏸ Pausada" };
+      const p = a.prioridad || "B";
+
+      const card = document.createElement("div");
+      card.className = "acta-card " + (pCls[p] || "p-B");
+      card.innerHTML = `
+        <div class="acta-header">
+          <span class="acta-estado" style="background:${pBg[p]};color:${pColor[p]}">${p}</span>
+          <span class="acta-titulo">${a.titulo || "—"}</span>
+          <span class="acta-estado ${a.estado}">${estadoTxt[a.estado] || a.estado}</span>
+        </div>
+        ${a.descripcion ? `<div class="acta-desc">${a.descripcion}</div>` : ""}
+        <div class="acta-meta">
+          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> Límite: <b>${a.fecha_limite}${a.hora_limite ? " · " + a.hora_limite : ""}</b></span>` : ""}
+          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Asignada por: <b>${a.creado_por_nombre}</b></span>` : ""}
+        </div>
+        <div class="acta-crono">
+          <span>⏱ Trabajo: <b id="acta-t-${a.id}">${fmtActa(actaTrabajoMs(a))}</b></span>
+          ${a.tiempo_respuesta_ms ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> Respuesta: <b>${fmtActa(a.tiempo_respuesta_ms)}</b></span>` : ""}
+        </div>
+        <div class="acta-btns" id="acta-btns-${a.id}"></div>`;
+
+      const btnsEl = card.querySelector(`#acta-btns-${a.id}`);
+      const mkBtn = (cls, txt, accion) => {
+        const b = document.createElement("button");
+        b.className = "acta-btn " + cls;
+        b.textContent = txt;
+        b.addEventListener("click", () => actaAccion(a, accion));
+        btnsEl.appendChild(b);
+      };
+      if (a.estado === "pendiente") {
+        mkBtn("iniciar", "▶ Iniciar", "iniciar");
+      } else if (a.estado === "en_proceso") {
+        mkBtn("pausar", "⏸ Pausar", "pausar");
+        mkBtn("terminar", "✔ Terminar", "terminar");
+        _actaTimers[a.id] = setInterval(() => {
+          const el = document.getElementById(`acta-t-${a.id}`);
+          if (el) el.textContent = fmtActa(actaTrabajoMs(a)); else clearInterval(_actaTimers[a.id]);
+        }, 1000);
+      } else if (a.estado === "pausada") {
+        mkBtn("iniciar", "▶ Reanudar", "reanudar");
+        mkBtn("terminar", "✔ Terminar", "terminar");
+      }
+      return card;
+    }
+
+    async function cargarActividadesAsignadas() {
+      const listEl = document.getElementById("actasig-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+      Object.values(_actaTimers).forEach(clearInterval);
+      Object.keys(_actaTimers).forEach(k => delete _actaTimers[k]);
+
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+
+      let acts = [];
+      try {
+        const snap = await getDocs(query(
+          collection(db, "actividades_asignadas"),
+          where("asignado_a_id", "==", user.uid)
+        ));
+        acts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .filter(a => a.estado !== "terminada")
+          .sort((a, b) => (a.creado_en || "").localeCompare(b.creado_en || ""));
+      } catch (e) {
+        listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>';
+        return;
+      }
+
+      acts.filter(a => !a.visto).forEach(a => {
+        updateDoc(doc(db, "actividades_asignadas", a.id), { visto: true }).catch(() => {});
+        _actaNotified.add(a.id);
+      });
+
+      if (!acts.length) {
+        listEl.innerHTML = '<div class="loading-state">✓ Sin actividades asignadas pendientes</div>';
+        return;
+      }
+      listEl.innerHTML = "";
+      acts.forEach(a => listEl.appendChild(renderActaCard(a)));
+    }
+
+    async function pollActividadesAsignadas() {
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+      try {
+        const [actaSnap, tareasSnap] = await Promise.all([
+          getDocs(query(collection(db, "actividades_asignadas"), where("asignado_a_id", "==", user.uid))),
+          getDocs(query(collection(db, "tareas"), where("asesor_asignado_id", "==", user.uid))),
+        ]);
+
+        const pendActa = actaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => a.estado !== "terminada");
+        const pendTareas = tareasSnap.docs.filter(d => d.data().estado !== "completado").length;
+
+        const bA = document.getElementById("badge-actasig");
+        bA.textContent = pendActa.length;
+        bA.style.display = pendActa.length > 0 ? "inline-block" : "none";
+        const bT = document.getElementById("badge-mistareas");
+        bT.textContent = pendTareas;
+        bT.style.display = pendTareas > 0 ? "inline-block" : "none";
+
+        pendActa.filter(a => !a.visto && !_actaNotified.has(a.id)).forEach(a => {
+          _actaNotified.add(a.id);
+          try {
+            new Notification("Nueva actividad asignada", {
+              body: `${a.titulo || "Actividad"}${a.creado_por_nombre ? " — de " + a.creado_por_nombre : ""}. Revísala en la pestaña Actividades.`,
+            });
+          } catch (_) {}
+          updateDoc(doc(db, "actividades_asignadas", a.id), { visto: true, notificado_en: new Date().toISOString() }).catch(() => {});
+        });
+      } catch (e) { console.warn("[poll acta]", e); }
+    }
+    setInterval(pollActividadesAsignadas, 30000);
+    pollActividadesAsignadas();
+
+    // ── Asignar actividad a cualquier usuario ────────────────────────────────
+    async function abrirModalAsignarTarea() {
+      const modal = document.getElementById("modal-asignar-tarea");
+      modal.classList.remove("hidden");
+      document.getElementById("at-error").style.display = "none";
+
+      const sel = document.getElementById("at-usuario");
+      sel.innerHTML = '<option value="">Cargando usuarios...</option>';
+      try {
+        const snap = await getDocs(collection(db, "usuarios"));
+        const usuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const rolOrden = { asesor: 0, gerencia: 1, atc: 2, director: 3 };
+        const rolLabel = { asesor: "Asesores", gerencia: "Gerencia", atc: "ATC", director: "Director" };
+        usuarios.sort((a, b) => (rolOrden[a.rol] ?? 9) - (rolOrden[b.rol] ?? 9) || (a.nombre || "").localeCompare(b.nombre || ""));
+
+        sel.innerHTML = '<option value="">— Selecciona un usuario —</option>';
+        let grupoActual = null, og = null;
+        usuarios.forEach(u => {
+          if (u.rol !== grupoActual) {
+            grupoActual = u.rol;
+            og = document.createElement("optgroup");
+            og.label = rolLabel[u.rol] || u.rol || "Otros";
+            sel.appendChild(og);
+          }
+          const opt = document.createElement("option");
+          opt.value = u.id;
+          opt.textContent = u.nombre || u.email || u.id;
+          opt.dataset.nombre = u.nombre || u.email || u.id;
+          og.appendChild(opt);
+        });
+      } catch (e) {
+        sel.innerHTML = '<option value="">Error al cargar usuarios</option>';
+      }
+    }
+
+    document.getElementById("btn-abrir-asignar").addEventListener("click", abrirModalAsignarTarea);
+    document.getElementById("btn-at-cancel").addEventListener("click", () => {
+      document.getElementById("modal-asignar-tarea").classList.add("hidden");
+    });
+
+    document.getElementById("btn-at-crear").addEventListener("click", async () => {
+      const sel     = document.getElementById("at-usuario");
+      const uid     = sel.value;
+      const nombre  = sel.selectedOptions[0]?.dataset.nombre || "";
+      const titulo  = document.getElementById("at-titulo").value.trim();
+      const desc    = document.getElementById("at-desc").value.trim();
+      const dif     = document.getElementById("at-dif").value;
+      const fecha   = document.getElementById("at-fecha").value;
+      const hora    = document.getElementById("at-hora").value;
+      const errEl   = document.getElementById("at-error");
+
+      if (!uid || !titulo) {
+        errEl.textContent = "Selecciona un usuario y escribe el título de la actividad.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const btn = document.getElementById("btn-at-crear");
+      btn.disabled = true; btn.textContent = "Asignando...";
+      try {
+        const nowIso = new Date().toISOString();
+        await addDoc(collection(db, "actividades_asignadas"), {
+          titulo,
+          descripcion: desc || "",
+          prioridad: dif,
+          fecha_limite: fecha || "",
+          hora_limite: hora || "",
+          estado: "pendiente",
+          visto: false,
+          tiempo_trabajo_ms: 0,
+          pausas: [],
+          creado_en: nowIso,
+          asignado_a_id: uid,
+          asignado_a_nombre: nombre,
+          creado_por_id: currentUser?.uid || "",
+          creado_por_nombre: currentUser?.nombre || "",
+          creado_por_rol: currentUser?.rol || "director",
+        });
+        document.getElementById("modal-asignar-tarea").classList.add("hidden");
+        document.getElementById("at-titulo").value = "";
+        document.getElementById("at-desc").value = "";
+        document.getElementById("at-fecha").value = "";
+        document.getElementById("at-hora").value = "";
+        // Refrescar el panel por si se asignó a sí mismo
+        if (uid === currentUser?.uid) cargarActividadesAsignadas();
+      } catch (e) {
+        errEl.textContent = "Error: " + e.message;
+        errEl.style.display = "block";
+      }
+      btn.disabled = false; btn.textContent = "Asignar actividad";
+    });
+
+    async function cargarMisTareasDir() {
+      const listEl = document.getElementById("dir-mistareas-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+      Object.values(_dirMtTimers).forEach(clearInterval);
+      Object.keys(_dirMtTimers).forEach(k => delete _dirMtTimers[k]);
+
+      if (!currentUser) return;
+
+      let tareas = [];
+      try {
+        const snap = await getDocs(query(
+          collection(db, "tareas"),
+          where("asesor_asignado_id", "==", currentUser.uid)
+        ));
+        tareas = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(t => t.estado !== "completado")
+          .sort((a, b) => (a.dia_entrega || "9999").localeCompare(b.dia_entrega || "9999"));
+      } catch(e) {
+        listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>';
+        return;
+      }
+
+      if (!tareas.length) {
+        listEl.innerHTML = '<div class="loading-state">✓ Sin tareas asignadas pendientes</div>';
+        return;
+      }
+
+      listEl.innerHTML = "";
+      const difCls   = { "A++": "dif-App", "A+": "dif-Ap", "A": "dif-A", "B": "dif-B" };
+      const difColor = { "A++": "#bf5af2", "A+": "var(--red)", "A": "var(--orange)", "B": "var(--cyan)" };
+      const difBg    = { "A++": "rgba(191,90,242,.15)", "A+": "rgba(255,69,58,.15)", "A": "rgba(255,159,10,.15)", "B": "rgba(9,163,239,.15)" };
+      const estLabel = { pendiente:"Pendiente", asignado:"Asignado", en_proceso:"En proceso", completado:"Completado", en_cola:"En cola" };
+
+      tareas.forEach(t => {
+        const card = document.createElement("div");
+        card.className = "mt-card " + (difCls[t.dificultad] || "dif-B");
+        const dif = t.dificultad || "B";
+        const creadoMs = t.creado_en ? new Date(t.creado_en).getTime() : Date.now();
+
+        card.innerHTML = `
+          <div class="mt-header">
+            <span class="dif-badge ${difCls[dif]||'B'}" style="font-size:10px;padding:2px 8px">${dif}</span>
+            <span class="mt-cliente">${t.cliente || "—"}</span>
+            <span style="font-size:10px;background:rgba(255,255,255,.07);padding:2px 8px;border-radius:4px;color:var(--sub)">${estLabel[t.estado]||t.estado}</span>
+          </div>
+          <div class="mt-data">
+            ${t.plataforma  ? `<span>Plataforma: <b>${t.plataforma}</b></span>` : ""}
+            ${t.escuela     ? `<span>Escuela: <b>${t.escuela}</b></span>` : ""}
+            ${t.id_alumno   ? `<span>ID: <b>${t.id_alumno}</b></span>` : ""}
+            ${t.contrasena  ? `<span>Contraseña: <b>${t.contrasena}</b></span>` : ""}
+            ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${t.materia}</b></span>` : ""}
+            ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${t.entregable}</b></span>` : ""}
+            ${t.dia_entrega ? `<span>Entrega: <b>${t.dia_entrega}${t.hora_entrega ? " · " + t.hora_entrega : ""}</b></span>` : ""}
+            ${t.subir       ? `<span>Subir: <b>${t.subir}</b></span>` : ""}
+          </div>
+          ${t.anotaciones ? `<div class="mt-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${t.anotaciones}</div>` : ""}
+          <div class="mt-crono" id="dmt-${t.id}">
+            <div class="mt-crono-dot"></div>
+            <div class="mt-crono-vals">
+              <div class="mt-crono-row">
+                <span class="mt-crono-lbl">⏱ Tiempo trabajando</span>
+                <span class="mt-crono-val" id="dmt-trabajo-${t.id}">0s</span>
+              </div>
+              <div class="mt-crono-row">
+                <span class="mt-crono-lbl"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> Tiempo de respuesta</span>
+                <span class="mt-crono-val" id="dmt-resp-${t.id}" style="font-size:11px;opacity:.7">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="acta-btns" id="dmt-btns-${t.id}" style="margin-top:2px"></div>`;
+
+        listEl.appendChild(card);
+
+        const btnsEl    = card.querySelector(`#dmt-btns-${t.id}`);
+        const cronoEl   = card.querySelector(`#dmt-${t.id}`);
+        const trabajoEl = card.querySelector(`#dmt-trabajo-${t.id}`);
+        const respEl    = card.querySelector(`#dmt-resp-${t.id}`);
+
+        // Estado restaurado desde Firestore (sobrevive recargas de la vista)
+        let _acumMs   = t.tiempo_trabajo_ms || 0;
+        let _resumeMs = t.timer_ultima_reanudacion_ms || t.timer_iniciado_ms || null;
+        let _estado   = t.estado === "en_proceso" ? (t.timer_pausado ? "pausada" : "corriendo") : "sin_iniciar";
+        let _pausas   = Array.isArray(t.timer_pausas) ? [...t.timer_pausas] : [];
+
+        const trabajoActual = () => _acumMs + (_estado === "corriendo" && _resumeMs ? Date.now() - _resumeMs : 0);
+        const pintarCrono   = () => { trabajoEl.textContent = fmtDirMt(trabajoActual()); };
+        const arrancarTick  = () => { clearInterval(_dirMtTimers[t.id]); _dirMtTimers[t.id] = setInterval(pintarCrono, 1000); };
+        const cerrarPausa   = () => { if (_pausas.length && !_pausas[_pausas.length-1].fin) _pausas[_pausas.length-1].fin = new Date().toISOString(); };
+        const mkB = (cls, txt, fn) => { const b = document.createElement("button"); b.className = "acta-btn " + cls; b.textContent = txt; b.onclick = fn; btnsEl.appendChild(b); };
+
+        function pintarBotones() {
+          btnsEl.innerHTML = "";
+          if (_estado === "sin_iniciar") {
+            mkB("iniciar", "▶ Iniciar tarea", iniciarT);
+          } else if (_estado === "corriendo") {
+            mkB("pausar", "⏸ Pausar", pausarT);
+            mkB("terminar", "■ Completar", completarT);
+          } else if (_estado === "pausada") {
+            mkB("iniciar", "▶ Reanudar", reanudarT);
+            mkB("terminar", "■ Completar", completarT);
+          }
+        }
+
+        async function iniciarT() {
+          _estado = "corriendo"; _resumeMs = Date.now(); _acumMs = 0; _pausas = [];
+          const tiempoRespMs = _resumeMs - creadoMs;
+          respEl.textContent = fmtDirMt(tiempoRespMs);
+          cronoEl.classList.add("visible");
+          arrancarTick(); pintarBotones();
+          try {
+            await updateDoc(doc(db, "tareas", t.id), {
+              estado: "en_proceso",
+              timer_iniciado_ms: _resumeMs,
+              timer_iniciado_iso: new Date().toISOString(),
+              timer_ultima_reanudacion_ms: _resumeMs,
+              timer_pausado: false,
+              timer_pausas: [],
+              tiempo_trabajo_ms: 0,
+              tiempo_respuesta_ms: tiempoRespMs,
+            });
+          } catch(e) { console.warn("[dmt]", e); }
+        }
+
+        async function pausarT() {
+          _acumMs = trabajoActual(); _estado = "pausada";
+          _pausas.push({ inicio: new Date().toISOString(), fin: null });
+          clearInterval(_dirMtTimers[t.id]); pintarCrono(); pintarBotones();
+          try {
+            await updateDoc(doc(db, "tareas", t.id), { timer_pausado: true, tiempo_trabajo_ms: _acumMs, timer_pausas: _pausas });
+          } catch(e) { console.warn("[dmt pausa]", e); }
+        }
+
+        async function reanudarT() {
+          _estado = "corriendo"; _resumeMs = Date.now(); cerrarPausa();
+          arrancarTick(); pintarBotones();
+          try {
+            await updateDoc(doc(db, "tareas", t.id), { timer_pausado: false, timer_ultima_reanudacion_ms: _resumeMs, timer_pausas: _pausas });
+          } catch(e) { console.warn("[dmt reanudar]", e); }
+        }
+
+        async function completarT() {
+          const totalMs = trabajoActual();
+          _estado = "hecho"; cerrarPausa();
+          clearInterval(_dirMtTimers[t.id]); delete _dirMtTimers[t.id];
+          trabajoEl.textContent = fmtDirMt(totalMs);
+          cronoEl.classList.add("done");
+          btnsEl.innerHTML = "";
+          try {
+            await updateDoc(doc(db, "tareas", t.id), {
+              estado:               "completado",
+              fecha_completacion:   new Date().toISOString().split("T")[0],
+              listo_para_cobrar:    true,
+              timer_completado_ms:  Date.now(),
+              timer_completado_iso: new Date().toISOString(),
+              tiempo_trabajo_ms:    totalMs,
+              timer_pausado:        false,
+              timer_pausas:         _pausas,
+            });
+          } catch(e) { console.error("[dmt completar]", e); }
+          setTimeout(() => {
+            card.remove();
+            if (!listEl.querySelector(".mt-card"))
+              listEl.innerHTML = '<div class="loading-state">✓ Sin tareas asignadas pendientes</div>';
+          }, 1500);
+        }
+
+        if (_estado !== "sin_iniciar") {
+          cronoEl.classList.add("visible");
+          if (t.tiempo_respuesta_ms) respEl.textContent = fmtDirMt(t.tiempo_respuesta_ms);
+          pintarCrono();
+          if (_estado === "corriendo") arrancarTick();
+        }
+        pintarBotones();
+      });
+    }
+
     // ── PEDIDOS ──────────────────────────────────────────────────────────────────
+    let _todosAsesores = []; // cache para el select de asesor en el modal
+
     async function cargarPedidos() {
       const listEl = document.getElementById("pedidos-list");
       listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
       try {
+        // Cargar asesores una vez para el select del modal
+        if (_todosAsesores.length === 0) {
+          const aSnap = await getDocs(collection(db, "usuarios"));
+          _todosAsesores = aSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+
         const snap = await getDocs(collection(db, "tareas"));
         listEl.innerHTML = "";
         if (snap.empty) { listEl.innerHTML = '<div class="loading-state">Sin pedidos</div>'; return; }
 
-        const docs = snap.docs.sort((a,b) => (b.data().creado_en||"").localeCompare(a.data().creado_en||""));
+        const docs = snap.docs
+          .filter(d => !d.data().es_interna) // las tareas internas no son pedidos de clientes
+          .sort((a,b) => (b.data().creado_en||"").localeCompare(a.data().creado_en||""));
         docs.forEach(d => {
           const t = d.data(); const id = d.id;
           const dc = difBadgeClass(t.dificultad);
+          const ep = t.estatus_pago || "";
           const card = document.createElement("div");
           card.className = "pedido-card";
+
+          const row = (label, val) => val
+            ? `<div class="pedido-field"><div class="pf-label">${label}</div><div class="pf-val">${val}</div></div>`
+            : "";
+          const rowFull = (label, val) => val
+            ? `<div class="pedido-field pedido-full"><div class="pf-label">${label}</div><div class="pf-val">${val}</div></div>`
+            : "";
+
           card.innerHTML = `
             <div class="pedido-header">
               <span class="pedido-id">#${t.numero_pedido||"—"}</span>
@@ -512,35 +1238,140 @@
               <span class="dif-badge ${dc}">${t.dificultad||"?"}</span>
               <span class="pedido-badge ${t.estado||"pendiente"}">${estadoLabel[t.estado]||t.estado}</span>
             </div>
-            <div class="pedido-meta">
-              ${t.materia ? `<span>Materia: <b>${t.materia}</b></span>` : ""}
-              ${t.entregable ? `<span>Entregable: <b>${t.entregable}</b></span>` : ""}
-              <span>Asesor: <b>${t.asesor_nombre||"Sin asignar"}</b></span>
-              ${t.dia_entrega ? `<span>Entrega: <b>${t.dia_entrega}</b></span>` : ""}
-              ${t.estatus_pago ? `<span>Pago: <b>${t.estatus_pago}</b></span>` : ""}
+            <div class="pedido-grid">
+              ${row("Plataforma", t.plataforma)}
+              ${row("Escuela", t.escuela)}
+              ${row("ID / Usuario", t.id_alumno)}
+              ${row("Contraseña", t.contrasena)}
+              ${rowFull("Materia", t.materia)}
+              ${rowFull("Entregable", t.entregable)}
+              ${row("Día Agenda", t.dia_agenda)}
+              ${row("Día Entrega", t.dia_entrega||t.fecha_entrega_estimada)}
+              ${row("Subir", t.subir)}
+              ${row("Asesor", t.asesor_nombre||"Sin asignar")}
+              ${t.precio != null ? row("Precio", "$" + t.precio) : ""}
+              ${ep ? `<div class="pedido-field"><div class="pf-label">Pago</div><div class="pf-val"><span class="pago-badge ${ep}">${ep}</span></div></div>` : ""}
+              ${t.cantidad_pagada != null ? row("Cantidad pagada", "$" + t.cantidad_pagada) : ""}
+              ${rowFull("Anotaciones", t.anotaciones)}
             </div>
             <div class="pedido-actions">
-              <button class="btn-p-action primary btn-edit-dif">✏️ Cambiar dificultad</button>
+              <button class="btn-p-action primary btn-editar-pedido"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar todo</button>
+              <button class="btn-p-action danger btn-eliminar-pedido" style="background:rgba(224,54,44,.10);border:1px solid rgba(224,54,44,.3);color:#e0362c"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M7 7l.8 12a2 2 0 0 0 2 1.9h4.4a2 2 0 0 0 2-1.9L17 7"/></svg> Eliminar</button>
             </div>`;
-          card.querySelector(".btn-edit-dif").onclick = () => {
-            document.getElementById("ed-id").value = id;
-            document.getElementById("ed-cliente").textContent = t.cliente || "—";
-            document.getElementById("ed-dif").value = t.dificultad || "B";
-            document.getElementById("modal-edit-dif").classList.remove("hidden");
-          };
+
+          card.querySelector(".btn-editar-pedido").onclick = () => abrirModalEditar(id, t);
+          card.querySelector(".btn-eliminar-pedido").onclick = () => abrirModalEliminarPedido(id, t, card);
           listEl.appendChild(card);
         });
       } catch(e) { listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>'; }
     }
 
-    // Modal editar dificultad
-    document.getElementById("btn-ed-cancel").onclick = () => document.getElementById("modal-edit-dif").classList.add("hidden");
-    document.getElementById("btn-ed-save").onclick = async () => {
-      const id  = document.getElementById("ed-id").value;
-      const dif = document.getElementById("ed-dif").value;
-      await updateDoc(doc(db, "tareas", id), { dificultad: dif, descripcion: dif });
-      document.getElementById("modal-edit-dif").classList.add("hidden");
-      cargarPedidos();
+    // ── Eliminar pedido (con confirmación) ───────────────────────────────────
+    let _delPedido = null; // { id, card }
+    function abrirModalEliminarPedido(id, t, card) {
+      _delPedido = { id, card };
+      document.getElementById("del-p-nombre").textContent =
+        `#${t.numero_pedido || "—"} · ${t.cliente || "sin cliente"}${t.materia ? " · " + t.materia : ""}`;
+      document.getElementById("modal-eliminar-pedido").classList.remove("hidden");
+    }
+    document.getElementById("btn-del-p-cancel").addEventListener("click", () => {
+      _delPedido = null;
+      document.getElementById("modal-eliminar-pedido").classList.add("hidden");
+    });
+    document.getElementById("btn-del-p-confirm").addEventListener("click", async () => {
+      if (!_delPedido) return;
+      const btn = document.getElementById("btn-del-p-confirm");
+      btn.disabled = true; btn.textContent = "Eliminando...";
+      try {
+        await deleteDoc(doc(db, "tareas", _delPedido.id));
+        _delPedido.card.remove();
+        document.getElementById("modal-eliminar-pedido").classList.add("hidden");
+      } catch (e) { alert("Error al eliminar: " + e.message); }
+      btn.disabled = false; btn.textContent = "Sí, eliminar";
+      _delPedido = null;
+    });
+
+    function abrirModalEditar(id, t) {
+      document.getElementById("ep-id").value              = id;
+      document.getElementById("ep-cliente").value         = t.cliente || "";
+      document.getElementById("ep-plataforma").value      = t.plataforma || "";
+      document.getElementById("ep-escuela").value         = t.escuela || "";
+      document.getElementById("ep-id-alumno").value       = t.id_alumno || "";
+      document.getElementById("ep-contrasena").value      = t.contrasena || "";
+      document.getElementById("ep-materia").value         = t.materia || "";
+      document.getElementById("ep-entregable").value      = t.entregable || "";
+      document.getElementById("ep-dia-agenda").value      = t.dia_agenda || "";
+      document.getElementById("ep-dia-entrega").value     = t.dia_entrega || t.fecha_entrega_estimada || "";
+      document.getElementById("ep-subir").value           = t.subir || "";
+      document.getElementById("ep-anotaciones").value     = t.anotaciones || "";
+      document.getElementById("ep-precio").value          = t.precio != null ? t.precio : "";
+      document.getElementById("ep-estatus-pago").value    = t.estatus_pago || "";
+      document.getElementById("ep-cantidad-pagada").value = t.cantidad_pagada != null ? t.cantidad_pagada : "";
+      document.getElementById("ep-dif").value             = t.dificultad || "B";
+      document.getElementById("ep-estado").value          = t.estado || "en_cola";
+      document.getElementById("ep-msg").innerHTML         = "";
+
+      // Poblar select de asesores
+      const sel = document.getElementById("ep-asesor");
+      sel.innerHTML = '<option value="">Sin asignar</option>';
+      _todosAsesores.filter(u => u.rol === "asesor").forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.id; opt.textContent = u.nombre;
+        if (u.id === t.asesor_asignado_id) opt.selected = true;
+        sel.appendChild(opt);
+      });
+
+      document.getElementById("modal-edit-pedido").classList.remove("hidden");
+    }
+
+    // Guardar edición completa
+    document.getElementById("btn-ep-cancel").onclick = () => document.getElementById("modal-edit-pedido").classList.add("hidden");
+    document.getElementById("btn-ep-save").onclick = async () => {
+      const btn   = document.getElementById("btn-ep-save");
+      const msgEl = document.getElementById("ep-msg");
+      btn.disabled = true; btn.textContent = "Guardando...";
+
+      const id      = document.getElementById("ep-id").value;
+      const materia = document.getElementById("ep-materia").value.trim();
+      const entregable = document.getElementById("ep-entregable").value.trim();
+      const precio  = document.getElementById("ep-precio").value;
+      const cant    = document.getElementById("ep-cantidad-pagada").value;
+      const sel     = document.getElementById("ep-asesor");
+      const asesorId   = sel.value;
+      const asesorNombre = sel.options[sel.selectedIndex]?.text || "";
+
+      try {
+        await updateDoc(doc(db, "tareas", id), {
+          cliente:          document.getElementById("ep-cliente").value.trim(),
+          plataforma:       document.getElementById("ep-plataforma").value || null,
+          escuela:          document.getElementById("ep-escuela").value || null,
+          id_alumno:        document.getElementById("ep-id-alumno").value.trim() || null,
+          contrasena:       document.getElementById("ep-contrasena").value.trim() || null,
+          materia:          materia || null,
+          entregable:       entregable || null,
+          dia_agenda:       document.getElementById("ep-dia-agenda").value || null,
+          dia_entrega:      document.getElementById("ep-dia-entrega").value || null,
+          fecha_entrega_estimada: document.getElementById("ep-dia-entrega").value || null,
+          subir:            document.getElementById("ep-subir").value || null,
+          anotaciones:      document.getElementById("ep-anotaciones").value.trim() || null,
+          precio:           precio !== "" ? Number(precio) : null,
+          estatus_pago:     document.getElementById("ep-estatus-pago").value || null,
+          cantidad_pagada:  cant !== "" ? Number(cant) : null,
+          dificultad:       document.getElementById("ep-dif").value,
+          estado:           document.getElementById("ep-estado").value,
+          descripcion:      materia || entregable || "",
+          asesor_asignado_id: asesorId || null,
+          asesor_nombre:    asesorId ? asesorNombre : null,
+        });
+        msgEl.innerHTML = '<div class="msg-ok">✓ Pedido actualizado</div>';
+        setTimeout(() => {
+          document.getElementById("modal-edit-pedido").classList.add("hidden");
+          cargarPedidos();
+        }, 800);
+      } catch(e) {
+        msgEl.innerHTML = `<div class="msg-err">Error: ${e.message}</div>`;
+      }
+      btn.disabled = false; btn.textContent = "Guardar cambios";
     };
 
     // ── USUARIOS ─────────────────────────────────────────────────────────────────
@@ -556,22 +1387,44 @@
           const u = d.data(); const uid = d.id;
           const card = document.createElement("div");
           card.className = "usuario-card";
+          card.style.flexDirection = "column";
+          card.style.alignItems    = "stretch";
           card.innerHTML = `
-            <div class="usuario-avatar" style="background:${avatarColor(u.rol)}">${avatarLetters(u.nombre)}</div>
-            <div class="usuario-info">
-              <div class="usuario-nombre">${u.nombre || "—"}</div>
-              <div class="usuario-email">${u.email || "—"}</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="usuario-avatar" style="background:${avatarColor(u.rol)}">${avatarLetters(u.nombre)}</div>
+              <div class="usuario-info">
+                <div class="usuario-nombre">${u.nombre || "—"}</div>
+                <div class="usuario-email">${u.email || "—"}</div>
+              </div>
+              <span class="rol-badge ${u.rol||"asesor"}">${(u.rol||"asesor").toUpperCase()}</span>
             </div>
-            <span class="rol-badge ${u.rol||"asesor"}">${(u.rol||"asesor").toUpperCase()}</span>
-            <div class="usuario-actions">
-              <button class="btn-sm btn-cambiar-rol">🔄 Rol</button>
+            <div class="usuario-actions" style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
+              <button class="btn-sm btn-editar-usuario"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar</button>
+              <button class="btn-sm btn-cambiar-rol"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 3.5V8h-4.5"/></svg> Rol</button>
+              <button class="btn-sm danger btn-eliminar-usuario"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M7 7l.8 12a2 2 0 0 0 2 1.9h4.4a2 2 0 0 0 2-1.9L17 7"/></svg> Eliminar</button>
             </div>`;
+
+          card.querySelector(".btn-editar-usuario").onclick = () => {
+            document.getElementById("eu-uid").value    = uid;
+            document.getElementById("eu-nombre").value = u.nombre || "";
+            document.getElementById("eu-email").value  = u.email  || "";
+            document.getElementById("eu-pass").value   = "";
+            document.getElementById("eu-msg").innerHTML = "";
+            document.getElementById("modal-editar-usuario").classList.remove("hidden");
+          };
           card.querySelector(".btn-cambiar-rol").onclick = () => {
             document.getElementById("cr-uid").value = uid;
             document.getElementById("cr-nombre").textContent = u.nombre || "—";
             document.getElementById("cr-rol").value = u.rol || "asesor";
             document.getElementById("modal-cambiar-rol").classList.remove("hidden");
           };
+          card.querySelector(".btn-eliminar-usuario").onclick = () => {
+            document.getElementById("del-uid").value = uid;
+            document.getElementById("del-u-nombre").textContent = u.nombre || u.email || "—";
+            document.getElementById("del-u-msg").innerHTML = "";
+            document.getElementById("modal-eliminar-usuario").classList.remove("hidden");
+          };
+
           listEl.appendChild(card);
         });
       } catch(e) { listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>'; }
@@ -635,6 +1488,72 @@
       }
     };
 
+    // ── Modal editar usuario ────────────────────────────────────────────────────
+    const auth = getAuth(fbApp);
+
+    document.getElementById("btn-eu-cancel").onclick = () => document.getElementById("modal-editar-usuario").classList.add("hidden");
+    document.getElementById("btn-eu-save").onclick   = async () => {
+      const btn    = document.getElementById("btn-eu-save");
+      const msgEl  = document.getElementById("eu-msg");
+      const uid    = document.getElementById("eu-uid").value;
+      const nombre = document.getElementById("eu-nombre").value.trim();
+      const email  = document.getElementById("eu-email").value.trim();
+      const pass   = document.getElementById("eu-pass").value;
+
+      if (!nombre) { msgEl.innerHTML = '<div class="msg-err">El nombre no puede quedar vacío.</div>'; return; }
+
+      btn.disabled = true; btn.textContent = "Guardando...";
+      msgEl.innerHTML = "";
+
+      try {
+        // 1. Actualizar nombre y email en Firestore
+        await updateDoc(doc(db, "usuarios", uid), { nombre, email });
+
+        // 2. Si escribió nueva contraseña → enviar email de restablecimiento
+        if (pass.length > 0) {
+          if (pass.length < 6) {
+            msgEl.innerHTML = '<div class="msg-err">La contraseña debe tener al menos 6 caracteres.</div>';
+            btn.disabled = false; btn.textContent = "Guardar cambios";
+            return;
+          }
+          await sendPasswordResetEmail(auth, email);
+          msgEl.innerHTML = '<div class="msg-ok">✓ Datos actualizados. Se envió un correo de restablecimiento de contraseña a ' + email + '</div>';
+        } else {
+          msgEl.innerHTML = '<div class="msg-ok">✓ Datos actualizados correctamente.</div>';
+        }
+
+        btn.disabled = false; btn.textContent = "Guardar cambios";
+        setTimeout(() => {
+          document.getElementById("modal-editar-usuario").classList.add("hidden");
+          cargarUsuarios();
+        }, 1500);
+      } catch(e) {
+        const msgs = { "auth/user-not-found": "Correo no encontrado en Firebase.", "auth/invalid-email": "Correo no válido." };
+        msgEl.innerHTML = `<div class="msg-err">${msgs[e.code] || e.message}</div>`;
+        btn.disabled = false; btn.textContent = "Guardar cambios";
+      }
+    };
+
+    // ── Modal eliminar usuario ──────────────────────────────────────────────────
+    document.getElementById("btn-del-u-cancel").onclick  = () => document.getElementById("modal-eliminar-usuario").classList.add("hidden");
+    document.getElementById("btn-del-u-confirm").onclick = async () => {
+      const btn   = document.getElementById("btn-del-u-confirm");
+      const msgEl = document.getElementById("del-u-msg");
+      const uid   = document.getElementById("del-uid").value;
+      btn.disabled = true; btn.textContent = "Eliminando...";
+      try {
+        await deleteDoc(doc(db, "usuarios", uid));
+        msgEl.innerHTML = '<div class="msg-ok">✓ Usuario eliminado. Ya no podrá iniciar sesión.</div>';
+        setTimeout(() => {
+          document.getElementById("modal-eliminar-usuario").classList.add("hidden");
+          cargarUsuarios();
+        }, 1200);
+      } catch(e) {
+        msgEl.innerHTML = `<div class="msg-err">Error: ${e.message}</div>`;
+        btn.disabled = false; btn.textContent = "Sí, eliminar";
+      }
+    };
+
     // Modal cambiar rol
     document.getElementById("btn-cr-cancel").onclick = () => document.getElementById("modal-cambiar-rol").classList.add("hidden");
     document.getElementById("btn-cr-save").onclick   = async () => {
@@ -661,18 +1580,33 @@
         }
       } catch {}
 
-      // Cargar asesores con sus tipos habilitados
+      // Cargar asesores Y gerencia con sus tipos habilitados
       const listEl = document.getElementById("asesores-cuotas");
       listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span></div>';
       try {
-        const snap = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+        const [snapA, snapG] = await Promise.all([
+          getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor"))),
+          getDocs(query(collection(db, "usuarios"), where("rol", "==", "gerencia")))
+        ]);
+        const snap = { docs: [...snapA.docs, ...snapG.docs], empty: snapA.empty && snapG.empty };
         listEl.innerHTML = "";
         if (snap.empty) { listEl.innerHTML = '<div class="cola-empty">Sin asesores</div>'; return; }
 
         snap.docs.forEach(d => {
           const u = d.data(); const uid = d.id;
-          const habilitados = u.tipos_habilitados || [];
+          const habilitados  = u.tipos_habilitados || [];
+          const cuotaMax     = u.cuota_max != null ? u.cuota_max : 1.0;
           const tipos = ["A++", "A+", "A", "B"];
+
+          // Calcular equivalencias con la cuota max actual
+          const costoApp = parseFloat(document.getElementById("costo-App").value) || 0.333;
+          const costoAp  = parseFloat(document.getElementById("costo-Ap").value)  || 0.25;
+          const costoA   = parseFloat(document.getElementById("costo-A").value)   || 0.167;
+          const costoB   = parseFloat(document.getElementById("costo-B").value)   || 0.125;
+          const eqApp = Math.round(cuotaMax / costoApp * 10) / 10;
+          const eqAp  = Math.round(cuotaMax / costoAp  * 10) / 10;
+          const eqA   = Math.round(cuotaMax / costoA   * 10) / 10;
+          const eqB   = Math.round(cuotaMax / costoB   * 10) / 10;
 
           const card = document.createElement("div");
           card.className = "asesor-cuota-card";
@@ -681,34 +1615,59 @@
             <div class="asesor-cuota-header">
               <div class="asesor-avatar" style="width:28px;height:28px;font-size:11px">${avatarLetters(u.nombre)}</div>
               <div class="asesor-cuota-name">${u.nombre}</div>
-              <button class="btn-sm btn-save-tipos">Guardar</button>
+              <button class="btn-sm btn-save-asesor">Guardar</button>
             </div>
-            <div style="font-size:10px;color:var(--sub);margin-bottom:6px">Tipos de tarea que puede recibir:</div>
+
+            <!-- Cuota máxima -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+              <div style="flex:1">
+                <div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">Cuota máxima diaria</div>
+                <div style="font-size:10px;color:var(--sub)">
+                  Equivale a: <b style="color:var(--text)">${eqApp} A++</b> · <b style="color:var(--text)">${eqAp} A+</b> · <b style="color:var(--text)">${eqA} A</b> · <b style="color:var(--text)">${eqB} B</b>
+                </div>
+              </div>
+              <input class="cuota-max-input" type="number" value="${cuotaMax}" min="0.1" max="5" step="0.05"
+                style="width:70px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-family:inherit;font-size:14px;font-weight:700;padding:5px 8px;outline:none;text-align:center"/>
+            </div>
+
+            <!-- Tipos habilitados -->
+            <div style="font-size:10px;color:var(--sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Tipos de tarea que puede recibir:</div>
             <div class="tipos-chips">
               ${tipos.map(t => {
-                const dc = difBadgeClass(t);
+                const dc  = difBadgeClass(t);
                 const sel = habilitados.includes(t) ? "selected " + dc : "";
                 return `<button class="tipo-chip ${sel}" data-tipo="${t}">${t}</button>`;
               }).join("")}
             </div>`;
 
+          // Recalcular equivalencias en tiempo real al cambiar cuota_max
+          const maxInput = card.querySelector(".cuota-max-input");
+          const eqLine   = card.querySelector(".cuota-max-input").closest("div").querySelector("div > div:last-child");
+          maxInput.addEventListener("input", () => {
+            const cm = parseFloat(maxInput.value) || 1;
+            const a  = n => Math.round(cm / n * 10) / 10;
+            eqLine.innerHTML = `Equivale a: <b style="color:var(--text)">${a(costoApp)} A++</b> · <b style="color:var(--text)">${a(costoAp)} A+</b> · <b style="color:var(--text)">${a(costoA)} A</b> · <b style="color:var(--text)">${a(costoB)} B</b>`;
+          });
+
           // Toggle tipo
           card.querySelectorAll(".tipo-chip").forEach(chip => {
             chip.addEventListener("click", () => {
-              const tipo = chip.dataset.tipo;
-              const dc   = difBadgeClass(tipo);
+              const dc = difBadgeClass(chip.dataset.tipo);
               chip.classList.toggle("selected");
-              if (chip.classList.contains("selected")) chip.classList.add(dc);
-              else chip.classList.remove(dc);
+              chip.classList.toggle(dc, chip.classList.contains("selected"));
             });
           });
 
-          // Guardar tipos
-          card.querySelector(".btn-save-tipos").addEventListener("click", async (e) => {
+          // Guardar todo (tipos + cuota_max)
+          card.querySelector(".btn-save-asesor").addEventListener("click", async (e) => {
             const btn = e.currentTarget;
             btn.disabled = true; btn.textContent = "...";
             const seleccionados = [...card.querySelectorAll(".tipo-chip.selected")].map(c => c.dataset.tipo);
-            await updateDoc(doc(db, "usuarios", uid), { tipos_habilitados: seleccionados });
+            const nuevaMax = parseFloat(card.querySelector(".cuota-max-input").value) || 1.0;
+            await updateDoc(doc(db, "usuarios", uid), {
+              tipos_habilitados: seleccionados,
+              cuota_max: nuevaMax
+            });
             btn.textContent = "✓"; btn.style.color = "var(--green)";
             setTimeout(() => { btn.textContent = "Guardar"; btn.style.color = ""; btn.disabled = false; }, 1500);
           });
@@ -735,6 +1694,119 @@
         msgEl.innerHTML = '<div class="msg-err" style="margin-top:8px">Error: ' + e.message + '</div>';
       }
       btn.disabled = false; btn.textContent = "Guardar costos globales";
+    });
+
+    // ── Google Sheets webhook ─────────────────────────────────────────────────
+    // Cargar URL guardada al entrar a Cuotas
+    async function cargarWebhookUrl() {
+      try {
+        const snap = await getDoc(doc(db, "configuracion", "integraciones"));
+        if (snap.exists() && snap.data().webhook_sheets) {
+          document.getElementById("sheets-webhook-url").value = snap.data().webhook_sheets;
+        }
+      } catch {}
+    }
+    // Llamar cuando se abre la pestaña Cuotas (extender el handler existente)
+    const _origCargarCuotas = cargarCuotas;
+    // cargarCuotas ya se llama desde el tab click; enganchamos la carga de URL
+    document.querySelector('[data-tab="cuotas"]')?.addEventListener("click", () => {
+      setTimeout(cargarWebhookUrl, 200);
+    });
+
+    // Guardar URL
+    document.getElementById("btn-save-webhook").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-save-webhook");
+      const url = document.getElementById("sheets-webhook-url").value.trim();
+      const msg = document.getElementById("msg-webhook");
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try {
+        await setDoc(doc(db, "configuracion", "integraciones"), { webhook_sheets: url }, { merge: true });
+        msg.innerHTML = '<span style="color:var(--green)">✓ URL guardada</span>';
+      } catch(e) {
+        msg.innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>';
+      }
+      btn.disabled = false; btn.textContent = "Guardar URL";
+    });
+
+    // Probar conexión
+    document.getElementById("btn-test-webhook").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-test-webhook");
+      const url = document.getElementById("sheets-webhook-url").value.trim();
+      const msg = document.getElementById("msg-webhook");
+      if (!url) { msg.innerHTML = '<span style="color:var(--red)">Primero escribe la URL</span>'; return; }
+      btn.disabled = true; btn.textContent = "Probando...";
+      try {
+        if (!window.AT?.syncPedido) throw new Error("IPC no disponible");
+        const r = await window.AT.syncPedido({
+          url,
+          payload: { action: "test", id: "test-" + Date.now(), cliente: "TEST", numero_pedido: "PTEST", estado: "test" }
+        });
+        msg.innerHTML = r?.ok
+          ? '<span style="color:var(--green)">✓ Conexión exitosa — el Sheet está recibiendo datos</span>'
+          : '<span style="color:var(--red)"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> El webhook respondió pero con error: ' + JSON.stringify(r) + '</span>';
+      } catch(e) {
+        msg.innerHTML = '<span style="color:var(--red)">Error de conexión: ' + e.message + '</span>';
+      }
+      btn.disabled = false; btn.textContent = "✓ Probar conexión";
+    });
+
+    // Sync completo — envía todos los pedidos de Firestore al Sheet
+    document.getElementById("btn-sync-all").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-sync-all");
+      const url = document.getElementById("sheets-webhook-url").value.trim();
+      const msg = document.getElementById("msg-webhook");
+      if (!url) { msg.innerHTML = '<span style="color:var(--red)">Primero guarda la URL del webhook</span>'; return; }
+      if (!window.AT?.syncPedido) { msg.innerHTML = '<span style="color:var(--red)">IPC no disponible</span>'; return; }
+
+      btn.disabled = true; btn.textContent = "Sincronizando...";
+      msg.innerHTML = '<span style="color:var(--sub)">Obteniendo pedidos de Firestore...</span>';
+
+      try {
+        const snap = await getDocs(collection(db, "tareas"));
+        const total = snap.size;
+        let enviados = 0, errores = 0;
+
+        for (const d of snap.docs) {
+          const t = d.data();
+          try {
+            await window.AT.syncPedido({
+              url,
+              payload: {
+                action: "sync",
+                id: d.id,
+                numero_pedido:   t.numero_pedido || "",
+                cliente:         t.cliente || "",
+                plataforma:      t.plataforma || "",
+                escuela:         t.escuela || "",
+                id_alumno:       t.id_alumno || "",
+                contrasena:      t.contrasena || "",
+                materia:         t.materia || "",
+                entregable:      t.entregable || "",
+                dia_agenda:      t.dia_agenda || "",
+                dia_entrega:     t.dia_entrega || "",
+                subir:           t.subir || "",
+                anotaciones:     t.anotaciones || "",
+                precio:          t.precio != null ? t.precio : "",
+                estatus_pago:    t.estatus_pago || "",
+                cantidad_pagada: t.cantidad_pagada != null ? t.cantidad_pagada : "",
+                dificultad:      t.dificultad || "",
+                asesor_nombre:   t.asesor_nombre || "",
+                estado:          t.estado || "",
+                atc_nombre:      t.atc_nombre || "",
+              }
+            });
+            enviados++;
+          } catch { errores++; }
+          msg.innerHTML = `<span style="color:var(--sub)">Enviando... ${enviados}/${total}</span>`;
+          // Pequeña pausa para no saturar el webhook
+          await new Promise(r => setTimeout(r, 150));
+        }
+
+        msg.innerHTML = `<span style="color:var(--green)">✓ Sync completo: ${enviados} pedidos enviados${errores > 0 ? `, ${errores} errores` : ""}</span>`;
+      } catch(e) {
+        msg.innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>';
+      }
+      btn.disabled = false; btn.textContent = "↑ Sync completo";
     });
   </script>
 </body>

@@ -238,7 +238,7 @@ function renderReport(r) {
 
   // ── Header ────────────────────────────────────────────────────────────────
   html += '<div class="header">';
-  html += '<div class="header-logo"><img src="assets/logo.png" alt="Academic Tareas"/></div>';
+  html += '<div class="header-logo"><img src="logo.png" alt="Academic Tareas"/></div>';
   html += '<div class="header-info">';
   html += '<div class="header-title">ACADEMIC <small>TAREAS</small></div>';
   html += '<div class="header-sub">Reporte de Productividad</div>';
@@ -417,7 +417,7 @@ function renderReport(r) {
   // Footer
   html += '<div class="footer">';
   html += '<div class="footer-left">';
-  html += '<div class="footer-logo"><img src="assets/logo.png" alt=""/></div>';
+  html += '<div class="footer-logo"><img src="logo.png" alt=""/></div>';
   html += '<div class="footer-brand">ACADEMIC <small>TAREAS</small></div>';
   html += '</div>';
   html += '<div class="footer-gen">Generado el ' + safe(r.meta.date) + ' · ' + new Date(r.meta.generatedAt).toLocaleTimeString("es-MX") + '</div>';
@@ -457,6 +457,9 @@ function intChip(icon, val, label) {
     + '<div class="int-lbl">' + label + '</div></div>'
     + '</div>';
 }
+
+// ── DATOS SIMULADOS (demo del diseño) ──
+renderReport({"meta": {"collaborator": "Aldahir Vidal — Asesor", "date": "2026-07-23", "generatedAt": "2026-07-23T18:36:12.000Z"}, "summary": {"startTime": "08:58:03", "endTime": "19:05:41", "totalDuration": "10h 07m", "activeTime": "8h 02m", "idleTime": "26m", "pausedTime": "58m", "productivityPct": 91, "clicks": 5210, "keyPresses": 24630, "totalIdlePeriods": 2, "totalActivities": 5}, "activities": [{"number": 1, "name": "Cliente 1042 — Álgebra Lineal S6 (foro + tarea)", "startTime": "09:05", "endTime": "11:20", "duration": "2h 15m"}, {"number": 2, "name": "Cliente 987 — Contabilidad de Costos, examen semanal", "startTime": "11:22", "endTime": "12:40", "duration": "1h 18m"}, {"number": 3, "name": "Cliente 1103 — Derecho Mercantil, ensayo 1200 palabras", "startTime": "13:40", "endTime": "15:55", "duration": "2h 15m"}, {"number": 4, "name": "Cliente 1042 — Álgebra Lineal S6 (actividad integradora)", "startTime": "15:57", "endTime": "17:31", "duration": "1h 34m"}, {"number": 5, "name": "Cliente 1156 — Estadística, quiz + participación", "startTime": "17:33", "endTime": "18:52", "duration": "1h 19m"}], "actividadesExtras": [{"titulo": "Apoyar a Didier con pedido urgente #P-2199", "prioridad": "A+", "estado": "terminada", "asignada_por": "Yael (Gerencia)", "iniciado": "12:44", "terminado": "13:12", "trabajo_ms": 1680000, "respuesta_ms": 240000, "pausas": 0}, {"titulo": "Capacitación: nueva plataforma Cambridge", "prioridad": "B", "estado": "pausada", "asignada_por": "Dirección", "iniciado": "18:53", "terminado": "—", "trabajo_ms": 540000, "respuesta_ms": 86400000, "pausas": 1}], "pauses": [{"reason": "Comida", "start": "13:05", "end": "13:40"}, {"reason": "Descanso", "start": "16:30", "end": "16:53"}], "idlePeriods": [{"duration": "12m", "start": "10:15", "end": "10:27", "reason": "Baño"}, {"duration": "14m", "start": "14:50", "end": "15:04", "reason": "Llamada personal breve"}], "appsOpened": [{"name": "Google Chrome", "duration": "6h 40m"}, {"name": "Word", "duration": "1h 25m"}, {"name": "Excel", "duration": "41m"}, {"name": "Vista Previa", "duration": "16m"}], "chromePages": [{"title": "Blackboard — Álgebra Lineal", "url": "uvmonline.blackboard.com/ultra/courses/alg-s6", "duration": "3h 22m", "totalMs": 12120000}, {"title": "Blackboard — Contabilidad de Costos", "url": "uvmonline.blackboard.com/ultra/courses/cont-987", "duration": "1h 15m", "totalMs": 4500000}, {"title": "Google Docs — Ensayo Derecho Mercantil", "url": "docs.google.com/document/d/1abc...", "duration": "1h 58m", "totalMs": 7080000}, {"title": "Coursera — Estadística", "url": "coursera.org/learn/estadistica", "duration": "1h 04m", "totalMs": 3840000}], "comments": "Cuota del día completada (3.0/3.0). El ensayo de Derecho quedó listo para revisión de ATC. Mañana retomo la capacitación de Cambridge."});
 </script>
 </body>
 </html>

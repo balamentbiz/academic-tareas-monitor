@@ -36,9 +36,12 @@
     .btn-logout:hover { border-color: var(--red); color: var(--red); }
 
     /* Tabs */
-    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 16px; }
-    .tab { padding: 10px 16px; font-size: 12px; font-weight: 600; color: var(--sub); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; }
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 16px; align-items: stretch; }
+    .tab { padding: 10px 16px; font-size: 12px; font-weight: 600; color: var(--sub); cursor: grab; border-bottom: 2px solid transparent; transition: all .2s; user-select: none; -webkit-user-select: none; }
+    .tab:active { cursor: grabbing; }
     .tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .tab.drag-over { background: rgba(9,163,239,.08); border-radius: 6px 6px 0 0; color: var(--cyan); }
+    .tab.dragging  { opacity: .35; }
 
     .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
     .tab-panel { display: none; flex-direction: column; gap: 12px; }
@@ -111,23 +114,232 @@
     .hidden { display: none !important; }
     .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(9,163,239,.3); border-top-color: var(--cyan); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Sesión ATC */
+    .sesion-bar { display:flex; align-items:center; gap:10px; padding:6px 16px; background:rgba(22,27,34,.6); border-bottom:1px solid var(--border); font-size:11px; color:var(--sub); }
+    .sesion-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); flex-shrink:0; }
+    .sesion-dot.idle { background:var(--orange); box-shadow:0 0 6px var(--orange); }
+    .sesion-timer { font-weight:700; color:var(--text); }
+    .sesion-prog { margin-left:auto; font-size:10px; color:var(--cyan); font-weight:600; }
+
+    /* Checklist actividades */
+    .act-header { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:14px; margin-bottom:8px; }
+    .act-progress-label { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .act-progress-label span { font-size:12px; font-weight:700; }
+    .act-progress-bar-bg { height:8px; background:rgba(255,255,255,.06); border-radius:4px; overflow:hidden; }
+    .act-progress-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--cyan),var(--green)); transition:width .4s; }
+    .act-item { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; display:flex; align-items:flex-start; gap:12px; transition:border-color .2s; }
+    .act-item.in-progress { border-color:rgba(255,159,10,.4); background:rgba(255,159,10,.04); }
+    .act-item.done        { border-color:rgba(50,215,75,.25); background:rgba(50,215,75,.05); }
+    .act-checkbox { width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; font-size:11px; font-weight:700; transition:all .2s; }
+    .act-item.in-progress .act-checkbox { border-color:var(--orange); background:rgba(255,159,10,.15); color:var(--orange); }
+    .act-item.done        .act-checkbox { border-color:var(--green);  background:var(--green); color:#fff; }
+    .act-body { flex:1; min-width:0; }
+    .act-label { font-size:13px; font-weight:600; color:var(--text); }
+    .act-sub   { font-size:11px; color:var(--sub); margin-top:2px; }
+    .act-tiempo { font-size:11px; margin-top:5px; }
+    .act-tiempo.running { color:var(--orange); font-weight:600; }
+    .act-tiempo.done    { color:var(--green);  font-weight:600; }
+    .act-btns  { display:flex; gap:6px; margin-top:8px; }
+    .btn-act-start { background:rgba(50,215,75,.12); border:1px solid rgba(50,215,75,.3); border-radius:6px; color:var(--green); font-family:var(--font); font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; transition:all .15s; }
+    .btn-act-start:hover { background:rgba(50,215,75,.22); }
+    .btn-act-stop  { background:rgba(255,69,58,.12); border:1px solid rgba(255,69,58,.3); border-radius:6px; color:var(--red); font-family:var(--font); font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; transition:all .15s; }
+    .btn-act-stop:hover  { background:rgba(255,69,58,.22); }
+    .btn-act-reset { background:none; border:1px solid var(--border); border-radius:6px; color:var(--sub); font-family:var(--font); font-size:10px; padding:3px 8px; cursor:pointer; }
+    .btn-act-reset:hover { border-color:rgba(255,255,255,.2); color:var(--text); }
+    .btn-act-pause { background:rgba(255,159,10,.12); border:1px solid rgba(255,159,10,.3); border-radius:6px; color:var(--orange); font-family:var(--font); font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; transition:all .15s; }
+    .btn-act-pause:hover { background:rgba(255,159,10,.22); }
+    .btn-act-resume { background:rgba(50,215,75,.12); border:1px solid rgba(50,215,75,.3); border-radius:6px; color:var(--green); font-family:var(--font); font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; transition:all .15s; }
+    .btn-act-resume:hover { background:rgba(50,215,75,.22); }
+    .btn-act-add  { background:rgba(94,106,210,.12); border:1px solid rgba(94,106,210,.3); border-radius:6px; color:#7c8cf8; font-family:var(--font); font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; transition:all .15s; }
+    .btn-act-add:hover { background:rgba(94,106,210,.22); }
+    .exec-list { display:flex; flex-direction:column; gap:3px; margin:6px 0 4px; }
+    .exec-row { font-size:11px; color:var(--sub); display:flex; align-items:center; gap:6px; }
+    .exec-idx { font-size:9px; background:rgba(255,255,255,.06); border-radius:3px; padding:1px 5px; color:var(--sub); font-weight:700; }
+    .exec-row.running { color:var(--orange); }
+    .exec-row.done    { color:var(--green); }
+
+    /* Reporte */
+    .rep-kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+    .rep-kpi { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px; }
+    .rep-kpi-lbl { font-size:9px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .rep-kpi-val { font-size:20px; font-weight:700; color:var(--text); line-height:1.1; }
+    .rep-kpi-sub { font-size:10px; color:var(--sub); margin-top:2px; }
+    .rep-sec  { font-size:10px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.6px; margin:14px 0 6px; }
+    .rep-act-row { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:10px 12px; margin-bottom:5px; }
+    .rep-act-name { font-size:12px; font-weight:600; margin-bottom:4px; }
+    .rep-act-execs { font-size:11px; color:var(--sub); display:flex; flex-direction:column; gap:2px; }
+    .btn-rep-export { width:100%; background:rgba(9,163,239,.12); border:1px solid rgba(9,163,239,.3); border-radius:10px; color:var(--cyan); font-family:var(--font); font-size:13px; font-weight:700; padding:12px; cursor:pointer; transition:all .2s; margin-top:4px; }
+    .btn-rep-export:hover { background:rgba(9,163,239,.22); }
+
+    /* Materia completa */
+    .mat-grupo { border: 1px solid rgba(59,130,246,.3); border-radius: var(--r); overflow: hidden; margin-bottom: 4px; }
+    .mat-grupo-header { background: rgba(59,130,246,.08); border-bottom: 1px solid rgba(59,130,246,.2); padding: 10px 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; cursor: pointer; user-select: none; }
+    .mat-grupo-badge { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; background: rgba(59,130,246,.2); color: #60a5fa; letter-spacing: .5px; flex-shrink: 0; }
+    .mat-grupo-title { font-size: 12px; font-weight: 700; color: var(--text); flex: 1; }
+    .mat-grupo-code { font-size: 10px; font-family: monospace; color: #60a5fa; background: rgba(59,130,246,.12); padding: 1px 6px; border-radius: 4px; }
+    .mat-grupo-stats { font-size: 10px; color: var(--sub); }
+    .mat-grupo-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .mat-grupo-body .pedido-card { margin-bottom: 0; border-left: 3px solid rgba(59,130,246,.4); }
+    .btn-duplicar { background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.3); border-radius: 6px; color: #60a5fa; font-size: 10px; font-weight: 700; padding: 3px 8px; cursor: pointer; font-family: inherit; transition: all .15s; flex-shrink: 0; }
+    .btn-duplicar:hover { background: rgba(59,130,246,.2); }
+
+    /* ── Panel Mis Tareas (tareas asignadas al usuario) ── */
+    .mt-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .mt-card.dif-App { border-left: 3px solid #bf5af2; }
+    .mt-card.dif-Ap  { border-left: 3px solid var(--red); }
+    .mt-card.dif-A   { border-left: 3px solid var(--orange); }
+    .mt-card.dif-B   { border-left: 3px solid var(--cyan); }
+    .mt-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .mt-cliente { font-size: 13px; font-weight: 700; flex: 1; }
+    .mt-data { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; font-size: 11px; color: var(--sub); margin-bottom: 6px; }
+    .mt-data b { color: var(--text); user-select: text; -webkit-user-select: text; }
+    .mt-nota { font-size: 11px; color: var(--sub); border-top: 1px solid var(--border); padding-top: 6px; margin-bottom: 6px; }
+    .mt-crono { display: none; align-items: center; gap: 10px; padding: 9px 12px; background: rgba(255,159,10,.07); border: 1px solid rgba(255,159,10,.2); border-radius: 8px; margin-bottom: 8px; }
+    .mt-crono.visible { display: flex; }
+    .mt-crono-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff9f0a; box-shadow: 0 0 6px #ff9f0a; flex-shrink: 0; animation: mt-pulse 1s infinite; }
+    @keyframes mt-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .mt-crono-vals { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .mt-crono-row { display: flex; justify-content: space-between; }
+    .mt-crono-lbl { font-size: 9px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; }
+    .mt-crono-val { font-size: 13px; font-weight: 800; font-family: monospace; color: #ff9f0a; }
+    .mt-crono.done { background: rgba(50,215,75,.07); border-color: rgba(50,215,75,.2); }
+    .mt-crono.done .mt-crono-dot { background: #32d74b; box-shadow: 0 0 6px #32d74b; animation: none; }
+    .mt-crono.done .mt-crono-val { color: #32d74b; }
+    .mt-dif-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .btn-mt-iniciar { width: 100%; background: rgba(50,215,75,.15); border: 1px solid rgba(50,215,75,.3); border-radius: 8px; color: #32d74b; font-family: var(--font); font-size: 12px; font-weight: 700; padding: 9px; cursor: pointer; transition: all .2s; }
+    .btn-mt-iniciar:hover { background: rgba(50,215,75,.25); }
+
+    /* ── Modal Materia Completa ── */
+    .mc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .mc-modal  { background: #161b22; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 24px; width: 560px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 0; }
+    .mc-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .mc-header h3 { font-size: 15px; font-weight: 800; flex: 1; }
+    .mc-close  { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--sub); font-size: 14px; width: 28px; height: 28px; cursor: pointer; font-family: inherit; line-height: 1; }
+    .mc-close:hover { border-color: var(--red); color: var(--red); }
+    .mc-section{ font-size: 10px; font-weight: 800; color: var(--sub); text-transform: uppercase; letter-spacing: .8px; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .mc-section:first-of-type { margin-top: 0; }
+    .mc-grid2  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .mc-field  { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+    .mc-field label { font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; }
+    .mc-field input, .mc-field select, .mc-field textarea {
+      background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font); font-size: 12px; padding: 8px 10px; outline: none; width: 100%;
+    }
+    .mc-field input:focus, .mc-field select:focus, .mc-field textarea:focus { border-color: var(--cyan); }
+    .mc-field select option { background: #161b22; }
+    .mc-dif-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 10px; }
+    .mc-act-item { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; position: relative; }
+    .mc-act-num  { font-size: 11px; font-weight: 800; color: #60a5fa; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .mc-act-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .mc-act-field { display: flex; flex-direction: column; gap: 4px; }
+    .mc-act-field label { font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; }
+    .mc-act-field input, .mc-act-field select {
+      background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font); font-size: 12px; padding: 7px 9px; outline: none; width: 100%;
+    }
+    .mc-act-field input:focus, .mc-act-field select:focus { border-color: var(--cyan); }
+    .mc-act-nota { display: flex; flex-direction: column; gap: 4px; }
+    .mc-act-nota label { font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; }
+    .mc-act-nota input { background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 12px; padding: 7px 9px; outline: none; width: 100%; }
+    .mc-act-nota input:focus { border-color: var(--cyan); }
+    .btn-mc-del-act { background: rgba(255,69,58,.1); border: 1px solid rgba(255,69,58,.3); border-radius: 5px; color: var(--red); font-size: 10px; padding: 3px 7px; cursor: pointer; font-family: inherit; margin-left: auto; }
+    .btn-mc-del-act:hover { background: rgba(255,69,58,.2); }
+    .btn-mc-add-act { width: 100%; background: rgba(94,106,210,.1); border: 1px solid rgba(94,106,210,.3); border-radius: 8px; color: #7c8cf8; font-family: var(--font); font-size: 12px; font-weight: 700; padding: 10px; cursor: pointer; margin-bottom: 0; transition: all .2s; }
+    .btn-mc-add-act:hover { background: rgba(94,106,210,.2); }
+    .mc-pago-info { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+    .mc-pago-info span { font-size: 11px; color: var(--sub); }
+    .mc-pago-info b { color: var(--text); }
+    .mc-pago-info .mc-por-act-val { font-size: 14px; font-weight: 800; color: var(--cyan); }
+    .mc-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-mat-completa-inline {
+      width: 100%; background: rgba(59,130,246,.1); border: 1.5px dashed rgba(59,130,246,.45);
+      border-radius: 10px; color: #60a5fa; font-family: var(--font); font-size: 14px; font-weight: 700;
+      padding: 13px; cursor: pointer; transition: all .2s; text-align: center; letter-spacing: .2px;
+    }
+    .btn-mat-completa-inline:hover { background: rgba(59,130,246,.2); border-style: solid; }
+
+    /* Cobros */
+    .cobro-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .cobro-card.parcial { border-left: 3px solid var(--cyan); }
+    .cobro-card.pendiente-pago { border-left: 3px solid var(--orange); }
+    .cobro-card.listo-cobrar { border-left: 3px solid #3b82f6; background: rgba(59,130,246,.04); }
+    .pago-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .pago-badge.PENDIENTE { background: rgba(255,159,10,.15); color: var(--orange); }
+    .pago-badge.PARCIAL   { background: rgba(9,163,239,.15);  color: var(--cyan); }
+    .pago-badge.PAGADO    { background: rgba(50,215,75,.15);  color: var(--green); }
+    .badge-listo-cobrar { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(59,130,246,.15); color: #3b82f6; border: 1px solid rgba(59,130,246,.35); }
+    .cobro-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .cobro-field label { display: block; font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+    .cobro-field input, .cobro-field select { width: 100%; background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 12px; padding: 8px 10px; outline: none; transition: border-color .2s; }
+    .cobro-field input:focus, .cobro-field select:focus { border-color: var(--cyan); }
+    .cobro-field select option { background: #1c2128; }
+    .btn-guardar-pago { width: 100%; background: rgba(50,215,75,.12); border: 1px solid rgba(50,215,75,.3); border-radius: 8px; color: var(--green); font-family: var(--font); font-size: 12px; font-weight: 700; padding: 9px; cursor: pointer; transition: all .2s; }
+    .btn-guardar-pago:hover { background: rgba(50,215,75,.22); }
+    .btn-guardar-pago:disabled { opacity: .4; cursor: not-allowed; }
+    .empty-cobros { text-align: center; color: var(--sub); font-size: 13px; padding: 40px 20px; }
+
+    /* Actividades asignadas */
+    .tab-badge { background:#ff453a; color:#fff; border-radius:9px; font-size:9px; font-weight:800; padding:1px 6px; margin-left:5px; display:none; }
+    .acta-card { background:rgba(255,255,255,.03); border:1px solid var(--border); border-left:3px solid var(--cyan); border-radius:12px; padding:13px 15px; display:flex; flex-direction:column; gap:9px; }
+    .acta-card.p-App { border-left-color:#bf5af2; } .acta-card.p-Ap { border-left-color:#ff453a; } .acta-card.p-A { border-left-color:#ff9f0a; } .acta-card.p-B { border-left-color:#09a3ef; }
+    .acta-header { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .acta-titulo { font-weight:800; font-size:14px; color:var(--text); flex:1; }
+    .acta-desc { font-size:12px; color:var(--sub); line-height:1.5; }
+    .acta-meta { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--sub); }
+    .acta-meta b { color:var(--text); }
+    .acta-estado { font-size:10px; font-weight:800; padding:2px 9px; border-radius:10px; }
+    .acta-estado.pendiente { background:rgba(255,159,10,.15); color:#ff9f0a; }
+    .acta-estado.en_proceso { background:rgba(50,215,75,.15); color:#32d74b; }
+    .acta-estado.pausada { background:rgba(255,214,10,.15); color:#ffd60a; }
+    .acta-crono { font-size:12px; color:var(--sub); display:flex; gap:16px; }
+    .acta-crono b { color:var(--text); font-variant-numeric:tabular-nums; }
+    .acta-btns { display:flex; gap:8px; }
+    .acta-btn { flex:1; border-radius:8px; font-family:inherit; font-size:12px; font-weight:700; padding:9px; cursor:pointer; border:1px solid transparent; transition:all .15s; }
+    .acta-btn.iniciar  { background:rgba(50,215,75,.15); border-color:rgba(50,215,75,.35); color:#32d74b; }
+    .acta-btn.pausar   { background:rgba(255,159,10,.15); border-color:rgba(255,159,10,.35); color:#ff9f0a; }
+    .acta-btn.terminar { background:rgba(9,163,239,.15); border-color:rgba(9,163,239,.35); color:#09a3ef; }
+    .acta-btn:active { transform:scale(.97); }
   </style>
+  <link rel="stylesheet" href="theme.css"/>
 </head>
-<body>
+<body class="at-light">
 
   <div class="titlebar">
     <div class="titlebar-left"><span class="role-badge">ATC</span></div>
-    <span class="titlebar-title">🎓 Academic Tareas</span>
+    <span class="titlebar-title" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">
+      <img src="assets/logo.png" alt="Academic Tareas" style="width:24px;height:24px;object-fit:contain;border-radius:22%;" onerror="this.style.display='none'"/>
+      <span>ACADEMIC <span style="color:#87b1ea;letter-spacing:4px;font-size:.78em">TAREAS</span></span>
+    </span>
     <div class="titlebar-right">
       <span class="user-name" id="user-name">—</span>
-      <button id="btn-migrar" style="-webkit-app-region:no-drag;background:rgba(255,159,10,.15);border:1px solid rgba(255,159,10,.4);border-radius:6px;color:#ff9f0a;font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer;font-family:inherit" title="Migrar tareas de Aldahir al nuevo UID">🔧 Migrar</button>
+      <button id="btn-agenda" style="-webkit-app-region:no-drag;background:rgba(50,215,75,.12);border:1px solid rgba(50,215,75,.3);border-radius:6px;color:#32d74b;font-size:11px;font-weight:700;padding:4px 10px;cursor:pointer;font-family:inherit"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M10 20V9M15 20v-9M20 20V5"/></svg> Agenda</button>
       <button class="btn-logout" id="btn-logout">Salir</button>
     </div>
   </div>
 
+  <!-- Barra de sesión activa -->
+  <div class="sesion-bar" id="sesion-bar">
+    <div class="sesion-dot" id="sesion-dot"></div>
+    <span id="sesion-estado" style="flex:1">Iniciando sesión...</span>
+    <span class="sesion-timer" id="sesion-timer"></span>
+    <span style="font-size:10px;color:var(--sub)" id="sesion-clicks"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3.5" width="8" height="17" rx="4"/><path d="M12 7v3.5"/></svg> 0</span>
+    <span style="font-size:10px;color:var(--sub)" id="sesion-keys">⌨ 0</span>
+    <span style="font-size:10px;color:var(--orange);font-weight:600;display:none" id="sesion-idle"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> muerto</span>
+    <span class="sesion-prog" id="sesion-checklist-prog"></span>
+    <button id="btn-pausa-atc" style="-webkit-app-region:no-drag;background:rgba(255,159,10,.12);border:1px solid rgba(255,159,10,.3);border-radius:5px;color:var(--orange);font-size:10px;font-weight:700;padding:3px 8px;cursor:pointer;font-family:inherit">⏸ Pausa</button>
+  </div>
+
   <div class="tabs">
-    <div class="tab active" data-tab="nuevo">+ Nuevo pedido</div>
-    <div class="tab" data-tab="pedidos">Mis pedidos</div>
+    <div class="tab active" data-tab="nuevo"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nuevo pedido</div>
+    <div class="tab" data-tab="pedidos"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>Mis pedidos</div>
+    <div class="tab" data-tab="urgentes"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg>Urgentes</div>
+    <div class="tab" data-tab="cobros"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M14.6 9c-.6-.9-1.5-1.4-2.6-1.4-1.6 0-2.7.8-2.7 2 0 2.7 5.4 1.4 5.4 4 0 1.2-1.1 2-2.7 2-1.2 0-2.2-.5-2.8-1.5"/></svg>Por cobrar</div>
+    <div class="tab" data-tab="actividades"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>Actividades</div>
+    <div class="tab" data-tab="mistareas"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.4-6.5-10A6.5 6.5 0 0 1 18.5 11c0 4.6-6.5 10-6.5 10z"/><circle cx="12" cy="11" r="2.3"/></svg>Mis tareas<span class="tab-badge" id="badge-mistareas">0</span></div>
+    <div class="tab" data-tab="actasig"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v11a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-6l-2-3h-5a2 2 0 0 0-2 2z"/></svg>Asignadas<span class="tab-badge" id="badge-actasig">0</span></div>
+    <div class="tab" data-tab="todos"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8.5 4.5v9L12 21l-8.5-4.5v-9z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>Todos los pedidos</div>
+    <div class="tab" data-tab="reporte"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20v-6M10 20V9M15 20v-9M20 20V5"/></svg>Reporte</div>
   </div>
 
   <div class="content">
@@ -144,8 +356,8 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div class="field">
             <label>Plataforma</label>
-            <select id="f-plataforma">
-              <option value="">— Seleccionar —</option>
+            <input id="f-plataforma" type="text" list="dl-plataforma" placeholder="Seleccionar o escribir..."/>
+            <datalist id="dl-plataforma">
               <option>BLACKBOARD</option>
               <option>COURSERA</option>
               <option>CAMBRIDGE</option>
@@ -153,12 +365,12 @@
               <option>DOCTORADO</option>
               <option>TAREA</option>
               <option>PUBLICA</option>
-            </select>
+            </datalist>
           </div>
           <div class="field">
             <label>Escuela</label>
-            <select id="f-escuela">
-              <option value="">— Seleccionar —</option>
+            <input id="f-escuela" type="text" list="dl-escuela" placeholder="Seleccionar o escribir..."/>
+            <datalist id="dl-escuela">
               <option>UNITEC</option>
               <option>UVM</option>
               <option>UTC</option>
@@ -181,7 +393,7 @@
               <option>CULV</option>
               <option>ITESO</option>
               <option>N/A</option>
-            </select>
+            </datalist>
           </div>
         </div>
 
@@ -209,8 +421,8 @@
           <input id="f-entregable" type="text" placeholder="Ej. ENTREGABLE 2, EXAMEN FINAL..."/>
         </div>
 
-        <!-- Fila: Día Agenda + Día Entrega -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <!-- Fila: Día Agenda + Día Entrega + Hora límite -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
           <div class="field">
             <label>Día Agenda</label>
             <input id="f-dia-agenda" type="date"/>
@@ -218,6 +430,10 @@
           <div class="field">
             <label>Día Entrega</label>
             <input id="f-dia-entrega" type="date"/>
+          </div>
+          <div class="field">
+            <label>Hora límite</label>
+            <input id="f-hora-entrega" type="time"/>
           </div>
         </div>
 
@@ -269,6 +485,7 @@
           </div>
         </div>
 
+        <button class="btn-mat-completa-inline" id="btn-abrir-mc"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> Agendar Materia Completa</button>
         <button class="btn-submit" id="btn-crear">Crear pedido y asignar</button>
         <div class="success-msg" id="success-msg"></div>
         <div class="error-msg" id="error-msg"></div>
@@ -282,31 +499,179 @@
       </div>
     </div>
 
+    <!-- URGENTES / POR VENCER -->
+    <div class="tab-panel" id="panel-urgentes">
+      <div id="urgentes-list" class="pedidos-list">
+        <div class="loading-state"><span class="spinner"></span>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- MIS TAREAS ASIGNADAS -->
+    <div class="tab-panel" id="panel-mistareas">
+      <div id="mistareas-list" class="pedidos-list">
+        <div class="loading-state"><span class="spinner"></span>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ACTIVIDADES ASIGNADAS -->
+    <div class="tab-panel" id="panel-actasig">
+      <div id="actasig-list" style="display:flex;flex-direction:column;gap:10px">
+        <div class="loading-state"><span class="spinner"></span>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- TODOS LOS PEDIDOS -->
+    <div class="tab-panel" id="panel-todos">
+      <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center">
+        <input id="buscar-todos" type="text" placeholder="Buscar por cliente, # pedido, materia, plataforma, asesor, estado..." style="flex:1;padding:11px 14px;font-size:13px"/>
+        <button id="btn-refresh-todos" style="background:rgba(9,163,239,.1);border:1px solid rgba(9,163,239,.35);border-radius:999px;color:#067ab8;font-family:inherit;font-size:12px;font-weight:700;padding:10px 16px;cursor:pointer;white-space:nowrap">↻ Actualizar</button>
+      </div>
+      <div id="todos-count" style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:10px"></div>
+      <div id="todos-list" class="pedidos-list">
+        <div class="loading-state"><span class="spinner"></span>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ACTIVIDADES DEL DÍA -->
+    <div class="tab-panel" id="panel-actividades">
+
+      <!-- Header con progreso -->
+      <div class="act-header">
+        <div class="act-progress-label">
+          <span id="act-prog-texto">Actividades del día</span>
+          <span id="act-prog-frac" style="color:var(--cyan)">0 / 9</span>
+        </div>
+        <div class="act-progress-bar-bg">
+          <div class="act-progress-bar-fill" id="act-prog-fill" style="width:0%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--sub);margin-top:6px" id="act-prog-fecha"></div>
+      </div>
+
+      <!-- Lista de actividades -->
+      <div id="actividades-list" style="display:flex;flex-direction:column;gap:6px">
+        <div class="loading-state"><span class="spinner"></span>Cargando...</div>
+      </div>
+
+    </div>
+
+    <!-- REPORTE DEL DÍA -->
+    <div class="tab-panel" id="panel-reporte">
+      <div id="reporte-content">
+        <div class="loading-state">Selecciona la pestaña para generar el reporte...</div>
+      </div>
+    </div>
+
+    <!-- COBROS PENDIENTES -->
+    <div class="tab-panel" id="panel-cobros">
+      <div id="cobros-list" class="pedidos-list">
+        <div class="loading-state">Cargando cobros pendientes...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ Modal Materia Completa ══════════════════════════════════════════════ -->
+  <div class="mc-overlay hidden" id="modal-mc">
+    <div class="mc-modal">
+
+      <div class="mc-header">
+        <span style="font-size:22px"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg></span>
+        <h3>Agendar Materia Completa</h3>
+        <button class="mc-close" id="mc-close">✕</button>
+      </div>
+
+      <!-- Datos del cliente -->
+      <div class="mc-section">Datos del cliente y materia</div>
+
+      <div class="mc-grid2">
+        <div class="mc-field">
+          <label># Cliente</label>
+          <input id="mc-cliente" type="text" placeholder="Nombre o número de cliente"/>
+        </div>
+        <div class="mc-field">
+          <label>Día agenda</label>
+          <input id="mc-dia-agenda" type="date"/>
+        </div>
+      </div>
+      <div class="mc-grid2">
+        <div class="mc-field">
+          <label>Plataforma</label>
+          <input id="mc-plataforma" type="text" list="dl-plataforma" placeholder="Seleccionar o escribir..."/>
+        </div>
+        <div class="mc-field">
+          <label>Escuela</label>
+          <input id="mc-escuela" type="text" list="dl-escuela" placeholder="Seleccionar o escribir..."/>
+        </div>
+      </div>
+      <div class="mc-grid2">
+        <div class="mc-field">
+          <label>ID / Usuario</label>
+          <input id="mc-id-alumno" type="text" placeholder="ID de acceso"/>
+        </div>
+        <div class="mc-field">
+          <label>Contraseña</label>
+          <input id="mc-contrasena" type="text" placeholder="Contraseña de la plataforma"/>
+        </div>
+      </div>
+      <div class="mc-field">
+        <label>Materia</label>
+        <input id="mc-materia" type="text" placeholder="Nombre de la materia o curso"/>
+      </div>
+
+      <div class="mc-field" style="margin-bottom:0">
+        <label>Dificultad (asignación asesor)</label>
+        <div class="mc-dif-row">
+          <button class="dif-btn App mc-dif-btn" data-dif="A++">A++<br><small>Muy difícil</small></button>
+          <button class="dif-btn Ap mc-dif-btn" data-dif="A+">A+<br><small>Difícil</small></button>
+          <button class="dif-btn A mc-dif-btn" data-dif="A">A<br><small>Media</small></button>
+          <button class="dif-btn B mc-dif-btn" data-dif="B">B<br><small>Fácil</small></button>
+        </div>
+      </div>
+
+      <!-- Actividades -->
+      <div class="mc-section">Actividades / Entregables</div>
+      <div id="mc-acts-list"></div>
+      <button class="btn-mc-add-act" id="mc-add-act">＋ Agregar actividad</button>
+
+      <!-- Pago -->
+      <div class="mc-section">Pago</div>
+      <div class="mc-grid2">
+        <div class="mc-field" style="margin-bottom:0">
+          <label>Precio total de la materia</label>
+          <input id="mc-precio-total" type="number" placeholder="0" min="0" step="1"/>
+        </div>
+        <div class="mc-field" style="margin-bottom:0">
+          <label>Adelanto recibido</label>
+          <input id="mc-adelanto" type="number" placeholder="0" min="0" step="1"/>
+        </div>
+      </div>
+      <div class="mc-pago-info" id="mc-pago-info" style="margin-top:10px">
+        <span>Actividades: <b id="mc-n-acts">0</b></span>
+        <span>Precio por actividad: <b id="mc-precio-por-act">$0</b></span>
+        <span>Adelanto por actividad: <b id="mc-adelanto-por-act" class="mc-por-act-val">$0</b></span>
+        <span style="font-size:10px;color:var(--sub);margin-top:2px">El adelanto se divide en partes iguales entre todas las actividades.</span>
+      </div>
+
+      <div class="mc-footer">
+        <button class="btn-modal-sec" id="mc-cancel" style="flex:1">Cancelar</button>
+        <button class="btn-submit" id="mc-submit" style="flex:2"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> Crear pedidos</button>
+      </div>
+      <div class="error-msg" id="mc-error" style="margin-top:10px"></div>
+      <div class="success-msg" id="mc-ok" style="margin-top:10px"></div>
+    </div>
   </div>
 
   <!-- Modal Editar pedido -->
   <div class="atc-modal-overlay hidden" id="modal-editar">
     <div class="atc-modal" style="width:380px">
-      <h3>✏️ Editar pedido</h3>
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar pedido</h3>
       <input type="hidden" id="edit-id"/>
       <label># Cliente</label>
       <input type="text" id="edit-cliente"/>
       <label>Plataforma</label>
-      <select id="edit-plataforma">
-        <option value="">— Seleccionar —</option>
-        <option>BLACKBOARD</option><option>COURSERA</option><option>CAMBRIDGE</option>
-        <option>EXÁMEN</option><option>DOCTORADO</option><option>TAREA</option><option>PUBLICA</option>
-      </select>
+      <input id="edit-plataforma" type="text" list="dl-plataforma" placeholder="Seleccionar o escribir..."/>
       <label>Escuela</label>
-      <select id="edit-escuela">
-        <option value="">— Seleccionar —</option>
-        <option>UNITEC</option><option>UVM</option><option>UTC</option><option>UTEL</option>
-        <option>TEC</option><option>IPN</option><option>RC</option><option>UNADM</option>
-        <option>CUT</option><option>CNCI</option><option>UNIDEP</option><option>UNRC</option>
-        <option>UNAM</option><option>CUCEA</option><option>MARISTAS</option><option>SAE</option>
-        <option>LA SALLE</option><option>ULA</option><option>TEC MILENIO</option>
-        <option>CULV</option><option>ITESO</option><option>N/A</option>
-      </select>
+      <input id="edit-escuela" type="text" list="dl-escuela" placeholder="Seleccionar o escribir..."/>
       <label>ID / Usuario</label>
       <input type="text" id="edit-id-alumno"/>
       <label>Contraseña</label>
@@ -319,6 +684,8 @@
       <input type="date" id="edit-dia-agenda"/>
       <label>Día Entrega</label>
       <input type="date" id="edit-dia-entrega"/>
+      <label>Hora límite</label>
+      <input type="time" id="edit-hora-entrega"/>
       <label>Subir / No Subir</label>
       <select id="edit-subir">
         <option value="">— Seleccionar —</option>
@@ -352,7 +719,7 @@
   <!-- Modal Reasignar asesor -->
   <div class="atc-modal-overlay hidden" id="modal-reasignar">
     <div class="atc-modal">
-      <h3>👤 Reasignar asesor</h3>
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Reasignar asesor</h3>
       <input type="hidden" id="reasig-id"/>
       <label>Asesor</label>
       <select id="reasig-select"></select>
@@ -366,7 +733,7 @@
   <!-- Modal Eliminar pedido -->
   <div class="atc-modal-overlay hidden" id="modal-eliminar">
     <div class="atc-modal">
-      <h3>🗑 Eliminar pedido</h3>
+      <h3><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M7 7l.8 12a2 2 0 0 0 2 1.9h4.4a2 2 0 0 0 2-1.9L17 7"/></svg> Eliminar pedido</h3>
       <input type="hidden" id="del-id"/>
       <p style="font-size:13px;color:var(--sub);margin-bottom:4px">¿Eliminar el pedido <b id="del-nombre" style="color:var(--text)"></b>? Esta acción no se puede deshacer.</p>
       <div class="atc-modal-btns">
@@ -377,7 +744,8 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, query, where, getDocs, orderBy, Timestamp, doc, updateDoc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -389,8 +757,16 @@
       appId: "1:131741560355:web:a0e3c06fc1819885da8b96"
     };
 
-    const fbApp = initializeApp(firebaseConfig);
+    const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db    = getFirestore(fbApp);
+    const auth  = getAuth(fbApp);
+
+    // Esperar a que Firebase restaure la sesión iniciada en el login
+    // (las reglas de Firestore exigen usuario autenticado)
+    await new Promise(resolve => {
+      const unsub = onAuthStateChanged(auth, (u) => { unsub(); resolve(u); });
+    });
+    if (!auth.currentUser && window.AT) { window.AT.authLogout(); }
 
     let currentUser = null;
     let difSeleccionada = null;
@@ -406,45 +782,340 @@
     // Logout
     document.getElementById("btn-logout").addEventListener("click", () => window.AT.authLogout());
 
-    // Migración única: cambiar UID viejo de Aldahir → nuevo
-    document.getElementById("btn-migrar").addEventListener("click", async () => {
-      const UID_VIEJO = "UaE0PXt4NuT0GduusSjeOfMzS5z2";
-      const UID_NUEVO = "vusdvsAbYMTWHnRLBGToHKIf6Ts2";
-      const btn = document.getElementById("btn-migrar");
-      btn.disabled = true; btn.textContent = "Migrando...";
-      try {
-        const snap = await getDocs(query(
-          collection(db, "tareas"),
-          where("asesor_asignado_id", "==", UID_VIEJO)
-        ));
-        if (snap.empty) {
-          btn.textContent = "✓ Sin tareas que migrar";
-          return;
-        }
-        const updates = snap.docs.map(d => updateDoc(doc(db, "tareas", d.id), {
-          asesor_asignado_id: UID_NUEVO
-        }));
-        await Promise.all(updates);
-        btn.textContent = `✓ ${snap.size} tareas migradas`;
-        btn.style.color = "#32d74b";
-        btn.style.borderColor = "rgba(50,215,75,.4)";
-        btn.style.background = "rgba(50,215,75,.15)";
-      } catch(e) {
-        btn.textContent = "Error: " + e.message;
-        btn.disabled = false;
-      }
+    // Agenda → abre el Google Sheet
+    document.getElementById("btn-agenda").addEventListener("click", () => {
+      window.AT.openUrl("https://docs.google.com/spreadsheets/d/1zPDy5SuEGZIeL7mbMJvEGW8fgu0rTnfr6_sYHwASfC4/edit");
     });
 
-    // Tabs
-    document.querySelectorAll(".tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-        tab.classList.add("active");
-        document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
-        if (tab.dataset.tab === "pedidos") cargarPedidos();
+    // ── Materia completa — modal dedicado ────────────────────────────────────
+    function genMatId() {
+      return "MAT-" + Math.random().toString(36).slice(2,8).toUpperCase();
+    }
+
+    let _mcDif  = null;
+    let _mcActs = [];  // [{ id, entregable, dia_entrega, hora_entrega, subir, anotaciones }]
+    let _mcMatId = null; // para pre-cargar al duplicar
+
+    function actualizarMcPago() {
+      const n   = _mcActs.length;
+      const pt  = Number(document.getElementById("mc-precio-total").value) || 0;
+      const adv = Number(document.getElementById("mc-adelanto").value)     || 0;
+      document.getElementById("mc-n-acts").textContent         = n;
+      document.getElementById("mc-precio-por-act").textContent = n > 0 ? "$" + Math.round(pt / n).toLocaleString("es-MX") : "$0";
+      document.getElementById("mc-adelanto-por-act").textContent = n > 0 ? "$" + Math.round(adv / n).toLocaleString("es-MX") : "$0";
+    }
+
+    function renderMcActs() {
+      const el = document.getElementById("mc-acts-list");
+      el.innerHTML = "";
+      _mcActs.forEach((act, i) => {
+        const item = document.createElement("div");
+        item.className = "mc-act-item";
+        item.innerHTML = `
+          <div class="mc-act-num">
+            <span>Actividad ${i + 1}</span>
+            <button class="btn-mc-del-act" data-idx="${i}">✕ Quitar</button>
+          </div>
+          <div class="mc-act-grid">
+            <div class="mc-act-field" style="grid-column:1/-1">
+              <label>Entregable</label>
+              <input type="text" data-field="entregable" value="${act.entregable||""}" placeholder="Ej. ENTREGABLE 2, EXAMEN FINAL..."/>
+            </div>
+            <div class="mc-act-field">
+              <label>Día entrega</label>
+              <input type="date" data-field="dia_entrega" value="${act.dia_entrega||""}"/>
+            </div>
+            <div class="mc-act-field">
+              <label>Hora límite</label>
+              <input type="time" data-field="hora_entrega" value="${act.hora_entrega||""}"/>
+            </div>
+            <div class="mc-act-field">
+              <label>Subir / No subir</label>
+              <select data-field="subir">
+                <option value="">—</option>
+                <option ${act.subir==="SUBIR"?"selected":""}>SUBIR</option>
+                <option ${act.subir==="NO SUBIR"?"selected":""}>NO SUBIR</option>
+              </select>
+            </div>
+          </div>
+          <div class="mc-act-nota">
+            <label>Anotaciones</label>
+            <input type="text" data-field="anotaciones" value="${act.anotaciones||""}" placeholder="Notas adicionales..."/>
+          </div>`;
+
+        // Escuchar cambios en los campos → actualizar _mcActs en tiempo real
+        item.querySelectorAll("[data-field]").forEach(input => {
+          input.addEventListener("input", () => {
+            _mcActs[i][input.dataset.field] = input.value;
+            if (input.dataset.field === "dia_entrega") actualizarMcPago();
+          });
+          input.addEventListener("change", () => {
+            _mcActs[i][input.dataset.field] = input.value;
+          });
+        });
+
+        item.querySelector(".btn-mc-del-act").onclick = () => {
+          _mcActs.splice(i, 1);
+          renderMcActs();
+          actualizarMcPago();
+        };
+
+        el.appendChild(item);
+      });
+      actualizarMcPago();
+    }
+
+    function abrirMcModal(prefill) {
+      // Resetear estado
+      _mcDif  = null;
+      _mcActs = [];
+      _mcMatId = null;
+      document.querySelectorAll(".mc-dif-btn").forEach(b => b.classList.remove("selected"));
+      document.getElementById("mc-cliente").value     = "";
+      document.getElementById("mc-dia-agenda").value  = new Date().toISOString().split("T")[0];
+      document.getElementById("mc-plataforma").value  = "";
+      document.getElementById("mc-escuela").value     = "";
+      document.getElementById("mc-id-alumno").value   = "";
+      document.getElementById("mc-contrasena").value  = "";
+      document.getElementById("mc-materia").value     = "";
+      document.getElementById("mc-precio-total").value = "";
+      document.getElementById("mc-adelanto").value    = "";
+      document.getElementById("mc-error").classList.remove("show");
+      document.getElementById("mc-ok").classList.remove("show");
+
+      // Pre-cargar si viene de Duplicar
+      if (prefill) {
+        document.getElementById("mc-cliente").value    = prefill.cliente    || "";
+        document.getElementById("mc-plataforma").value = prefill.plataforma || "";
+        document.getElementById("mc-escuela").value    = prefill.escuela    || "";
+        document.getElementById("mc-id-alumno").value  = prefill.id_alumno  || "";
+        document.getElementById("mc-contrasena").value = prefill.contrasena || "";
+        document.getElementById("mc-materia").value    = prefill.materia    || "";
+        _mcMatId = prefill.materia_id || null;
+        if (prefill.dificultad) {
+          const btn = document.querySelector(`.mc-dif-btn[data-dif="${prefill.dificultad}"]`);
+          if (btn) { btn.classList.add("selected"); _mcDif = prefill.dificultad; }
+        }
+      }
+
+      // Agregar al menos 1 actividad vacía
+      _mcActs = [{ id: Date.now(), entregable: "", dia_entrega: "", hora_entrega: "", subir: "", anotaciones: "" }];
+      renderMcActs();
+      document.getElementById("modal-mc").classList.remove("hidden");
+    }
+
+    function cerrarMcModal() {
+      document.getElementById("modal-mc").classList.add("hidden");
+    }
+
+    document.getElementById("btn-abrir-mc").onclick = () => abrirMcModal(null);
+    document.getElementById("mc-close").onclick     = cerrarMcModal;
+    document.getElementById("mc-cancel").onclick    = cerrarMcModal;
+
+    // Dificultad
+    document.querySelectorAll(".mc-dif-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".mc-dif-btn").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        _mcDif = btn.dataset.dif;
       });
     });
+
+    document.getElementById("mc-add-act").onclick = () => {
+      _mcActs.push({ id: Date.now(), entregable: "", dia_entrega: "", hora_entrega: "", subir: "", anotaciones: "" });
+      renderMcActs();
+    };
+
+    document.getElementById("mc-precio-total").addEventListener("input", actualizarMcPago);
+    document.getElementById("mc-adelanto").addEventListener("input", actualizarMcPago);
+
+    document.getElementById("mc-submit").onclick = async () => {
+      const errEl = document.getElementById("mc-error");
+      const okEl  = document.getElementById("mc-ok");
+      errEl.classList.remove("show"); okEl.classList.remove("show");
+
+      const cliente   = document.getElementById("mc-cliente").value.trim();
+      const diaAgenda = document.getElementById("mc-dia-agenda").value;
+      const plataforma = document.getElementById("mc-plataforma").value.trim();
+      const escuela   = document.getElementById("mc-escuela").value.trim();
+      const idAlumno  = document.getElementById("mc-id-alumno").value.trim();
+      const contrasena= document.getElementById("mc-contrasena").value.trim();
+      const materia   = document.getElementById("mc-materia").value.trim();
+      const precioTotal = Number(document.getElementById("mc-precio-total").value) || 0;
+      const adelanto  = Number(document.getElementById("mc-adelanto").value) || 0;
+
+      if (!cliente) { errEl.textContent = "El campo # Cliente es obligatorio."; errEl.classList.add("show"); return; }
+      if (!_mcDif)  { errEl.textContent = "Selecciona la dificultad."; errEl.classList.add("show"); return; }
+      if (_mcActs.length === 0) { errEl.textContent = "Agrega al menos una actividad."; errEl.classList.add("show"); return; }
+      const sinEntregable = _mcActs.findIndex(a => !a.entregable.trim());
+      if (sinEntregable >= 0) { errEl.textContent = `La actividad ${sinEntregable+1} no tiene entregable.`; errEl.classList.add("show"); return; }
+
+      const btn = document.getElementById("mc-submit");
+      btn.disabled = true; btn.textContent = "Creando...";
+
+      try {
+        const matId = _mcMatId || genMatId();
+        const hoyStr = new Date().toISOString().split("T")[0];
+        const n = _mcActs.length;
+        const precioPorAct = n > 0 && precioTotal > 0 ? Math.round(precioTotal / n) : null;
+        const adelantoPorAct = n > 0 && adelanto > 0  ? Math.round(adelanto / n)   : null;
+        const estatusPago = adelanto > 0 ? "PARCIAL" : (precioTotal > 0 ? "PENDIENTE" : null);
+
+        // Ordenar actividades por día de entrega (más próximos primero)
+        const actsOrdenadas = [..._mcActs].sort((a, b) => (a.dia_entrega || "9999").localeCompare(b.dia_entrega || "9999"));
+
+        let creados = 0;
+        let primerAsesor = null;
+        for (const [idx, act] of actsOrdenadas.entries()) {
+          const numP = "P" + (Date.now() + idx).toString().slice(-6);
+          const ref = await addDoc(collection(db, "tareas"), {
+            numero_pedido:  numP,
+            cliente,
+            plataforma:     plataforma || null,
+            escuela:        escuela    || null,
+            id_alumno:      idAlumno   || null,
+            contrasena:     contrasena || null,
+            materia:        materia    || null,
+            entregable:     act.entregable.trim() || null,
+            dia_agenda:     diaAgenda  || hoyStr,
+            dia_entrega:    act.dia_entrega  || null,
+            hora_entrega:   act.hora_entrega || null,
+            subir:          act.subir        || null,
+            anotaciones:    act.anotaciones  || null,
+            precio:         precioPorAct,
+            estatus_pago:   estatusPago,
+            cantidad_pagada: adelantoPorAct,
+            descripcion:    materia || act.entregable || "",
+            dificultad:     _mcDif,
+            estado:         "pendiente",
+            atc_creador_id: currentUser?.uid || "",
+            atc_nombre:     currentUser?.nombre || "",
+            fecha_entrega_estimada: act.dia_entrega || null,
+            creado_en:      new Date().toISOString(),
+            fecha_dia:      hoyStr,
+            es_materia_completa: true,
+            materia_id:     matId,
+          });
+
+          const asesor = await asignarAsesor(ref.id, _mcDif);
+          if (idx === 0) primerAsesor = asesor;
+
+          syncToSheets({
+            action:         "create",
+            id:             ref.id,
+            numero_pedido:  numP,
+            cliente,
+            plataforma:     plataforma || "",
+            escuela:        escuela    || "",
+            id_alumno:      idAlumno   || "",
+            contrasena:     contrasena || "",
+            materia:        materia    || "",
+            entregable:     act.entregable.trim() || "",
+            dia_agenda:     diaAgenda  || hoyStr,
+            dia_entrega:    act.dia_entrega  || "",
+            hora_entrega:   act.hora_entrega || "",
+            subir:          act.subir        || "",
+            anotaciones:    act.anotaciones  || "",
+            precio:         precioPorAct     || "",
+            estatus_pago:   estatusPago      || "",
+            cantidad_pagada: adelantoPorAct  || "",
+            dificultad:     _mcDif,
+            asesor_nombre:  asesor || "",
+            estado:         asesor ? "asignado" : "en_cola",
+            atc_nombre:     currentUser?.nombre || "",
+            materia_id:     matId,
+          });
+          creados++;
+        }
+
+        okEl.textContent = `✓ ${creados} pedido${creados>1?"s":""} creados · Grupo ${matId} · ${primerAsesor || "en cola"}`;
+        okEl.classList.add("show");
+        setTimeout(() => cerrarMcModal(), 2500);
+
+        // Refrescar la tab de pedidos si está activa
+        if (document.getElementById("panel-pedidos").classList.contains("active")) cargarPedidos();
+      } catch(e) {
+        errEl.textContent = "Error: " + e.message;
+        errEl.classList.add("show");
+      }
+      btn.disabled = false; btn.textContent = "Crear pedidos";
+    };
+
+    // ── Tabs: click + drag & drop para reordenar ─────────────────────────────
+    const tabsEl = document.querySelector(".tabs");
+    let _dragTab = null;
+
+    function initTabs() {
+      document.querySelectorAll(".tab").forEach(tab => {
+        // Click para activar
+        tab.addEventListener("click", () => {
+          if (tab.classList.contains("dragging")) return; // ignorar click al soltar drag
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+          document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+          tab.classList.add("active");
+          document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+          if (tab.dataset.tab === "pedidos")     cargarPedidos();
+          if (tab.dataset.tab === "urgentes")    cargarUrgentes();
+          if (tab.dataset.tab === "cobros")      cargarCobros();
+          if (tab.dataset.tab === "mistareas")   cargarMisTareas();
+          if (tab.dataset.tab === "actasig")     cargarActividadesAsignadas();
+          if (tab.dataset.tab === "todos")       cargarTodosPedidos();
+          if (tab.dataset.tab === "actividades") cargarActividades();
+          if (tab.dataset.tab === "reporte")     cargarReporte();
+        });
+
+        // Drag
+        tab.setAttribute("draggable", "true");
+
+        tab.addEventListener("dragstart", e => {
+          _dragTab = tab;
+          tab.classList.add("dragging");
+          e.dataTransfer.effectAllowed = "move";
+        });
+
+        tab.addEventListener("dragend", () => {
+          tab.classList.remove("dragging");
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("drag-over"));
+          _dragTab = null;
+          // Guardar orden
+          const order = Array.from(document.querySelectorAll(".tab")).map(t => t.dataset.tab);
+          try { localStorage.setItem("atc_tab_order", JSON.stringify(order)); } catch {}
+        });
+
+        tab.addEventListener("dragover", e => {
+          e.preventDefault();
+          if (!_dragTab || tab === _dragTab) return;
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("drag-over"));
+          tab.classList.add("drag-over");
+          const rect = tab.getBoundingClientRect();
+          const insertBefore = e.clientX < rect.left + rect.width / 2;
+          tabsEl.insertBefore(_dragTab, insertBefore ? tab : tab.nextSibling);
+        });
+
+        tab.addEventListener("dragleave", () => tab.classList.remove("drag-over"));
+        tab.addEventListener("drop",      e => { e.preventDefault(); tab.classList.remove("drag-over"); });
+      });
+    }
+
+    // Restaurar orden guardado
+    function restoreTabOrder() {
+      try {
+        const saved = localStorage.getItem("atc_tab_order");
+        if (!saved) return;
+        const order = JSON.parse(saved);
+        // Orden final = guardadas (en su orden) + pestañas nuevas al FINAL en su orden natural
+        const nuevas = [...document.querySelectorAll(".tab")]
+          .map(t => t.dataset.tab)
+          .filter(id => !order.includes(id));
+        [...order, ...nuevas].forEach(tabId => {
+          const tab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+          if (tab) tabsEl.appendChild(tab);
+        });
+      } catch {}
+    }
+
+    restoreTabOrder();
+    initTabs();
 
     // Selección dificultad
     document.querySelectorAll(".dif-btn").forEach(btn => {
@@ -454,6 +1125,28 @@
         difSeleccionada = btn.dataset.dif;
       });
     });
+
+    // ── Google Sheets sync ────────────────────────────────────────────────────
+    let _webhookUrl = undefined; // undefined = no cargado; null = no configurado; string = URL
+
+    async function getWebhookUrl() {
+      if (_webhookUrl !== undefined) return _webhookUrl;
+      try {
+        const snap = await getDoc(doc(db, "configuracion", "integraciones"));
+        _webhookUrl = snap.exists() ? (snap.data().webhook_sheets || null) : null;
+      } catch { _webhookUrl = null; }
+      return _webhookUrl;
+    }
+
+    function syncToSheets(payload) {
+      // Fire-and-forget: nunca bloquea al usuario
+      getWebhookUrl().then(url => {
+        if (!url || !window.AT?.syncPedido) return;
+        window.AT.syncPedido({ url, payload })
+          .then(r => { if (!r?.ok) console.warn("[sheets]", r); })
+          .catch(e => console.warn("[sheets]", e));
+      });
+    }
 
     // Cuotas por defecto (se sobreescriben si hay doc en Firestore)
     const CUOTA_DEFAULT = { "A++": 0.333, "A+": 0.25, "A": 0.167, "B": 0.125 };
@@ -471,20 +1164,29 @@
       const hoy = new Date().toISOString().split("T")[0];
       const cuotaValor = await getCuotaValores();
       const cuotaRequerida = cuotaValor[dificultad] || 0.167;
-      const asesores = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+
+      // Incluir asesores Y gerencia (gerencia también recibe tareas)
+      const [snapAsesor, snapGerencia] = await Promise.all([
+        getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor"))),
+        getDocs(query(collection(db, "usuarios"), where("rol", "==", "gerencia")))
+      ]);
+      const todosDocs = [...snapAsesor.docs, ...snapGerencia.docs];
 
       const candidatos = [];
-      for (const snap of asesores.docs) {
+      for (const snap of todosDocs) {
         const u = snap.data();
         if (u.estado_hoy === "offline") continue;
         // Filtrar por tipos habilitados (si está configurado)
         const tipos = u.tipos_habilitados;
         if (tipos && Array.isArray(tipos) && !tipos.includes(dificultad)) continue;
+        const cuotaMax = u.cuota_max != null ? u.cuota_max : 1.0;
         const cuotaDocSnap = await getDoc(doc(db, "cuota_diaria", snap.id + "_" + hoy));
         const cd = cuotaDocSnap.exists() ? cuotaDocSnap.data() : {};
         const cuotaActual = cd.cuota_actual || 0;
         const totalTareas = cd.total_tareas || 0;
-        candidatos.push({ id: snap.id, nombre: u.nombre, cuotaActual, totalTareas });
+        // Excluir si ya alcanzó su cuota máxima
+        if (cuotaActual >= cuotaMax) continue;
+        candidatos.push({ id: snap.id, nombre: u.nombre, cuotaActual, totalTareas, cuotaMax, esGerencia: u.rol === "gerencia" });
       }
 
       if (candidatos.length === 0) {
@@ -492,8 +1194,12 @@
         return null;
       }
 
-      // Prioridad: ≤3 tareas van primero, luego menor cuota, aleatorio en empate
+      // Prioridad: gerencia tiene preferencia en A++; ≤3 tareas van primero; luego menor cuota; aleatorio en empate
       candidatos.sort((a, b) => {
+        if (dificultad === "A++") {
+          if (a.esGerencia && !b.esGerencia) return -1;
+          if (!a.esGerencia && b.esGerencia) return 1;
+        }
         const aPrior = a.totalTareas <= 3 ? 0 : 1;
         const bPrior = b.totalTareas <= 3 ? 0 : 1;
         if (aPrior !== bPrior) return aPrior - bPrior;
@@ -531,6 +1237,7 @@
       const entregable      = document.getElementById("f-entregable").value.trim();
       const diaAgenda       = document.getElementById("f-dia-agenda").value;
       const diaEntrega      = document.getElementById("f-dia-entrega").value;
+      const horaEntrega     = document.getElementById("f-hora-entrega").value;
       const subir           = document.getElementById("f-subir").value;
       const anotaciones     = document.getElementById("f-anotaciones").value.trim();
       const precio          = document.getElementById("f-precio").value;
@@ -562,6 +1269,7 @@
           entregable: entregable || null,
           dia_agenda: diaAgenda || hoyStr,
           dia_entrega: diaEntrega || null,
+          hora_entrega: horaEntrega || null,
           subir: subir || null,
           anotaciones: anotaciones || null,
           precio: precio ? Number(precio) : null,
@@ -576,6 +1284,8 @@
           fecha_entrega_estimada: diaEntrega || null,
           creado_en: new Date().toISOString(),
           fecha_dia: hoyStr,
+          es_materia_completa: false,
+          materia_id: null,
         });
 
         // Asignar
@@ -585,8 +1295,33 @@
           : `✓ Pedido ${numeroPedido} creado — en cola (sin asesor disponible)`;
         sucEl.classList.add("show");
 
+        // Sync a Google Sheets (silencioso, no bloquea)
+        syncToSheets({
+          action: "create",
+          id: ref.id,
+          numero_pedido: numeroPedido,
+          cliente,
+          plataforma: plataforma || "",
+          escuela: escuela || "",
+          id_alumno: idAlumno || "",
+          contrasena: contrasena || "",
+          materia: materia || "",
+          entregable: entregable || "",
+          dia_agenda: diaAgenda || hoyStr,
+          dia_entrega: diaEntrega || "",
+          subir: subir || "",
+          anotaciones: anotaciones || "",
+          precio: precio ? Number(precio) : "",
+          estatus_pago: estatusPago || "",
+          cantidad_pagada: cantidadPagada ? Number(cantidadPagada) : "",
+          dificultad: difSeleccionada || "",
+          asesor_nombre: asignado || "",
+          estado: asignado ? "asignado" : "en_cola",
+          atc_nombre: currentUser?.nombre || "",
+        });
+
         // Limpiar formulario
-        ["f-cliente","f-id-alumno","f-contrasena","f-materia","f-entregable","f-dia-agenda","f-dia-entrega","f-anotaciones","f-precio","f-cantidad-pagada"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+        ["f-cliente","f-id-alumno","f-contrasena","f-materia","f-entregable","f-dia-agenda","f-dia-entrega","f-hora-entrega","f-anotaciones","f-precio","f-cantidad-pagada"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
         ["f-plataforma","f-escuela","f-subir","f-estatus-pago"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
         document.querySelectorAll(".dif-btn").forEach(b => b.classList.remove("selected"));
         difSeleccionada = null;
@@ -622,6 +1357,7 @@
         entregable:       entregable || null,
         dia_agenda:       document.getElementById("edit-dia-agenda").value || null,
         dia_entrega:      document.getElementById("edit-dia-entrega").value || null,
+        hora_entrega:     document.getElementById("edit-hora-entrega").value || null,
         subir:            document.getElementById("edit-subir").value || null,
         anotaciones:      document.getElementById("edit-anotaciones").value.trim() || null,
         precio:           precio ? Number(precio) : null,
@@ -633,6 +1369,29 @@
       });
       document.getElementById("modal-editar").classList.add("hidden");
       cargarPedidos();
+
+      // Sync actualización a Google Sheets
+      syncToSheets({
+        action: "update",
+        id,
+        cliente:          document.getElementById("edit-cliente").value.trim(),
+        plataforma:       document.getElementById("edit-plataforma").value || "",
+        escuela:          document.getElementById("edit-escuela").value || "",
+        id_alumno:        document.getElementById("edit-id-alumno").value.trim() || "",
+        contrasena:       document.getElementById("edit-contrasena").value.trim() || "",
+        materia:          materia || "",
+        entregable:       entregable || "",
+        dia_agenda:       document.getElementById("edit-dia-agenda").value || "",
+        dia_entrega:      document.getElementById("edit-dia-entrega").value || "",
+        hora_entrega:     document.getElementById("edit-hora-entrega").value || "",
+        subir:            document.getElementById("edit-subir").value || "",
+        anotaciones:      document.getElementById("edit-anotaciones").value.trim() || "",
+        precio:           precio ? Number(precio) : "",
+        estatus_pago:     document.getElementById("edit-estatus-pago").value || "",
+        cantidad_pagada:  cant ? Number(cant) : "",
+        dificultad:       document.getElementById("edit-dif").value || "",
+        listo_para_cobrar: (await getDoc(doc(db, "tareas", id))).data()?.listo_para_cobrar || false,
+      });
     };
 
     // Modal eliminar
@@ -667,12 +1426,555 @@
       const sel = document.getElementById("reasig-select");
       sel.innerHTML = '<option disabled>Cargando...</option>';
       document.getElementById("modal-reasignar").classList.remove("hidden");
-      const asesores = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "asesor")));
+
+      // Cargar TODOS los usuarios (cualquier rol puede recibir pedidos)
+      const snap = await getDocs(collection(db, "usuarios"));
       sel.innerHTML = "";
-      asesores.forEach(d => {
+
+      const rolLabel = { asesor: "Asesor", gerencia: "Gerencia", atc: "ATC", director: "Director" };
+      const rolOrden = { asesor: 0, gerencia: 1, atc: 2, director: 3 };
+
+      const usuarios = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(u => u.nombre) // excluir docs sin nombre
+        .sort((a, b) => {
+          const ra = rolOrden[a.rol] ?? 9;
+          const rb = rolOrden[b.rol] ?? 9;
+          return ra !== rb ? ra - rb : (a.nombre || "").localeCompare(b.nombre || "");
+        });
+
+      let lastRol = null;
+      usuarios.forEach(u => {
+        // Separador de grupo por rol
+        if (u.rol !== lastRol) {
+          const grp = document.createElement("optgroup");
+          grp.label = rolLabel[u.rol] || u.rol || "Otros";
+          sel.appendChild(grp);
+          lastRol = u.rol;
+        }
         const opt = document.createElement("option");
-        opt.value = d.id; opt.textContent = d.data().nombre;
-        sel.appendChild(opt);
+        opt.value = u.id;
+        opt.textContent = u.nombre;
+        sel.lastChild.appendChild(opt);
+      });
+    }
+
+    // ── Todos los pedidos (lista completa, solo lectura, con buscador) ──────
+    let _todosCache = [];
+
+    function renderTodosPedidos() {
+      const filtro = (document.getElementById("buscar-todos").value || "").toLowerCase().trim();
+      const listEl = document.getElementById("todos-list");
+      const cntEl  = document.getElementById("todos-count");
+
+      const lista = !filtro ? _todosCache : _todosCache.filter(t =>
+        [t.cliente, t.numero_pedido, t.materia, t.plataforma, t.escuela, t.entregable,
+         t.asesor_asignado_nombre, t.atc_nombre, t.estado, t.dia_entrega, t.estatus_pago]
+          .some(v => String(v || "").toLowerCase().includes(filtro))
+      );
+
+      cntEl.textContent = `${lista.length} pedido${lista.length !== 1 ? "s" : ""}${filtro ? ` (de ${_todosCache.length})` : ""}`;
+
+      if (!lista.length) {
+        listEl.innerHTML = '<div class="loading-state">Sin resultados</div>';
+        return;
+      }
+
+      listEl.innerHTML = "";
+      lista.forEach(t => {
+        const card = document.createElement("div");
+        card.className = "pedido-card";
+        const pagado = t.estatus_pago === "PAGADO";
+        const parcial = !pagado && Number(t.cantidad_pagada) > 0;
+        card.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:10px;color:var(--sub);font-family:monospace">#${t.numero_pedido || "—"}</span>
+            <span style="font-weight:800;color:var(--text);flex:1">${t.cliente || "—"}</span>
+            <span class="pedido-badge ${t.estado || 'pendiente'}">${estadoLabel[t.estado] || t.estado || "—"}</span>
+            <span style="font-size:10px;font-weight:800;padding:2px 9px;border-radius:999px;${pagado ? "background:rgba(29,158,75,.14);color:var(--green)" : parcial ? "background:rgba(207,117,0,.13);color:var(--orange)" : "background:rgba(224,54,44,.10);color:var(--red)"}">${pagado ? "✓ Pagado" : parcial ? "Parcial" : "Sin pago"}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:11.5px;color:var(--sub)">
+            ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${t.plataforma}</b></span>` : ""}
+            ${t.escuela ? `<span>Escuela: <b style="color:var(--text)">${t.escuela}</b></span>` : ""}
+            ${t.materia ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${t.materia}</b></span>` : ""}
+            ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
+            ${t.dia_entrega ? `<span>Entrega: <b style="color:var(--text)">${t.dia_entrega}${t.hora_entrega ? " · " + t.hora_entrega : ""}</b></span>` : ""}
+            ${t.precio != null && t.precio !== "" ? `<span>Precio: <b style="color:var(--text)">$${Number(t.precio).toLocaleString("es-MX")}</b></span>` : ""}
+            ${t.asesor_asignado_nombre ? `<span>Asesor: <b style="color:var(--text)">${t.asesor_asignado_nombre}</b></span>` : ""}
+            ${t.atc_nombre ? `<span>ATC: <b style="color:var(--text)">${t.atc_nombre}</b></span>` : ""}
+          </div>`;
+        listEl.appendChild(card);
+      });
+    }
+
+    async function cargarTodosPedidos() {
+      const listEl = document.getElementById("todos-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+      try {
+        const snap = await getDocs(collection(db, "tareas"));
+        _todosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .filter(t => !t.es_interna)
+          .sort((a, b) => (b.creado_en || "").localeCompare(a.creado_en || ""));
+        renderTodosPedidos();
+      } catch (e) {
+        listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>';
+      }
+    }
+
+    document.getElementById("buscar-todos").addEventListener("input", renderTodosPedidos);
+    document.getElementById("btn-refresh-todos").addEventListener("click", cargarTodosPedidos);
+
+    // ── Actividades asignadas (Iniciar / Pausar / Reanudar / Terminar) ──────
+    const _actaTimers = {};
+    const _actaNotified = new Set();
+
+    function fmtActa(ms) {
+      if (!ms || ms < 0) return "0s";
+      const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
+    }
+
+    function actaTrabajoMs(a) {
+      return (a.tiempo_trabajo_ms || 0) + (a.estado === "en_proceso" ? Date.now() - (a.ultima_reanudacion_ms || Date.now()) : 0);
+    }
+
+    async function actaAccion(a, accion) {
+      const now = Date.now(), iso = new Date().toISOString();
+      let upd = {};
+      if (accion === "iniciar") {
+        upd = { estado: "en_proceso", iniciado_en: iso, ultima_reanudacion_ms: now, tiempo_trabajo_ms: 0,
+                tiempo_respuesta_ms: now - (a.creado_en ? new Date(a.creado_en).getTime() : now) };
+      } else if (accion === "pausar") {
+        upd = { estado: "pausada", tiempo_trabajo_ms: actaTrabajoMs(a),
+                pausas: [...(a.pausas || []), { inicio: iso }] };
+      } else if (accion === "reanudar") {
+        const ps = [...(a.pausas || [])];
+        if (ps.length && !ps[ps.length - 1].fin) ps[ps.length - 1].fin = iso;
+        upd = { estado: "en_proceso", ultima_reanudacion_ms: now, pausas: ps };
+      } else if (accion === "terminar") {
+        const ps = [...(a.pausas || [])];
+        if (ps.length && !ps[ps.length - 1].fin) ps[ps.length - 1].fin = iso;
+        upd = { estado: "terminada", terminado_en: iso, tiempo_trabajo_ms: actaTrabajoMs(a), pausas: ps };
+      }
+      try { await updateDoc(doc(db, "actividades_asignadas", a.id), upd); } catch(e) { console.warn("[acta]", e); }
+      cargarActividadesAsignadas();
+      pollActividadesAsignadas();
+    }
+
+    function renderActaCard(a) {
+      const pCls  = { "A++": "p-App", "A+": "p-Ap", "A": "p-A", "B": "p-B" };
+      const pColor = { "A++": "#bf5af2", "A+": "#ff453a", "A": "#ff9f0a", "B": "#09a3ef" };
+      const pBg    = { "A++": "rgba(191,90,242,.15)", "A+": "rgba(255,69,58,.15)", "A": "rgba(255,159,10,.15)", "B": "rgba(9,163,239,.15)" };
+      const estadoTxt = { pendiente: "⏳ Pendiente", en_proceso: "▶ En proceso", pausada: "⏸ Pausada" };
+      const p = a.prioridad || "B";
+
+      const card = document.createElement("div");
+      card.className = "acta-card " + (pCls[p] || "p-B");
+      card.innerHTML = `
+        <div class="acta-header">
+          <span class="acta-estado" style="background:${pBg[p]};color:${pColor[p]}">${p}</span>
+          <span class="acta-titulo">${a.titulo || "—"}</span>
+          <span class="acta-estado ${a.estado}">${estadoTxt[a.estado] || a.estado}</span>
+        </div>
+        ${a.descripcion ? `<div class="acta-desc">${a.descripcion}</div>` : ""}
+        <div class="acta-meta">
+          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> Límite: <b>${a.fecha_limite}${a.hora_limite ? " · " + a.hora_limite : ""}</b></span>` : ""}
+          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Asignada por: <b>${a.creado_por_nombre}</b></span>` : ""}
+        </div>
+        <div class="acta-crono">
+          <span>⏱ Trabajo: <b id="acta-t-${a.id}">${fmtActa(actaTrabajoMs(a))}</b></span>
+          ${a.tiempo_respuesta_ms ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> Respuesta: <b>${fmtActa(a.tiempo_respuesta_ms)}</b></span>` : ""}
+        </div>
+        <div class="acta-btns" id="acta-btns-${a.id}"></div>`;
+
+      const btnsEl = card.querySelector(`#acta-btns-${a.id}`);
+      const mkBtn = (cls, txt, accion) => {
+        const b = document.createElement("button");
+        b.className = "acta-btn " + cls;
+        b.textContent = txt;
+        b.addEventListener("click", () => actaAccion(a, accion));
+        btnsEl.appendChild(b);
+      };
+      if (a.estado === "pendiente") {
+        mkBtn("iniciar", "▶ Iniciar", "iniciar");
+      } else if (a.estado === "en_proceso") {
+        mkBtn("pausar", "⏸ Pausar", "pausar");
+        mkBtn("terminar", "✔ Terminar", "terminar");
+        _actaTimers[a.id] = setInterval(() => {
+          const el = document.getElementById(`acta-t-${a.id}`);
+          if (el) el.textContent = fmtActa(actaTrabajoMs(a)); else clearInterval(_actaTimers[a.id]);
+        }, 1000);
+      } else if (a.estado === "pausada") {
+        mkBtn("iniciar", "▶ Reanudar", "reanudar");
+        mkBtn("terminar", "✔ Terminar", "terminar");
+      }
+      return card;
+    }
+
+    async function cargarActividadesAsignadas() {
+      const listEl = document.getElementById("actasig-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+      Object.values(_actaTimers).forEach(clearInterval);
+      Object.keys(_actaTimers).forEach(k => delete _actaTimers[k]);
+
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+
+      let acts = [];
+      try {
+        const snap = await getDocs(query(
+          collection(db, "actividades_asignadas"),
+          where("asignado_a_id", "==", user.uid)
+        ));
+        acts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .filter(a => a.estado !== "terminada")
+          .sort((a, b) => (a.creado_en || "").localeCompare(b.creado_en || ""));
+      } catch (e) {
+        listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>';
+        return;
+      }
+
+      // Marcar como vistas al abrir el panel
+      acts.filter(a => !a.visto).forEach(a => {
+        updateDoc(doc(db, "actividades_asignadas", a.id), { visto: true }).catch(() => {});
+        _actaNotified.add(a.id);
+      });
+
+      if (!acts.length) {
+        listEl.innerHTML = '<div class="loading-state">✓ Sin actividades asignadas pendientes</div>';
+        return;
+      }
+      listEl.innerHTML = "";
+      acts.forEach(a => listEl.appendChild(renderActaCard(a)));
+    }
+
+    // ── Actividades extras para el reporte del día ───────────────────────────
+    async function obtenerExtrasReporte() {
+      const user = await window.AT.getLoggedUser();
+      if (!user) return [];
+      const hoy = new Date().toISOString().split("T")[0];
+      const snap = await getDocs(query(
+        collection(db, "actividades_asignadas"),
+        where("asignado_a_id", "==", user.uid)
+      ));
+      const horaDe = iso => iso ? new Date(iso).toLocaleTimeString("es-MX") : "—";
+      return snap.docs.map(d => d.data())
+        .filter(a => (a.estado === "terminada" && (a.terminado_en || "").startsWith(hoy)) || (a.estado && a.estado !== "terminada"))
+        .sort((a, b) => (a.creado_en || "").localeCompare(b.creado_en || ""))
+        .map(a => ({
+          titulo:       a.titulo || "Actividad",
+          prioridad:    a.prioridad || "B",
+          estado:       a.estado,
+          asignada_por: a.creado_por_nombre || "",
+          iniciado:     a.iniciado_en ? horaDe(a.iniciado_en) : "—",
+          terminado:    a.terminado_en ? horaDe(a.terminado_en) : "—",
+          trabajo_ms:   (a.tiempo_trabajo_ms || 0) + (a.estado === "en_proceso" && a.ultima_reanudacion_ms ? Date.now() - a.ultima_reanudacion_ms : 0),
+          respuesta_ms: a.tiempo_respuesta_ms || 0,
+          pausas:       (a.pausas || []).length,
+        }));
+    }
+
+    // ── Polling: badges + notificaciones de nuevas actividades ──────────────
+    async function pollActividadesAsignadas() {
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+      try {
+        const [actaSnap, tareasSnap] = await Promise.all([
+          getDocs(query(collection(db, "actividades_asignadas"), where("asignado_a_id", "==", user.uid))),
+          getDocs(query(collection(db, "tareas"), where("asesor_asignado_id", "==", user.uid))),
+        ]);
+
+        const pendActa = actaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => a.estado !== "terminada");
+        const pendTareas = tareasSnap.docs.filter(d => d.data().estado !== "completado").length;
+
+        const bA = document.getElementById("badge-actasig");
+        bA.textContent = pendActa.length;
+        bA.style.display = pendActa.length > 0 ? "inline-block" : "none";
+        const bT = document.getElementById("badge-mistareas");
+        bT.textContent = pendTareas;
+        bT.style.display = pendTareas > 0 ? "inline-block" : "none";
+
+        // Notificar las nuevas (no vistas)
+        pendActa.filter(a => !a.visto && !_actaNotified.has(a.id)).forEach(a => {
+          _actaNotified.add(a.id);
+          try {
+            new Notification("Nueva actividad asignada", {
+              body: `${a.titulo || "Actividad"}${a.creado_por_nombre ? " — de " + a.creado_por_nombre : ""}. Revísala en la pestaña Asignadas.`,
+            });
+          } catch (_) {}
+          updateDoc(doc(db, "actividades_asignadas", a.id), { visto: true, notificado_en: new Date().toISOString() }).catch(() => {});
+        });
+      } catch (e) { console.warn("[poll acta]", e); }
+    }
+    setInterval(pollActividadesAsignadas, 30000);
+    pollActividadesAsignadas();
+
+    // ── Mis tareas asignadas (con cronómetro) ────────────────────────────────
+    const _mtTimers = {}; // tareaId → intervalId
+
+    function fmtMt(ms) {
+      if (!ms || ms < 0) return "0s";
+      const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
+    }
+
+    async function cargarMisTareas() {
+      const listEl = document.getElementById("mistareas-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+
+      // Limpiar timers anteriores
+      Object.values(_mtTimers).forEach(clearInterval);
+      Object.keys(_mtTimers).forEach(k => delete _mtTimers[k]);
+
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+
+      let tareas = [];
+      try {
+        const snap = await getDocs(query(
+          collection(db, "tareas"),
+          where("asesor_asignado_id", "==", user.uid)
+        ));
+        tareas = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(t => t.estado !== "completado")
+          .sort((a, b) => (a.dia_entrega || "9999").localeCompare(b.dia_entrega || "9999"));
+      } catch(e) {
+        listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>';
+        return;
+      }
+
+      if (!tareas.length) {
+        listEl.innerHTML = '<div class="loading-state">✓ Sin tareas asignadas pendientes</div>';
+        return;
+      }
+
+      listEl.innerHTML = "";
+      const difCls   = { "A++": "dif-App", "A+": "dif-Ap", "A": "dif-A", "B": "dif-B" };
+      const difColor = { "A++": "#bf5af2", "A+": "var(--red)", "A": "var(--orange)", "B": "var(--cyan)" };
+      const difBg    = { "A++": "rgba(191,90,242,.15)", "A+": "rgba(255,69,58,.15)", "A": "rgba(255,159,10,.15)", "B": "rgba(9,163,239,.15)" };
+
+      tareas.forEach(t => {
+        const card = document.createElement("div");
+        card.className = "mt-card " + (difCls[t.dificultad] || "dif-B");
+        const dif = t.dificultad || "B";
+        const creadoMs = t.creado_en ? new Date(t.creado_en).getTime() : Date.now();
+
+        card.innerHTML = `
+          <div class="mt-header">
+            <span class="mt-dif-badge" style="background:${difBg[dif]||difBg.B};color:${difColor[dif]||difColor.B}">${dif}</span>
+            <span class="mt-cliente">${t.cliente || "—"}</span>
+            <span class="pedido-badge ${t.estado||'pendiente'}">${estadoLabel[t.estado]||t.estado}</span>
+          </div>
+          <div class="mt-data">
+            ${t.plataforma  ? `<span>Plataforma: <b>${t.plataforma}</b></span>` : ""}
+            ${t.escuela     ? `<span>Escuela: <b>${t.escuela}</b></span>` : ""}
+            ${t.id_alumno   ? `<span>ID: <b>${t.id_alumno}</b></span>` : ""}
+            ${t.contrasena  ? `<span>Contraseña: <b>${t.contrasena}</b></span>` : ""}
+            ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${t.materia}</b></span>` : ""}
+            ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${t.entregable}</b></span>` : ""}
+            ${t.dia_entrega ? `<span>Entrega: <b>${t.dia_entrega}${t.hora_entrega ? " · " + t.hora_entrega : ""}</b></span>` : ""}
+            ${t.subir       ? `<span>Subir: <b>${t.subir}</b></span>` : ""}
+          </div>
+          ${t.anotaciones ? `<div class="mt-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${t.anotaciones}</div>` : ""}
+          <div class="mt-crono" id="mtc-${t.id}">
+            <div class="mt-crono-dot"></div>
+            <div class="mt-crono-vals">
+              <div class="mt-crono-row">
+                <span class="mt-crono-lbl">⏱ Tiempo trabajando</span>
+                <span class="mt-crono-val" id="mtc-trabajo-${t.id}">0s</span>
+              </div>
+              <div class="mt-crono-row">
+                <span class="mt-crono-lbl"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> Tiempo de respuesta</span>
+                <span class="mt-crono-val" id="mtc-resp-${t.id}" style="font-size:11px;opacity:.7">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="acta-btns" id="mtbtns-${t.id}" style="margin-top:2px"></div>`;
+
+        listEl.appendChild(card);
+
+        const btnsEl    = card.querySelector(`#mtbtns-${t.id}`);
+        const cronoEl   = card.querySelector(`#mtc-${t.id}`);
+        const trabajoEl = card.querySelector(`#mtc-trabajo-${t.id}`);
+        const respEl    = card.querySelector(`#mtc-resp-${t.id}`);
+
+        // Estado restaurado desde Firestore (sobrevive recargas de la vista)
+        let _acumMs   = t.tiempo_trabajo_ms || 0;
+        let _resumeMs = t.timer_ultima_reanudacion_ms || t.timer_iniciado_ms || null;
+        let _estado   = t.estado === "en_proceso" ? (t.timer_pausado ? "pausada" : "corriendo") : "sin_iniciar";
+        let _pausas   = Array.isArray(t.timer_pausas) ? [...t.timer_pausas] : [];
+
+        const trabajoActual = () => _acumMs + (_estado === "corriendo" && _resumeMs ? Date.now() - _resumeMs : 0);
+        const pintarCrono   = () => { trabajoEl.textContent = fmtMt(trabajoActual()); };
+        const arrancarTick  = () => { clearInterval(_mtTimers[t.id]); _mtTimers[t.id] = setInterval(pintarCrono, 1000); };
+        const cerrarPausa   = () => { if (_pausas.length && !_pausas[_pausas.length-1].fin) _pausas[_pausas.length-1].fin = new Date().toISOString(); };
+        const mkB = (cls, txt, fn) => { const b = document.createElement("button"); b.className = "acta-btn " + cls; b.textContent = txt; b.onclick = fn; btnsEl.appendChild(b); };
+
+        function pintarBotones() {
+          btnsEl.innerHTML = "";
+          if (_estado === "sin_iniciar") {
+            mkB("iniciar", "▶ Iniciar tarea", iniciarT);
+          } else if (_estado === "corriendo") {
+            mkB("pausar", "⏸ Pausar", pausarT);
+            mkB("terminar", "■ Completar", completarT);
+          } else if (_estado === "pausada") {
+            mkB("iniciar", "▶ Reanudar", reanudarT);
+            mkB("terminar", "■ Completar", completarT);
+          }
+        }
+
+        async function iniciarT() {
+          _estado = "corriendo"; _resumeMs = Date.now(); _acumMs = 0; _pausas = [];
+          const tiempoRespMs = _resumeMs - creadoMs;
+          respEl.textContent = fmtMt(tiempoRespMs);
+          cronoEl.classList.add("visible");
+          arrancarTick(); pintarBotones();
+          try {
+            await updateDoc(doc(db, "tareas", t.id), {
+              estado: "en_proceso",
+              timer_iniciado_ms: _resumeMs,
+              timer_iniciado_iso: new Date().toISOString(),
+              timer_ultima_reanudacion_ms: _resumeMs,
+              timer_pausado: false,
+              timer_pausas: [],
+              tiempo_trabajo_ms: 0,
+              tiempo_respuesta_ms: tiempoRespMs,
+            });
+          } catch(e) { console.warn("[mt timer]", e); }
+        }
+
+        async function pausarT() {
+          _acumMs = trabajoActual(); _estado = "pausada";
+          _pausas.push({ inicio: new Date().toISOString(), fin: null });
+          clearInterval(_mtTimers[t.id]); pintarCrono(); pintarBotones();
+          try {
+            await updateDoc(doc(db, "tareas", t.id), { timer_pausado: true, tiempo_trabajo_ms: _acumMs, timer_pausas: _pausas });
+          } catch(e) { console.warn("[mt pausa]", e); }
+        }
+
+        async function reanudarT() {
+          _estado = "corriendo"; _resumeMs = Date.now(); cerrarPausa();
+          arrancarTick(); pintarBotones();
+          try {
+            await updateDoc(doc(db, "tareas", t.id), { timer_pausado: false, timer_ultima_reanudacion_ms: _resumeMs, timer_pausas: _pausas });
+          } catch(e) { console.warn("[mt reanudar]", e); }
+        }
+
+        async function completarT() {
+          const totalMs = trabajoActual();
+          _estado = "hecho"; cerrarPausa();
+          clearInterval(_mtTimers[t.id]); delete _mtTimers[t.id];
+          trabajoEl.textContent = fmtMt(totalMs);
+          cronoEl.classList.add("done");
+          btnsEl.innerHTML = "";
+          try {
+            await updateDoc(doc(db, "tareas", t.id), {
+              estado:               "completado",
+              fecha_completacion:   new Date().toISOString().split("T")[0],
+              listo_para_cobrar:    true,
+              timer_completado_ms:  Date.now(),
+              timer_completado_iso: new Date().toISOString(),
+              tiempo_trabajo_ms:    totalMs,
+              timer_pausado:        false,
+              timer_pausas:         _pausas,
+            });
+          } catch(e) { console.error("[mt completar]", e); }
+
+          setTimeout(() => {
+            card.remove();
+            if (!listEl.querySelector(".mt-card")) {
+              listEl.innerHTML = '<div class="loading-state">✓ Sin tareas asignadas pendientes</div>';
+            }
+          }, 1500);
+        }
+
+        // Restaurar visual si la tarea ya estaba en proceso o pausada
+        if (_estado !== "sin_iniciar") {
+          cronoEl.classList.add("visible");
+          if (t.tiempo_respuesta_ms) respEl.textContent = fmtMt(t.tiempo_respuesta_ms);
+          pintarCrono();
+          if (_estado === "corriendo") arrancarTick();
+        }
+        pintarBotones();
+      });
+    }
+
+    // ── Pedidos urgentes / por vencer ────────────────────────────────────────
+    async function cargarUrgentes() {
+      const listEl = document.getElementById("urgentes-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+
+      const hoy    = new Date().toISOString().split("T")[0];
+      const manana = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+
+      let todos = [];
+      try {
+        const snap = await getDocs(query(
+          collection(db, "tareas"),
+          where("atc_creador_id", "==", user.uid)
+        ));
+        todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch(e) {
+        listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>';
+        return;
+      }
+
+      const nivelOrd = { vencido: 0, hoy: 1, manana: 2, urgente: 3 };
+      const nivelCfg = {
+        vencido: { label: "VENCIDO",      color: "var(--red)",    bg: "rgba(255,69,58,.12)",   border: "rgba(255,69,58,.35)" },
+        hoy:     { label: "VENCE HOY",    color: "var(--orange)", bg: "rgba(255,159,10,.12)",  border: "rgba(255,159,10,.35)" },
+        manana:  { label: "VENCE MAÑANA", color: "var(--orange)", bg: "rgba(255,159,10,.08)",  border: "rgba(255,159,10,.2)" },
+        urgente: { label: "URGENTE",      color: "#bf5af2",       bg: "rgba(191,90,242,.12)",  border: "rgba(191,90,242,.35)" },
+      };
+
+      const urgentes = [];
+      todos.forEach(t => {
+        if (t.estado === "completado") return;
+        const diaEnt  = t.dia_entrega || t.fecha_entrega_estimada || null;
+        const esUrgDif = t.dificultad === "A++" || t.dificultad === "A+";
+        let nivel = null;
+        if (diaEnt) {
+          if (diaEnt < hoy)     nivel = "vencido";
+          else if (diaEnt === hoy)    nivel = "hoy";
+          else if (diaEnt === manana) nivel = "manana";
+        }
+        if (!nivel && esUrgDif) nivel = "urgente";
+        if (nivel) urgentes.push({ ...t, _nivel: nivel, _diaEnt: diaEnt });
+      });
+
+      urgentes.sort((a, b) => nivelOrd[a._nivel] - nivelOrd[b._nivel]);
+
+      if (!urgentes.length) {
+        listEl.innerHTML = '<div class="loading-state">✓ Sin pedidos urgentes ni por vencer</div>';
+        return;
+      }
+
+      listEl.innerHTML = "";
+      urgentes.forEach(t => {
+        const cfg = nivelCfg[t._nivel];
+        const card = document.createElement("div");
+        card.className = "pedido-card";
+        card.style.borderLeft = `3px solid ${cfg.color}`;
+        card.innerHTML = `
+          <div class="pedido-header" style="margin-bottom:6px">
+            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.border}">${cfg.label}</span>
+            <span class="pedido-cliente">${t.cliente || "—"}</span>
+            <span class="pedido-badge ${badgeMap[t.estado]||'pendiente'}">${estadoLabel[t.estado]||t.estado}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:11px;color:var(--sub)">
+            ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${t.plataforma}</b></span>` : ""}
+            ${t.escuela    ? `<span>Escuela: <b style="color:var(--text)">${t.escuela}</b></span>` : ""}
+            ${t.materia    ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${t.materia}</b></span>` : ""}
+            ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
+            ${t._diaEnt    ? `<span>Entrega: <b style="color:${cfg.color}">${t._diaEnt}${t.hora_entrega ? ' · ' + t.hora_entrega : ''}</b></span>` : ""}
+            ${t.asesor_nombre ? `<span>Asesor: <b style="color:var(--text)">${t.asesor_nombre}</b></span>` : ""}
+            ${t.dificultad ? `<span>Dif: <b style="color:var(--text)">${t.dificultad}</b></span>` : ""}
+          </div>`;
+        listEl.appendChild(card);
       });
     }
 
@@ -688,9 +1990,24 @@
         // Ordenar por fecha creación desc (más recientes primero)
         const docs = snap.docs.sort((a, b) => (b.data().creado_en || "").localeCompare(a.data().creado_en || ""));
 
+        // Separar en grupos y pedidos individuales
+        const grupos    = {};
+        const solos     = [];
         docs.forEach(d => {
-          const t = d.data(); const id = d.id;
-          const estatusPagoColor = { PAGADO: "var(--green)", PENDIENTE: "var(--orange)", PARCIAL: "var(--cyan)" };
+          const t = { id: d.id, ...d.data() };
+          if (t.materia_id) {
+            if (!grupos[t.materia_id]) grupos[t.materia_id] = [];
+            grupos[t.materia_id].push(t);
+          } else {
+            solos.push(t);
+          }
+        });
+
+        const estatusPagoColor = { PAGADO: "var(--green)", PENDIENTE: "var(--orange)", PARCIAL: "var(--cyan)" };
+
+        // ── Helper: construir un card de pedido ────────────────────────────
+        function buildPedidoCard(t) {
+          const id   = t.id;
           const card = document.createElement("div");
           card.className = "pedido-card";
           card.innerHTML = `
@@ -698,31 +2015,47 @@
               <span class="pedido-id">#${t.numero_pedido || "—"}</span>
               <span class="pedido-cliente">${t.cliente}</span>
               <span class="pedido-badge ${badgeMap[t.estado]||'pendiente'}">${estadoLabel[t.estado]||t.estado}</span>
+              ${t.listo_para_cobrar && t.estado === "completado" ? `<span class="badge-listo-cobrar"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M14.6 9c-.6-.9-1.5-1.4-2.6-1.4-1.6 0-2.7.8-2.7 2 0 2.7 5.4 1.4 5.4 4 0 1.2-1.1 2-2.7 2-1.2 0-2.2-.5-2.8-1.5"/></svg> Listo p/cobrar</span>` : ""}
+              <button class="btn-duplicar" title="Duplicar con mismas credenciales"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 12l2.2 2.2L15.5 10"/></svg> Duplicar</button>
             </div>
             <div class="pedido-desc" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px;color:var(--sub);margin:6px 0">
               ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${t.plataforma}</b></span>` : ""}
-              ${t.escuela ? `<span>Escuela: <b style="color:var(--text)">${t.escuela}</b></span>` : ""}
-              ${t.id_alumno ? `<span>ID: <b style="color:var(--text)">${t.id_alumno}</b></span>` : ""}
+              ${t.escuela    ? `<span>Escuela: <b style="color:var(--text)">${t.escuela}</b></span>` : ""}
+              ${t.id_alumno  ? `<span>ID: <b style="color:var(--text)">${t.id_alumno}</b></span>` : ""}
               ${t.contrasena ? `<span>Pass: <b style="color:var(--text)">${t.contrasena}</b></span>` : ""}
-              ${t.materia ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${t.materia}</b></span>` : ""}
+              ${t.materia    ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${t.materia}</b></span>` : ""}
               ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
-              ${t.dia_agenda ? `<span>Agenda: <b style="color:var(--text)">${t.dia_agenda}</b></span>` : ""}
-              ${t.dia_entrega ? `<span>Entrega: <b style="color:var(--text)">${t.dia_entrega}</b></span>` : ""}
-              ${t.subir ? `<span>Subir: <b style="color:var(--text)">${t.subir}</b></span>` : ""}
+              ${t.dia_agenda  ? `<span>Agenda: <b style="color:var(--text)">${t.dia_agenda}</b></span>` : ""}
+              ${t.dia_entrega ? `<span>Entrega: <b style="color:var(--text)">${t.dia_entrega}${t.hora_entrega ? ' · ' + t.hora_entrega : ''}</b></span>` : ""}
+              ${t.subir       ? `<span>Subir: <b style="color:var(--text)">${t.subir}</b></span>` : ""}
               ${t.precio != null ? `<span>Precio: <b style="color:var(--text)">$${t.precio}</b></span>` : ""}
               ${t.estatus_pago ? `<span>Pago: <b style="color:${estatusPagoColor[t.estatus_pago]||'var(--text)'}">${t.estatus_pago}</b></span>` : ""}
               ${t.cantidad_pagada != null ? `<span>Pagado: <b style="color:var(--text)">$${t.cantidad_pagada}</b></span>` : ""}
             </div>
-            ${t.anotaciones ? `<div style="font-size:11px;color:var(--sub);border-top:1px solid var(--border);padding-top:5px;margin-top:2px">📝 ${t.anotaciones}</div>` : ""}
+            ${t.anotaciones ? `<div style="font-size:11px;color:var(--sub);border-top:1px solid var(--border);padding-top:5px;margin-top:2px"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${t.anotaciones}</div>` : ""}
             <div class="pedido-meta" style="margin-top:6px">
               <span>Dif: <b>${t.dificultad}</b></span>
               <span>Asesor: <b>${t.asesor_nombre || "Sin asignar"}</b></span>
             </div>
             <div class="pedido-actions">
-              <button class="btn-p-action primary btn-editar" ${EDITABLE(t.estado)?'':'disabled'}>✏️ Editar</button>
-              <button class="btn-p-action primary btn-reasignar" ${REASIGNABLE(t.estado)?'':'disabled'}>👤 Reasignar</button>
-              <button class="btn-p-action danger btn-eliminar">🗑</button>
+              <button class="btn-p-action primary btn-editar" ${EDITABLE(t.estado)?'':'disabled'}><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar</button>
+              <button class="btn-p-action primary btn-reasignar" ${REASIGNABLE(t.estado)?'':'disabled'}><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Reasignar</button>
+              <button class="btn-p-action danger btn-eliminar"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M7 7l.8 12a2 2 0 0 0 2 1.9h4.4a2 2 0 0 0 2-1.9L17 7"/></svg></button>
             </div>`;
+
+          // Botón Duplicar → abre modal materia completa con datos pre-llenados
+          card.querySelector(".btn-duplicar").onclick = () => {
+            abrirMcModal({
+              cliente:    t.cliente,
+              plataforma: t.plataforma || "",
+              escuela:    t.escuela    || "",
+              id_alumno:  t.id_alumno  || "",
+              contrasena: t.contrasena || "",
+              materia:    t.materia    || "",
+              dificultad: t.dificultad || null,
+              materia_id: t.materia_id || null,
+            });
+          };
 
           card.querySelector(".btn-editar").onclick = () => {
             if (!EDITABLE(t.estado)) return;
@@ -736,6 +2069,7 @@
             document.getElementById("edit-entregable").value       = t.entregable || "";
             document.getElementById("edit-dia-agenda").value       = t.dia_agenda || "";
             document.getElementById("edit-dia-entrega").value      = t.dia_entrega || t.fecha_entrega_estimada || "";
+            document.getElementById("edit-hora-entrega").value     = t.hora_entrega || "";
             document.getElementById("edit-subir").value            = t.subir || "";
             document.getElementById("edit-anotaciones").value      = t.anotaciones || "";
             document.getElementById("edit-precio").value           = t.precio != null ? t.precio : "";
@@ -755,6 +2089,666 @@
             document.getElementById("del-nombre").textContent = t.cliente;
             document.getElementById("modal-eliminar").classList.remove("hidden");
           };
+
+          return card;
+        }
+
+        // ── Renderizar grupos ──────────────────────────────────────────────
+        Object.entries(grupos).forEach(([mid, items]) => {
+          const completados = items.filter(x => x.estado === "completado").length;
+          const precioTotal = items.reduce((s, x) => s + (x.precio || 0), 0);
+          const rep = items[0]; // representante para nombre/materia
+
+          const grupo = document.createElement("div");
+          grupo.className = "mat-grupo";
+
+          const header = document.createElement("div");
+          header.className = "mat-grupo-header";
+          header.innerHTML = `
+            <span class="mat-grupo-badge"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> MATERIA COMPLETA</span>
+            <span class="mat-grupo-title">${rep.cliente} · ${rep.materia || "—"}</span>
+            <span class="mat-grupo-code">${mid}</span>
+            <span class="mat-grupo-stats">${items.length} entregables · ${completados} completados · $${precioTotal.toLocaleString("es-MX")}</span>
+            <span style="font-size:12px;color:var(--sub);margin-left:auto">▾</span>`;
+
+          const body = document.createElement("div");
+          body.className = "mat-grupo-body";
+          items.forEach(t => body.appendChild(buildPedidoCard(t)));
+
+          // Toggle collapse
+          let open = true;
+          header.addEventListener("click", () => {
+            open = !open;
+            body.style.display = open ? "flex" : "none";
+            header.querySelector("span:last-child").textContent = open ? "▾" : "▸";
+          });
+
+          grupo.appendChild(header);
+          grupo.appendChild(body);
+          listEl.appendChild(grupo);
+        });
+
+        // ── Renderizar individuales ────────────────────────────────────────
+        solos.forEach(t => listEl.appendChild(buildPedidoCard(t)));
+      } catch(e) {
+        listEl.innerHTML = '<div class="loading-state">Error: ' + e.message + '</div>';
+      }
+    }
+    // ── Sesión ATC — auto-start y timer ──────────────────────────────────────
+    let _sesionStart = null;
+    let _timerInterval = null;
+
+    function fmtMs(ms) {
+      if (!ms || ms < 0) return "0s";
+      const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
+    }
+
+    async function iniciarSesionATC() {
+      if (!window.AT) return;
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+      const { session: s } = (await window.AT.getStatus()) || {};
+      if (!s || s.status !== "active") {
+        await window.AT.startDay({ collaborator: user.nombre });
+      }
+      const status2 = await window.AT.getStatus();
+      _sesionStart = status2?.session?.startTime || Date.now();
+
+      const estadoEl = document.getElementById("sesion-estado");
+      if (estadoEl) estadoEl.textContent = `Sesión activa · ${user.nombre}`;
+
+      clearInterval(_timerInterval);
+      _timerInterval = setInterval(() => {
+        const timerEl = document.getElementById("sesion-timer");
+        if (timerEl) timerEl.textContent = "⏱ " + fmtMs(Date.now() - _sesionStart);
+      }, 1000);
+
+      // ── Contadores de clicks / teclas ─────────────────────────────────────
+      if (window.AT.onGlobalEvent) {
+        window.AT.onGlobalEvent((ev) => {
+          if (ev.type === "click") {
+            const el = document.getElementById("sesion-clicks");
+            if (el) el.textContent = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3.5" width="8" height="17" rx="4"/><path d="M12 7v3.5"/></svg> ${ev.clicks.toLocaleString()}`;
+          }
+          if (ev.type === "key") {
+            const el = document.getElementById("sesion-keys");
+            if (el) el.textContent = `⌨ ${ev.keyPresses.toLocaleString()}`;
+          }
+        });
+      }
+
+      // ── Indicador idle (tiempo muerto) ────────────────────────────────────
+      // Si el sistema lleva >60s sin actividad el dot se pone naranja
+      if (window.AT.onShowIdle) {
+        window.AT.onShowIdle(() => {
+          const dot  = document.getElementById("sesion-dot");
+          const idle = document.getElementById("sesion-idle");
+          const est  = document.getElementById("sesion-estado");
+          if (dot)  dot.classList.add("idle");
+          if (idle) idle.style.display = "inline";
+          if (est)  est.textContent = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> Tiempo muerto · ${user.nombre}`;
+        });
+      }
+    }
+
+    // ── Botón Pausa / Reanudar ────────────────────────────────────────────────
+    document.getElementById("btn-pausa-atc")?.addEventListener("click", async function() {
+      const { session: s } = (await window.AT.getStatus()) || {};
+      const dot     = document.getElementById("sesion-dot");
+      const estadoE = document.getElementById("sesion-estado");
+      const idle    = document.getElementById("sesion-idle");
+      if (!s) return;
+
+      if (s.status === "active") {
+        await window.AT.pauseSession({ reason: "pausa manual ATC" });
+        this.textContent = "▶ Reanudar";
+        this.style.background    = "rgba(50,215,75,.12)";
+        this.style.borderColor   = "rgba(50,215,75,.3)";
+        this.style.color         = "var(--green)";
+        if (dot)  dot.classList.add("idle");
+        if (estadoE) estadoE.textContent = "⏸ Sesión en pausa";
+      } else if (s.status === "paused") {
+        await window.AT.resumeSession();
+        this.textContent = "⏸ Pausa";
+        this.style.background    = "rgba(255,159,10,.12)";
+        this.style.borderColor   = "rgba(255,159,10,.3)";
+        this.style.color         = "var(--orange)";
+        if (dot)  dot.classList.remove("idle");
+        if (idle) idle.style.display = "none";
+        const user2 = await window.AT.getLoggedUser();
+        if (estadoE && user2) estadoE.textContent = `Sesión activa · ${user2.nombre}`;
+      }
+    });
+
+    // Iniciar sesión automáticamente al cargar
+    iniciarSesionATC();
+
+    // ── Checklist de actividades del día ─────────────────────────────────────
+    const ACTIVIDADES_ATC = [
+      { id: "a1",  label: "Mandar Campaña a todos los grupos",            sub: "Promociones y fotos" },
+      { id: "a3",  label: "Subir referencias a WhatsApp, FB e Instagram", sub: "De calificaciones y cursos" },
+      { id: "a4",  label: "Actualizar la Agenda" },
+      { id: "a5",  label: "Mandar referencias de entrega a los grupos",   sub: "De calificaciones y cursos" },
+      { id: "a7",  label: "Mandar un grupo por Blackboard UVM / UNITEC" },
+      { id: "a9",  label: "Mantener activos los grupos importantes" },
+      { id: "a10", label: "Contestar en FB e IG" },
+      { id: "a11", label: "Atención a comunidad de IG" },
+      { id: "a13", label: "Actualizar fechas de cierre constantemente" },
+    ];
+
+    // Timers en memoria { actId: intervalId }
+    const _actTimers = {};
+
+    function fmtDuracion(ms) {
+      if (!ms || ms < 0) return "0s";
+      const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
+    }
+    function tiempoHora() {
+      return new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    // ejecuciones[actId] = Array<{ inicio_ms, iniciada, terminada, duracion_ms }>
+    // Una ejecución "en curso" tiene terminada = null
+    function actualizarProgreso(ejecuciones) {
+      const total = ACTIVIDADES_ATC.length;
+      const done  = ACTIVIDADES_ATC.filter(a => (ejecuciones[a.id] || []).some(e => e.terminada)).length;
+      const pct   = Math.round((done / total) * 100);
+      const totalExecs = Object.values(ejecuciones).flat().filter(e => e.terminada).length;
+      const fill  = document.getElementById("act-prog-fill");
+      const frac  = document.getElementById("act-prog-frac");
+      const texto = document.getElementById("act-prog-texto");
+      const prog  = document.getElementById("sesion-checklist-prog");
+      if (fill)  fill.style.width = pct + "%";
+      if (frac)  frac.textContent = `${done} / ${total} · ${totalExecs} ejecuciones`;
+      if (texto) texto.textContent = done === total
+        ? `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.4 2.4 4.6-5"/></svg> ¡Todas completadas! (${totalExecs} ejecuciones totales)`
+        : `Actividades del día — ${pct}%`;
+      if (prog)  prog.textContent = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 12l2.2 2.2L15.5 10"/></svg> ${done}/${total}`;
+    }
+
+    async function cargarActividades() {
+      const listEl = document.getElementById("actividades-list");
+      if (!listEl) return;
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando...</div>';
+
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+      const hoy    = new Date().toISOString().split("T")[0];
+      const docRef = doc(db, "checklist_atc", user.uid + "_" + hoy);
+
+      const fechaEl = document.getElementById("act-prog-fecha");
+      if (fechaEl) {
+        const d = new Date(hoy + "T12:00:00");
+        fechaEl.textContent = d.toLocaleDateString("es-MX", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+      }
+
+      // Leer ejecuciones del día
+      let ejecuciones = {};
+      try {
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.ejecuciones) {
+            ejecuciones = data.ejecuciones;
+          } else if (data.completadas) {
+            // Migración desde formato anterior
+            for (const [id, val] of Object.entries(data.completadas || {})) {
+              if (val?.terminada) {
+                ejecuciones[id] = [{ inicio_ms: val.inicio_ms || 0, iniciada: val.iniciada || "—", terminada: val.terminada, duracion_ms: val.duracion_ms }];
+              }
+            }
+          }
+        }
+      } catch {}
+
+      actualizarProgreso(ejecuciones);
+      listEl.innerHTML = "";
+
+      async function guardar() {
+        try {
+          await setDoc(docRef, {
+            uid: user.uid, nombre: user.nombre, fecha: hoy,
+            ejecuciones, actualizado_en: new Date().toISOString(),
+          }, { merge: true });
+        } catch(e) { console.warn("[checklist]", e); }
+      }
+
+      ACTIVIDADES_ATC.forEach(act => {
+        const item = document.createElement("div");
+        item.dataset.id = act.id;
+
+        function render() {
+          const execs   = ejecuciones[act.id] || [];
+          const running = execs.find(e => !e.terminada) || null;
+          const done    = execs.filter(e => e.terminada);
+          const hasDone = done.length > 0;
+          const isRun   = !!running;
+
+          item.className = "act-item" + (isRun ? " in-progress" : hasDone ? " done" : "");
+
+          const icon = isRun ? "⏱" : hasDone ? "✓" : "";
+
+          const execListHtml = done.map((e, i) => `
+            <div class="exec-row done">
+              <span class="exec-idx">#${i + 1}</span>
+              ▶ ${e.iniciada} → ■ ${e.terminada} · <b>${fmtDuracion(e.duracion_ms)}</b>
+            </div>`).join("");
+
+          item.innerHTML = `
+            <div class="act-checkbox">${icon}</div>
+            <div class="act-body">
+              <div class="act-label">${act.label}</div>
+              ${act.sub ? `<div class="act-sub">${act.sub}</div>` : ""}
+              ${execListHtml ? `<div class="exec-list">${execListHtml}</div>` : ""}
+              ${isRun ? `
+                <div class="exec-row running" style="margin:6px 0 4px">
+                  <span class="exec-idx">#${execs.length}</span>
+                  ▶ ${running.iniciada} · ⏱ <span id="live-${act.id}">—</span>${running.pausado ? ' · <b style="color:var(--orange)">⏸ en pausa</b>' : ""}
+                </div>` : ""}
+              <div class="act-btns" style="flex-wrap:wrap">
+                ${!isRun ? `<button class="btn-act-start">▶ Iniciar</button>` : ""}
+                ${isRun && !running.pausado ? `<button class="btn-act-pause">⏸ Pausar</button>` : ""}
+                ${isRun && running.pausado  ? `<button class="btn-act-resume">▶ Reanudar</button>` : ""}
+                ${isRun  ? `<button class="btn-act-stop">■ Terminar</button>`  : ""}
+                ${(hasDone || isRun) ? `<button class="btn-act-reset">↩ Borrar todo</button>` : ""}
+              </div>
+            </div>`;
+
+          // Trabajo efectivo de una ejecución en curso (descuenta pausas)
+          const trabajoExec = (e) => {
+            const fin = e.pausado ? (e.pausado_desde_ms || Date.now()) : Date.now();
+            return Math.max(0, fin - e.inicio_ms - (e.pausa_acum_ms || 0));
+          };
+
+          // Timer en vivo
+          clearInterval(_actTimers[act.id]);
+          if (isRun && running.inicio_ms) {
+            const liveEl0 = document.getElementById("live-" + act.id);
+            if (liveEl0) liveEl0.textContent = fmtDuracion(trabajoExec(running));
+            if (!running.pausado) {
+              _actTimers[act.id] = setInterval(() => {
+                const liveEl = document.getElementById("live-" + act.id);
+                if (liveEl) liveEl.textContent = fmtDuracion(trabajoExec(running));
+              }, 1000);
+            }
+          }
+
+          // Botón Pausar
+          const pauseBtn = item.querySelector(".btn-act-pause");
+          if (pauseBtn) pauseBtn.addEventListener("click", async () => {
+            running.pausado = true;
+            running.pausado_desde_ms = Date.now();
+            clearInterval(_actTimers[act.id]);
+            render();
+            await guardar();
+          });
+
+          // Botón Reanudar
+          const resumeBtn = item.querySelector(".btn-act-resume");
+          if (resumeBtn) resumeBtn.addEventListener("click", async () => {
+            running.pausa_acum_ms = (running.pausa_acum_ms || 0) + (Date.now() - (running.pausado_desde_ms || Date.now()));
+            running.pausado = false;
+            running.pausado_desde_ms = null;
+            render();
+            await guardar();
+          });
+
+          // Botón Iniciar / Otra vez
+          const startBtn = item.querySelector(".btn-act-start, .btn-act-add");
+          if (startBtn) startBtn.addEventListener("click", async () => {
+            if (!ejecuciones[act.id]) ejecuciones[act.id] = [];
+            ejecuciones[act.id].push({ inicio_ms: Date.now(), iniciada: tiempoHora(), terminada: null, duracion_ms: null });
+            actualizarProgreso(ejecuciones);
+            render();
+            await guardar();
+          });
+
+          // Botón Terminar (descuenta el tiempo en pausa)
+          const stopBtn = item.querySelector(".btn-act-stop");
+          if (stopBtn) stopBtn.addEventListener("click", async () => {
+            const exs = ejecuciones[act.id] || [];
+            const idx = exs.findIndex(e => !e.terminada);
+            if (idx >= 0) {
+              const e = exs[idx];
+              if (e.pausado) {
+                e.pausa_acum_ms = (e.pausa_acum_ms || 0) + (Date.now() - (e.pausado_desde_ms || Date.now()));
+                e.pausado = false; e.pausado_desde_ms = null;
+              }
+              e.terminada   = tiempoHora();
+              e.duracion_ms = e.inicio_ms ? Math.max(0, Date.now() - e.inicio_ms - (e.pausa_acum_ms || 0)) : null;
+            }
+            clearInterval(_actTimers[act.id]);
+            actualizarProgreso(ejecuciones);
+            render();
+            await guardar();
+          });
+
+          // Botón Borrar todo
+          const resetBtn = item.querySelector(".btn-act-reset");
+          if (resetBtn) resetBtn.addEventListener("click", async () => {
+            clearInterval(_actTimers[act.id]);
+            ejecuciones[act.id] = [];
+            actualizarProgreso(ejecuciones);
+            render();
+            await guardar();
+          });
+        }
+
+        render();
+        listEl.appendChild(item);
+      });
+    }
+
+    // ── Reporte del día ───────────────────────────────────────────────────────
+    async function cargarReporte() {
+      const contEl = document.getElementById("reporte-content");
+      contEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Generando reporte...</div>';
+
+      const user = await window.AT.getLoggedUser();
+      if (!user) return;
+      const hoy = new Date().toISOString().split("T")[0];
+
+      // 1. Actividades del checklist
+      let ejecuciones = {};
+      try {
+        const snap = await getDoc(doc(db, "checklist_atc", user.uid + "_" + hoy));
+        if (snap.exists()) ejecuciones = snap.data().ejecuciones || {};
+      } catch {}
+
+      const actUnicas    = ACTIVIDADES_ATC.filter(a => (ejecuciones[a.id] || []).some(e => e.terminada)).length;
+      const totalExecs   = Object.values(ejecuciones).flat().filter(e => e.terminada).length;
+      const tiempoActMs  = Object.values(ejecuciones).flat().filter(e => e.terminada && e.duracion_ms).reduce((s, e) => s + e.duracion_ms, 0);
+      const enCurso      = Object.values(ejecuciones).flat().some(e => !e.terminada);
+
+      // 2. Sesión — tiempo activo estimado
+      const statusData = await window.AT.getStatus();
+      const sesionMs   = statusData?.session?.startTime ? Date.now() - statusData.session.startTime : 0;
+      const tiempoMuertoMs = Math.max(0, sesionMs - tiempoActMs);
+
+      // 3. Pedidos de hoy
+      let pedidosHoy = [], pedidosCompletadosHoy = [];
+      try {
+        const snapP = await getDocs(query(
+          collection(db, "tareas"),
+          where("atc_creador_id", "==", user.uid),
+          where("fecha_dia", "==", hoy)
+        ));
+        pedidosHoy = snapP.docs.map(d => d.data());
+      } catch {}
+
+      pedidosCompletadosHoy = pedidosHoy.filter(p => p.estado === "completado");
+
+      // 4. Dinero cobrado hoy = suma de cantidad_pagada de pedidos de hoy
+      const dineroCobrado = pedidosHoy.reduce((s, p) => s + (p.cantidad_pagada || 0), 0);
+
+      // 5. Dinero por cobrar = pedidos completados (de todos los días) con pago pendiente/parcial
+      let porCobrar = 0;
+      try {
+        const snapC = await getDocs(query(
+          collection(db, "tareas"),
+          where("atc_creador_id", "==", user.uid),
+          where("estado", "==", "completado")
+        ));
+        snapC.docs.forEach(d => {
+          const t = d.data();
+          if (t.estatus_pago !== "PAGADO") {
+            const pendiente = (t.precio || 0) - (t.cantidad_pagada || 0);
+            if (pendiente > 0) porCobrar += pendiente;
+          }
+        });
+      } catch {}
+
+      // 6. Actividad más frecuente y más larga
+      let masFrec = null, maxFrec = 0, masLarga = null, maxDur = 0;
+      ACTIVIDADES_ATC.forEach(a => {
+        const exs = (ejecuciones[a.id] || []).filter(e => e.terminada);
+        if (exs.length > maxFrec) { maxFrec = exs.length; masFrec = a.label; }
+        const dur = exs.reduce((s, e) => s + (e.duracion_ms || 0), 0);
+        if (dur > maxDur) { maxDur = dur; masLarga = a.label; }
+      });
+
+      // ── Render ──
+      const kpis = [
+        { lbl: "Actividades únicas", val: `${actUnicas}/9`,        sub: `${totalExecs} ejecuciones totales`, color: actUnicas === 9 ? "var(--green)" : "var(--cyan)" },
+        { lbl: "Tiempo activo",      val: fmtDuracion(tiempoActMs), sub: `Sesión: ${fmtDuracion(sesionMs)}`,  color: "var(--cyan)" },
+        { lbl: "Tiempo muerto est.", val: fmtDuracion(tiempoMuertoMs), sub: enCurso ? "Actividad en curso" : "—", color: tiempoMuertoMs > 3600000 ? "var(--orange)" : "var(--text)" },
+        { lbl: "Pedidos creados",    val: pedidosHoy.length,        sub: `${pedidosCompletadosHoy.length} completados hoy`, color: "var(--text)" },
+        { lbl: "Cobrado hoy",        val: `$${dineroCobrado.toLocaleString("es-MX")}`, sub: "Cantidad pagada en pedidos de hoy", color: "var(--green)" },
+        { lbl: "Por cobrar",         val: `$${porCobrar.toLocaleString("es-MX")}`,     sub: "Pedidos completados sin pago completo", color: porCobrar > 0 ? "var(--orange)" : "var(--green)" },
+      ];
+
+      const kpiHtml = kpis.map(k => `
+        <div class="rep-kpi">
+          <div class="rep-kpi-lbl">${k.lbl}</div>
+          <div class="rep-kpi-val" style="color:${k.color}">${k.val}</div>
+          <div class="rep-kpi-sub">${k.sub}</div>
+        </div>`).join("");
+
+      // Detalle actividades
+      const detHtml = ACTIVIDADES_ATC.map(a => {
+        const exs = (ejecuciones[a.id] || []).filter(e => e.terminada);
+        const enCursoAct = (ejecuciones[a.id] || []).find(e => !e.terminada);
+        if (!exs.length && !enCursoAct) return "";
+        return `
+          <div class="rep-act-row">
+            <div class="rep-act-name">${exs.length > 0 ? "✓" : "⏱"} ${a.label}
+              <span style="font-size:10px;font-weight:400;color:var(--sub);margin-left:6px">${exs.length} completada${exs.length !== 1 ? "s" : ""}</span>
+            </div>
+            <div class="rep-act-execs">
+              ${exs.map((e, i) => `<span>#${i+1} ▶ ${e.iniciada} → ■ ${e.terminada} · <b style="color:var(--text)">${fmtDuracion(e.duracion_ms)}</b></span>`).join("")}
+              ${enCursoAct ? `<span style="color:var(--orange)">⏱ En curso desde ${enCursoAct.iniciada}...</span>` : ""}
+            </div>
+          </div>`;
+      }).join("");
+
+      const d = new Date(hoy + "T12:00:00");
+      const fechaLegible = d.toLocaleDateString("es-MX", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+
+      contEl.innerHTML = `
+        <div style="font-size:10px;color:var(--sub);margin-bottom:12px;text-transform:capitalize">${fechaLegible}</div>
+        <div class="rep-kpi-grid">${kpiHtml}</div>
+        ${masFrec ? `
+          <div class="rep-kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0">
+            <div class="rep-kpi"><div class="rep-kpi-lbl">Más frecuente</div><div style="font-size:12px;font-weight:600;color:var(--text);margin-top:2px">${masFrec}</div><div class="rep-kpi-sub">${maxFrec} vez${maxFrec !== 1 ? "es" : ""}</div></div>
+            <div class="rep-kpi"><div class="rep-kpi-lbl">Más tiempo invertido</div><div style="font-size:12px;font-weight:600;color:var(--text);margin-top:2px">${masLarga || "—"}</div><div class="rep-kpi-sub">${fmtDuracion(maxDur)}</div></div>
+          </div>` : ""}
+        <div class="rep-sec">Detalle de actividades</div>
+        ${detHtml || '<div style="color:var(--sub);font-size:12px;text-align:center;padding:16px 0">Sin actividades registradas aún</div>'}
+        <div style="background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);border-radius:10px;padding:12px;margin-top:4px;font-size:12px;color:var(--sub);text-align:center">
+          ℹ️ El reporte completo se descarga al <b style="color:var(--text)">terminar la sesión del día</b>.<br>Incluirá tiempos muertos, clicks, teclas y todas las actividades.
+        </div>
+        <button class="btn-rep-export" id="btn-rep-export"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4"/><path d="M5.5 4.5c4-2.5 7 2 12 0v8.5c-5 2-8-2.5-12 0"/></svg> Terminar sesión y descargar reporte</button>`;
+
+      document.getElementById("btn-rep-export")?.addEventListener("click", async () => {
+        const btn = document.getElementById("btn-rep-export");
+        if (btn) { btn.disabled = true; btn.textContent = "⏳ Generando imagen..."; }
+
+        // 1. Terminar sesión y obtener reporte base del tracker
+        const resultado = await window.AT.endDay({ comments: `Reporte ATC ${hoy}` });
+        const reportBase = resultado?.report || {};
+
+        // 2. Agregar sección de checklist ATC al reporte
+        reportBase.atcActividades = {
+          actUnicas,
+          totalExecs,
+          tiempoActMs,
+          detalle: ACTIVIDADES_ATC.map(a => ({
+            id:        a.id,
+            label:     a.label,
+            ejecuciones: (ejecuciones[a.id] || []).filter(e => e.terminada),
+            enCurso:   (ejecuciones[a.id] || []).find(e => !e.terminada) || null,
+          }))
+        };
+
+        // 3. Agregar sección de dinero ATC al reporte
+        reportBase.atcDinero = {
+          pedidosHoy:            pedidosHoy.length,
+          pedidosCompletadosHoy: pedidosCompletadosHoy.length,
+          dineroCobrado,
+          porCobrar,
+        };
+
+        // 3.5 Actividades extras asignadas (del panel Asignadas)
+        try { reportBase.actividadesExtras = await obtenerExtrasReporte(); } catch(_) {}
+
+        // 4. Guardar como imagen PNG
+        const r = await window.AT.saveReportImage({
+          report:   reportBase,
+          filename: `reporte_atc_${hoy}.png`
+        });
+
+        if (btn) btn.textContent = r?.ok ? "✓ Imagen guardada" : "✕ Error al guardar";
+        setTimeout(() => window.AT.authLogout(), 1500);
+      });
+    }
+
+    // ── Cobros pendientes ─────────────────────────────────────────────────────
+    async function cargarCobros() {
+      const listEl = document.getElementById("cobros-list");
+      listEl.innerHTML = '<div class="loading-state"><span class="spinner"></span>Cargando cobros pendientes...</div>';
+      try {
+        const snap = await getDocs(query(
+          collection(db, "tareas"),
+          where("atc_creador_id", "==", currentUser?.uid || ""),
+          where("estado", "==", "completado")
+        ));
+
+        // Filtrar los que aún no están completamente pagados
+        const pendientes = snap.docs.filter(d => {
+          const t = d.data();
+          return t.estatus_pago !== "PAGADO";
+        });
+
+        listEl.innerHTML = "";
+
+        if (pendientes.length === 0) {
+          listEl.innerHTML = '<div class="empty-cobros"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.4 2.4 4.6-5"/></svg> ¡Sin cobros pendientes! Todos los pedidos completados están pagados.</div>';
+          return;
+        }
+
+        pendientes.forEach(d => {
+          const t = d.data();
+          const id = d.id;
+          const pagoEstatus = t.estatus_pago || "PENDIENTE";
+          const isParcial = pagoEstatus === "PARCIAL" || (Number(t.cantidad_pagada) > 0 && pagoEstatus !== "PAGADO");
+          const borderClass = t.listo_para_cobrar ? "listo-cobrar" : isParcial ? "parcial" : "pendiente-pago";
+          const pendienteAmt = (t.precio != null && t.cantidad_pagada != null)
+            ? Math.max(0, t.precio - t.cantidad_pagada)
+            : null;
+
+          const card = document.createElement("div");
+          card.className = `cobro-card ${borderClass}`;
+          card.dataset.id = id;
+
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:10px;color:var(--sub);font-family:monospace">#${t.numero_pedido || "—"}</span>
+              <span style="font-size:13px;font-weight:700;flex:1">${t.cliente || "—"}</span>
+              ${t.listo_para_cobrar ? `<span class="badge-listo-cobrar"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M14.6 9c-.6-.9-1.5-1.4-2.6-1.4-1.6 0-2.7.8-2.7 2 0 2.7 5.4 1.4 5.4 4 0 1.2-1.1 2-2.7 2-1.2 0-2.2-.5-2.8-1.5"/></svg> Listo para cobrar</span>` : ""}
+              <span class="pago-badge ${pagoEstatus}">${pagoEstatus}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:11px;color:var(--sub)">
+              ${t.materia    ? `<span style="grid-column:1/-1"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> <b style="color:var(--text)">${t.materia}</b></span>` : ""}
+              ${t.entregable ? `<span style="grid-column:1/-1"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg> <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
+              ${t.asesor_nombre ? `<span>Asesor: <b style="color:var(--text)">${t.asesor_nombre}</b></span>` : ""}
+              ${t.dia_entrega   ? `<span>Entrega: <b style="color:var(--text)">${t.dia_entrega}${t.hora_entrega ? ' · ' + t.hora_entrega : ''}</b></span>` : ""}
+              ${t.precio != null ? `<span>Total: <b style="color:var(--text)">$${t.precio}</b></span>` : ""}
+              ${pendienteAmt != null ? `<span>Pendiente: <b style="color:var(--orange)">$${pendienteAmt}</b></span>` : ""}
+            </div>
+            <div class="cobro-fields">
+              <div class="cobro-field">
+                <label>Estatus pago</label>
+                <select class="sel-estatus">
+                  <option value="PENDIENTE" ${pagoEstatus === "PENDIENTE" ? "selected" : ""}>PENDIENTE</option>
+                  <option value="PARCIAL"   ${pagoEstatus === "PARCIAL"   ? "selected" : ""}>PARCIAL</option>
+                  <option value="PAGADO"    ${pagoEstatus === "PAGADO"    ? "selected" : ""}>PAGADO</option>
+                </select>
+              </div>
+              <div class="cobro-field">
+                <label>Cantidad pagada</label>
+                <input type="number" class="inp-pagado" value="${t.cantidad_pagada != null ? t.cantidad_pagada : ""}" placeholder="0" min="0" step="1"/>
+              </div>
+            </div>
+            <button class="btn-guardar-pago">Guardar pago</button>
+            <div class="save-msg" style="display:none;font-size:11px;color:var(--green);text-align:center;padding:2px 0">✓ Pago actualizado correctamente</div>
+          `;
+
+          card.querySelector(".btn-guardar-pago").addEventListener("click", async (e) => {
+            const btn = e.currentTarget;
+            const sel = card.querySelector(".sel-estatus");
+            const inp = card.querySelector(".inp-pagado");
+            const msg = card.querySelector(".save-msg");
+            const newEstatus  = sel.value;
+            const newCantidad = inp.value !== "" ? Number(inp.value) : null;
+
+            btn.disabled = true; btn.textContent = "Guardando...";
+            try {
+              await updateDoc(doc(db, "tareas", id), {
+                estatus_pago:    newEstatus,
+                cantidad_pagada: newCantidad,
+              });
+
+              // Sync a Google Sheets (fire-and-forget)
+              syncToSheets({
+                action: "update",
+                id,
+                cliente:          t.cliente       || "",
+                plataforma:       t.plataforma     || "",
+                escuela:          t.escuela        || "",
+                id_alumno:        t.id_alumno      || "",
+                contrasena:       t.contrasena     || "",
+                materia:          t.materia        || "",
+                entregable:       t.entregable     || "",
+                dia_agenda:       t.dia_agenda     || "",
+                dia_entrega:      t.dia_entrega    || "",
+                subir:            t.subir          || "",
+                anotaciones:      t.anotaciones    || "",
+                precio:           t.precio != null  ? t.precio : "",
+                estatus_pago:     newEstatus,
+                cantidad_pagada:  newCantidad != null ? newCantidad : "",
+                dificultad:       t.dificultad     || "",
+                asesor_nombre:    t.asesor_nombre  || "",
+                estado:           t.estado         || "",
+                atc_nombre:       t.atc_nombre     || "",
+                listo_para_cobrar: t.listo_para_cobrar || false,
+              });
+
+              // Actualizar badge en la card
+              const badge = card.querySelector(".pago-badge");
+              badge.className = `pago-badge ${newEstatus}`;
+              badge.textContent = newEstatus;
+
+              msg.style.display = "block";
+              btn.textContent = "✓ Guardado";
+              btn.style.background = "rgba(50,215,75,.22)";
+
+              if (newEstatus === "PAGADO") {
+                // Desvanecer y quitar la card tras confirmar pago completo
+                setTimeout(() => {
+                  card.style.transition = "opacity .4s";
+                  card.style.opacity = "0";
+                  setTimeout(() => {
+                    card.remove();
+                    if (listEl.childElementCount === 0) {
+                      listEl.innerHTML = '<div class="empty-cobros"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.4 2.4 4.6-5"/></svg> ¡Sin cobros pendientes! Todos los pedidos completados están pagados.</div>';
+                    }
+                  }, 420);
+                }, 1200);
+              } else {
+                setTimeout(() => {
+                  btn.disabled = false;
+                  btn.textContent = "Guardar pago";
+                  btn.style.background = "";
+                  msg.style.display = "none";
+                }, 2200);
+              }
+            } catch (err) {
+              btn.textContent = "Error: " + err.message;
+              btn.disabled = false;
+            }
+          });
 
           listEl.appendChild(card);
         });

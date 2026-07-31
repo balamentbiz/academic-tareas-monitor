@@ -418,15 +418,22 @@ el("btn-dl-img").addEventListener("click", function() {
   var filename = buildFileName(currentReport, "png");
   el("btn-dl-img").textContent = "⏳ Generando...";
   el("btn-dl-img").disabled = true;
-  window.AT.saveReportImage({ report: currentReport, filename: filename }).then(function(r) {
-    el("btn-dl-img").textContent = r.ok ? "✓ Guardada" : "🖼 Imagen";
+  // Incluir actividades extras asignadas (si la vista las expone)
+  var _extras = window.obtenerExtrasReporte
+    ? window.obtenerExtrasReporte().catch(function() { return null; })
+    : Promise.resolve(null);
+  _extras.then(function(ex) {
+    if (ex) currentReport.actividadesExtras = ex;
+    return window.AT.saveReportImage({ report: currentReport, filename: filename });
+  }).then(function(r) {
+    el("btn-dl-img").textContent = r.ok ? "✓ Guardada" : "Imagen";
     el("btn-dl-img").disabled = false;
     // Desbloquear siempre — imagen generada, con o sin guardar
     lockNewSession(false);
     if (r.ok) window.AT.reportDownloaded();
-    setTimeout(function() { el("btn-dl-img").textContent = "🖼 Imagen"; }, 2000);
+    setTimeout(function() { el("btn-dl-img").textContent = "Imagen"; }, 2000);
   }).catch(function() {
-    el("btn-dl-img").textContent = "🖼 Imagen";
+    el("btn-dl-img").textContent = "Imagen";
     el("btn-dl-img").disabled = false;
     lockNewSession(false);
   });
@@ -491,7 +498,7 @@ el("btn-quit-idle").addEventListener("click", function() {
 
 el("btn-check-update").addEventListener("click", function() {
   var btn = el("btn-check-update");
-  btn.textContent = "🔄 Buscando...";
+  btn.textContent = "Buscando...";
   btn.disabled = true;
   btn.style.opacity = "0.6";
 
@@ -503,28 +510,28 @@ el("btn-check-update").addEventListener("click", function() {
       btn.textContent = "✓ Nueva versión v" + res.latest + " disponible";
       btn.style.color = "#09a3ef";
       setTimeout(function() {
-        btn.textContent = "🔄 Buscar actualizaciones";
+        btn.textContent = "Buscar actualizaciones";
         btn.style.color = "";
       }, 4000);
     } else if (res.status === "up-to-date") {
       btn.textContent = "✓ Ya tienes la versión más reciente";
       btn.style.color = "#32d74b";
       setTimeout(function() {
-        btn.textContent = "🔄 Buscar actualizaciones";
+        btn.textContent = "Buscar actualizaciones";
         btn.style.color = "";
       }, 3000);
     } else {
-      btn.textContent = "⚠ Sin conexión — intenta más tarde";
+      btn.textContent = "Sin conexión — intenta más tarde";
       btn.style.color = "#ff9f0a";
       setTimeout(function() {
-        btn.textContent = "🔄 Buscar actualizaciones";
+        btn.textContent = "Buscar actualizaciones";
         btn.style.color = "";
       }, 3000);
     }
   }).catch(function() {
     btn.disabled = false;
     btn.style.opacity = "";
-    btn.textContent = "🔄 Buscar actualizaciones";
+    btn.textContent = "Buscar actualizaciones";
   });
 });
 
@@ -623,7 +630,7 @@ function showPauseInfo(s) {
 function lockNewSession(locked) {
   var btn = el("btn-new-session");
   btn.dataset.locked   = locked ? "true" : "false";
-  btn.textContent      = locked ? "⬇ Descarga la imagen primero" : "+ Nueva sesión";
+  btn.textContent      = locked ? "Descarga la imagen primero" : "+ Nueva sesión";
   btn.style.color      = locked ? "#ff9f0a" : "";
   btn.style.fontWeight = locked ? "700" : "";
 }
@@ -641,7 +648,7 @@ function renderReport(r) {
 
   // Actividades
   if (activities.length > 0) {
-    html += '<span class="rsec">📋 Actividades (' + activities.length + ')</span>';
+    html += '<span class="rsec">Actividades (' + activities.length + ')</span>';
     activities.forEach(function(a) {
       html += '<div style="background:rgba(50,215,75,.06);border-left:3px solid #32d74b;padding:5px 8px;margin:3px 0;border-radius:0 6px 6px 0;font-size:11px">';
       html += '<strong style="color:#32d74b">' + a.number + '. ' + a.name + '</strong><br>';
@@ -670,7 +677,7 @@ function renderReport(r) {
 
   // Tiempos muertos
   if (idlePeriods.length > 0) {
-    html += '<span class="rsec" style="color:#ff453a">😴 Tiempos muertos (' + idlePeriods.length + ')</span>';
+    html += '<span class="rsec" style="color:#ff453a">Tiempos muertos (' + idlePeriods.length + ')</span>';
     idlePeriods.forEach(function(ip) {
       html += '<div style="background:rgba(255,69,58,.07);border-left:3px solid #ff453a;padding:4px 8px;margin:2px 0;border-radius:0 4px 4px 0;font-size:11px">';
       html += ip.start + '→' + ip.end + ' · <strong style="color:#ff453a">' + ip.duration + '</strong><br>';
@@ -680,7 +687,7 @@ function renderReport(r) {
 
   // Aplicaciones abiertas con tiempo
   if (appsOpened.length > 0) {
-    html += '<span class="rsec">💻 Aplicaciones usadas (' + appsOpened.length + ')</span>';
+    html += '<span class="rsec">Aplicaciones usadas (' + appsOpened.length + ')</span>';
     appsOpened.forEach(function(a) {
       html += '<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0">';
       html += '<span style="color:#87b1ea">• ' + a.name + '</span>';
@@ -690,7 +697,7 @@ function renderReport(r) {
 
   // Páginas Chrome
   if (chromePages.length > 0) {
-    html += '<span class="rsec">🌐 Páginas visitadas en Chrome (' + chromePages.length + ')</span>';
+    html += '<span class="rsec">Páginas visitadas en Chrome (' + chromePages.length + ')</span>';
     chromePages.slice(0, 10).forEach(function(p) {
       html += '<div style="margin:3px 0;font-size:11px">';
       html += '<div style="display:flex;justify-content:space-between">';
@@ -707,7 +714,7 @@ function renderReport(r) {
     if (i > 0) html += '<hr style="border:none;border-top:1px solid rgba(135,177,234,.1);margin:3px 0">';
     html += '<strong>' + p.number + '. ' + p.title + '</strong><br>';
     html += '<span style="color:rgba(135,177,234,.5);font-size:10px;word-break:break-all">' + p.url + '</span><br>';
-    html += '<span style="font-size:11px">🕐 ' + p.openedAt + '→' + p.closedAt + ' · ⏱ ' + p.duration + ' · 🖱 ' + p.clicks + ' clics</span>';
+    html += '<span style="font-size:11px">' + p.openedAt + '→' + p.closedAt + ' · ⏱ ' + p.duration + ' · ' + p.clicks + ' clics</span>';
   });
 
   el("report-summary").innerHTML = html;

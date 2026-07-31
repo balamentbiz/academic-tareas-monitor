@@ -45,21 +45,80 @@ function safeSend(channel, data) {
   } catch (_) {}
 }
 
+// ── UI remota (Firebase Hosting) ─────────────────────────────────────────────
+// Las vistas se cargan desde Hosting para que las actualizaciones lleguen al
+// instante a todos los usuarios sin reinstalar. Si no hay internet o el sitio
+// falla, cae automáticamente a los archivos locales incluidos en la app.
+// Poner "" para desactivar y usar siempre archivos locales.
+const REMOTE_UI = "https://academic-tareas-monitor.web.app";
+let _uiRemota  = !!REMOTE_UI;
+let _vistaActual = "login.html";
+
+function loadView(file) {
+  _vistaActual = file;
+  if (_uiRemota) {
+    win.loadURL(`${REMOTE_UI}/${file}`);
+  } else {
+    win.loadFile(path.join(__dirname, "renderer", file));
+  }
+}
+
 // ── Ventana ────────────────────────────────────────────────────────────────────
 function createWindow() {
   win = new BrowserWindow({
-    width: 400, height: 750,
-    minWidth: 360, minHeight: 550,
+    width: 420, height: 720,
+    minWidth: 380, minHeight: 560,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
-    backgroundColor: "#0d1117",
+    backgroundColor: "#eef2fb",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
+
+  // Fallback: si la UI remota no carga (sin internet, hosting caído),
+  // usar los archivos locales por el resto de la sesión
+  const caerALocal = (motivo) => {
+    if (!_uiRemota) return;
+    console.log("[UI] Hosting no disponible (" + motivo + ") → usando archivos locales");
+    _uiRemota = false;
+    win.loadFile(path.join(__dirname, "renderer", _vistaActual));
+  };
+  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
+    if (url && url.startsWith(REMOTE_UI) && code !== -3 /* ERR_ABORTED */) caerALocal(desc);
+  });
+  // 404/500 del hosting (p. ej. antes del primer deploy) no disparan did-fail-load
+  win.webContents.on("did-navigate", (_e, url, httpResponseCode) => {
+    if (url && url.startsWith(REMOTE_UI) && httpResponseCode >= 400) caerALocal("HTTP " + httpResponseCode);
+  });
+
   // Siempre arranca en el login
-  win.loadFile(path.join(__dirname, "renderer", "login.html"));
+  loadView("login.html");
+}
+
+// Tamaño ideal de ventana por rol — se abre ya al tamaño correcto (sin estirar)
+const WINDOW_SIZES = {
+  director: { width: 1240, height: 860, minWidth: 900,  minHeight: 640 },
+  // ATC tiene 8 pestañas — abre más ancha que las demás para que quepan todas
+  atc:      { width: 1360, height: 880, minWidth: 1080, minHeight: 640 },
+  gerencia: { width: 470,  height: 860, minWidth: 390, minHeight: 600 },
+  asesor:   { width: 470,  height: 860, minWidth: 390, minHeight: 600 },
+  login:    { width: 420,  height: 720, minWidth: 380, minHeight: 560 },
+};
+
+function applyWindowSize(key) {
+  const s = WINDOW_SIZES[key] || WINDOW_SIZES.asesor;
+  if (!win || win.isDestroyed()) return;
+  try {
+    const { screen } = require("electron");
+    const wa = screen.getPrimaryDisplay().workAreaSize;
+    // No exceder el área visible del monitor
+    const w = Math.min(s.width, wa.width), h = Math.min(s.height, wa.height);
+    win.setMinimumSize(s.minWidth, s.minHeight);
+    win.setSize(w, h);
+    win.center();
+  } catch (_) {}
 }
 
 // Carga el dashboard según el rol
@@ -68,16 +127,19 @@ function loadDashboard(rol) {
   console.log("[AUTH] Rol recibido:", rol, "→ normalizado:", rolNorm);
   const map = {
     director: "director.html",
-    gerencia: "gerencia.html",
+    gerencia: "index.html",   // gerencia usa interfaz de asesor (con tracking completo)
     atc:      "atc.html",
     asesor:   "index.html",
   };
   const file = map[rolNorm] || "index.html";
   console.log("[AUTH] Cargando dashboard:", file);
-  win.loadFile(path.join(__dirname, "renderer", file));
+  applyWindowSize(rolNorm);
+  loadView(file);
+  // Reaplicar al terminar de cargar (por si algo movió la ventana en el interín)
+  win.webContents.once("did-finish-load", () => applyWindowSize(rolNorm));
 
-  // Solo el asesor necesita el tracking de tiempo
-  if (rol === "asesor") {
+  // Asesor, gerencia y ATC necesitan tracking (cuota, idle, actividades)
+  if (rol === "asesor" || rol === "gerencia" || rol === "atc") {
     startIdleCheck();
     startAppTracking();
     startActivityPolling();
@@ -398,39 +460,63 @@ ipcMain.handle("save-report-file", async (_, { content, filename, ext }) => {
 });
 
 // ── Seguimiento de aplicaciones + páginas Chrome ─────────────────────────────
-let overlayWin       = null;
+let overlayWins = []; // una ventana por monitor
 
 function showIdleOverlay() {
-  if (overlayWin) return; // ya está abierta
+  if (overlayWins.length > 0) return; // ya están abiertas
   const { screen } = require("electron");
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const displays = screen.getAllDisplays();
 
-  overlayWin = new BrowserWindow({
-    width, height,
-    x: 0, y: 0,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    movable: false,
-    focusable: true,
-    webPreferences: {
-      preload: path.join(__dirname, "preload-overlay.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
+  displays.forEach(display => {
+    const { x, y, width, height } = display.bounds;
+    const w = new BrowserWindow({
+      x, y, width, height,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false,
+      movable: false,
+      focusable: true,
+      show: false, // mostrar solo después de posicionar correctamente
+      webPreferences: {
+        preload: path.join(__dirname, "preload-overlay.js"),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+
+    // Nivel más alto disponible en macOS para cubrir espacios y pantallas completas
+    if (process.platform === "darwin") {
+      w.setAlwaysOnTop(true, "screen-saver");
+    } else {
+      w.setAlwaysOnTop(true);
+    }
+
+    w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+    w.loadFile(path.join(__dirname, "renderer", "overlay.html"));
+
+    w.once("ready-to-show", () => {
+      // Forzar posición exacta en el monitor correspondiente antes de mostrar
+      w.setBounds({ x, y, width, height });
+      w.show();
+      // Solo dar foco al overlay del monitor principal
+      if (display.id === screen.getPrimaryDisplay().id) w.focus();
+    });
+
+    w.on("closed", () => {
+      overlayWins = overlayWins.filter(ow => ow !== w);
+    });
+
+    overlayWins.push(w);
   });
-
-  overlayWin.loadFile(path.join(__dirname, "renderer", "overlay.html"));
-  overlayWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  overlayWin.focus();
-
-  overlayWin.on("closed", () => { overlayWin = null; });
 }
 
 function closeIdleOverlay() {
-  if (overlayWin) { overlayWin.close(); overlayWin = null; }
+  const wins = [...overlayWins];
+  overlayWins = [];
+  wins.forEach(w => { try { w.close(); } catch (_) {} });
 }
 
 // Cuando el asesor hace clic en "Reanudar trabajo" desde el overlay
@@ -668,13 +754,92 @@ ipcMain.handle("auth-logout", () => {
   // Detener tracking si estaba activo
   clearInterval(idleTimer);
   idleTimer = null;
-  win.loadFile(path.join(__dirname, "renderer", "login.html"));
+  applyWindowSize("login");
+  loadView("login.html");
   return { ok: true };
 });
 
 ipcMain.handle("get-logged-user", () => loggedUser);
 
+// ── Google Sheets sync ────────────────────────────────────────────────────────
+// Usa https nativo para manejar los redirects de Google Apps Script manualmente
+ipcMain.handle("sync-pedido", async (_, { url, payload }) => {
+  if (!url) return { ok: false, reason: "no_url" };
+  const https = require("https");
+  const body  = JSON.stringify(payload);
+
+  function doPost(targetUrl, redirectsLeft) {
+    return new Promise((resolve) => {
+      try {
+        const u = new URL(targetUrl);
+        const opts = {
+          hostname: u.hostname,
+          path: u.pathname + u.search,
+          method: "POST",
+          headers: {
+            "Content-Type":   "application/json",
+            "Content-Length": Buffer.byteLength(body),
+          },
+        };
+        const req = https.request(opts, (res) => {
+          // Google Apps Script redirige: seguir el redirect con POST
+          if ((res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307) && res.headers.location && redirectsLeft > 0) {
+            res.resume();
+            resolve(doPost(res.headers.location, redirectsLeft - 1));
+            return;
+          }
+          let data = "";
+          res.on("data", (c) => { data += c; });
+          res.on("end", () => {
+            try { resolve(JSON.parse(data)); }
+            catch { resolve({ ok: true }); }
+          });
+        });
+        req.on("error", (e) => {
+          console.error("[sheets-sync]", e.message);
+          resolve({ ok: false, error: e.message });
+        });
+        req.write(body);
+        req.end();
+      } catch(e) {
+        console.error("[sheets-sync]", e.message);
+        resolve({ ok: false, error: e.message });
+      }
+    });
+  }
+
+  return doPost(url, 5);
+});
+
 // ── Ciclo de vida ─────────────────────────────────────────────────────────────
-app.whenReady().then(createWindow);
+// ── Auto-actualización del cascarón (electron-updater) ───────────────────────
+// Windows: descarga e instala solo. Mac: igual de automático cuando la app
+// está firmada/notarizada (Apple Developer); si no está firmada, el updater
+// falla sin romper nada y queda el botón "Buscar actualizaciones" manual.
+function initAutoUpdater() {
+  if (process.platform !== "win32" && process.platform !== "darwin") return;
+  try {
+    const { autoUpdater } = require("electron-updater");
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true; // instala al cerrar la app
+    autoUpdater.on("update-downloaded", (info) => {
+      dialog.showMessageBox(win, {
+        type: "info",
+        title: "Actualización lista",
+        message: `Nueva versión ${info.version} descargada.`,
+        detail: "Se instalará al cerrar la aplicación, o puedes reiniciar ahora.",
+        buttons: ["Al cerrar", "Reiniciar ahora"],
+        defaultId: 0,
+      }).then(({ response }) => {
+        if (response === 1) autoUpdater.quitAndInstall();
+      });
+    });
+    autoUpdater.on("error", (e) => console.log("[updater]", e?.message || e));
+    autoUpdater.checkForUpdates().catch(() => {});
+    setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 4 * 60 * 60 * 1000); // cada 4 h
+  } catch (e) { console.log("[updater no disponible]", e.message); }
+}
+
+app.whenReady().then(() => { createWindow(); initAutoUpdater(); });
 app.on("activate", () => { if (BrowserWindow.getAllWindows().length===0) createWindow(); else win?.show(); });
 app.on("window-all-closed", () => { if (process.platform!=="darwin") app.quit(); });

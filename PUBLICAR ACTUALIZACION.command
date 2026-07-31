@@ -39,11 +39,21 @@ git add -A
 git commit -m "v$CURRENT" 2>/dev/null || echo "(sin cambios nuevos)"
 git push --force https://balamentbiz:${GH_TOKEN}@github.com/balamentbiz/academic-tareas-monitor.git main 2>&1 | tail -3
 
-# ── Construir Mac DMG ──
+# ── Construir Mac DMG + ZIP (el ZIP lo usa el auto-updater) ──
 echo ""
-echo "[1/4] Construyendo Mac DMG..."
+echo "[1/4] Construyendo Mac DMG + ZIP..."
 echo "(~2-3 minutos)"
-npx electron-builder --mac dmg 2>&1
+
+# Firma + notarización automáticas si hay credenciales de Apple en .env
+MAC_FLAGS=""
+if [ -n "$APPLE_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+  echo "✓ Credenciales de Apple detectadas — se firmará y notarizará"
+  MAC_FLAGS="--config.mac.notarize.teamId=$APPLE_TEAM_ID"
+else
+  echo "(sin credenciales de Apple en .env — build sin firmar; Mac usará aviso manual)"
+fi
+
+npx electron-builder --mac $MAC_FLAGS 2>&1
 
 DMG=$(ls dist/*-arm64.dmg 2>/dev/null | grep "$CURRENT" | head -1)
 if [ -z "$DMG" ]; then DMG=$(ls dist/*.dmg 2>/dev/null | head -1); fi
@@ -144,6 +154,20 @@ curl -X POST \
   --progress-bar \
   --data-binary @"$EXE" \
   "https://uploads.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID/assets?name=$EXE_NAME"
+echo ""
+
+# ── Archivos del AUTO-UPDATER (sin estos, la app no se actualiza sola) ──
+echo "Subiendo metadatos del auto-updater..."
+for F in dist/latest.yml dist/latest-mac.yml dist/*.zip dist/*.blockmap; do
+  [ -f "$F" ] || continue
+  FN=$(basename "$F" | sed 's/ /-/g')
+  echo "  → $FN"
+  curl -s -X POST \
+    -H "Authorization: token $GH_TOKEN" \
+    -H "Content-Type: application/octet-stream" \
+    --data-binary @"$F" \
+    "https://uploads.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID/assets?name=$FN" > /dev/null
+done
 echo ""
 
 # Marcar como latest

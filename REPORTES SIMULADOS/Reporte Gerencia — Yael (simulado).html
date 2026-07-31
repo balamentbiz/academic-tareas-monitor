@@ -238,7 +238,7 @@ function renderReport(r) {
 
   // ── Header ────────────────────────────────────────────────────────────────
   html += '<div class="header">';
-  html += '<div class="header-logo"><img src="assets/logo.png" alt="Academic Tareas"/></div>';
+  html += '<div class="header-logo"><img src="logo.png" alt="Academic Tareas"/></div>';
   html += '<div class="header-info">';
   html += '<div class="header-title">ACADEMIC <small>TAREAS</small></div>';
   html += '<div class="header-sub">Reporte de Productividad</div>';
@@ -417,7 +417,7 @@ function renderReport(r) {
   // Footer
   html += '<div class="footer">';
   html += '<div class="footer-left">';
-  html += '<div class="footer-logo"><img src="assets/logo.png" alt=""/></div>';
+  html += '<div class="footer-logo"><img src="logo.png" alt=""/></div>';
   html += '<div class="footer-brand">ACADEMIC <small>TAREAS</small></div>';
   html += '</div>';
   html += '<div class="footer-gen">Generado el ' + safe(r.meta.date) + ' · ' + new Date(r.meta.generatedAt).toLocaleTimeString("es-MX") + '</div>';
@@ -457,6 +457,9 @@ function intChip(icon, val, label) {
     + '<div class="int-lbl">' + label + '</div></div>'
     + '</div>';
 }
+
+// ── DATOS SIMULADOS (demo del diseño) ──
+renderReport({"meta": {"collaborator": "Yael Ramírez — Gerencia", "date": "2026-07-23", "generatedAt": "2026-07-23T18:36:12.000Z"}, "summary": {"startTime": "09:12:30", "endTime": "18:47:22", "totalDuration": "9h 34m", "activeTime": "7h 05m", "idleTime": "31m", "pausedTime": "49m", "productivityPct": 82, "clicks": 2980, "keyPresses": 9840, "totalIdlePeriods": 2, "totalActivities": 4}, "activities": [{"number": 1, "name": "Monitoreo de asesores y cuotas (panel)", "startTime": "09:20", "endTime": "10:45", "duration": "1h 25m"}, {"number": 2, "name": "Cliente 1088 — Mercadotecnia, presentación", "startTime": "10:50", "endTime": "13:05", "duration": "2h 15m"}, {"number": 3, "name": "Reasignación de pedidos + apoyo en cola", "startTime": "14:00", "endTime": "15:10", "duration": "1h 10m"}, {"number": 4, "name": "Cliente 1121 — Finanzas Corporativas, caso práctico", "startTime": "15:12", "endTime": "18:10", "duration": "2h 58m"}], "actividadesExtras": [{"titulo": "Preparar resumen semanal para Dirección", "prioridad": "A", "estado": "terminada", "asignada_por": "Dirección", "iniciado": "13:06", "terminado": "13:52", "trabajo_ms": 2760000, "respuesta_ms": 1500000, "pausas": 1}, {"titulo": "Entrevista a candidato asesor (viernes)", "prioridad": "B", "estado": "pendiente", "asignada_por": "Dirección", "iniciado": "—", "terminado": "—", "trabajo_ms": 0, "respuesta_ms": 0, "pausas": 0}], "pauses": [{"reason": "Comida", "start": "13:52", "end": "14:00"}, {"reason": "Reunión", "start": "11:30", "end": "12:11"}], "idlePeriods": [{"duration": "16m", "start": "10:02", "end": "10:18", "reason": "Llamada con proveedor"}, {"duration": "15m", "start": "16:40", "end": "16:55", "reason": "Descanso"}], "appsOpened": [{"name": "Google Chrome", "duration": "5h 55m"}, {"name": "PowerPoint", "duration": "1h 12m"}, {"name": "WhatsApp", "duration": "48m"}, {"name": "Excel", "duration": "35m"}], "chromePages": [{"title": "Panel de Monitoreo — Academic Tareas", "url": "academic-tareas-monitor.web.app", "duration": "2h 10m", "totalMs": 7800000}, {"title": "Blackboard — Mercadotecnia", "url": "uvmonline.blackboard.com/ultra/courses/merca-1088", "duration": "1h 45m", "totalMs": 6300000}, {"title": "AGENDA PEDIDOS — Google Sheets", "url": "docs.google.com/spreadsheets/d/1zPDy...", "duration": "55m", "totalMs": 3300000}, {"title": "Canvas — Finanzas Corporativas", "url": "canvas.instructure.com/courses/fin-1121", "duration": "1h 38m", "totalMs": 5880000}], "comments": "Todos los asesores llegaron a cuota excepto uno (86%). Se reasignaron 2 pedidos de la cola. Pendiente: confirmar entrevista del viernes."});
 </script>
 </body>
 </html>
