@@ -3,6 +3,7 @@
   "productName": "Academic Tareas Monitor",
   "version": "2.0.0",
   "description": "Monitor de Productividad - Academic Tareas",
+  "author": "Academic Solutions <academicsolutionsmx@gmail.com>",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

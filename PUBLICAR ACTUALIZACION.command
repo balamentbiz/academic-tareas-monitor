@@ -44,6 +44,9 @@ echo ""
 echo "[1/4] Construyendo Mac DMG + ZIP..."
 echo "(~2-3 minutos)"
 
+# Limpiar artefactos viejos para no subir versiones anteriores por error
+rm -f dist/*.dmg dist/*.zip dist/*.blockmap dist/latest*.yml 2>/dev/null
+
 # Firma + notarización automáticas si hay credenciales de Apple en .env
 MAC_FLAGS=""
 if [ -n "$APPLE_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
