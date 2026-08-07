@@ -18,18 +18,16 @@ echo "  Academic Tareas — Publicar interfaz (Hosting)"
 echo "════════════════════════════════════════════════"
 echo ""
 
-# Instalar firebase-tools si no existe
-if ! command -v firebase >/dev/null 2>&1; then
-  echo "→ Instalando firebase-tools (solo la primera vez)..."
-  npm install -g firebase-tools || { echo "ERROR instalando firebase-tools"; read -p "Enter para salir..."; exit 1; }
-fi
+# Usar npx: no requiere instalación global ni permisos de administrador.
+# La primera vez descarga firebase-tools a la caché del usuario (~1-2 min).
+FB="npx -y firebase-tools"
 
-# Login si hace falta
-firebase projects:list >/dev/null 2>&1 || firebase login
+# Login si hace falta (abre el navegador la primera vez)
+$FB projects:list >/dev/null 2>&1 || $FB login
 
 echo ""
-echo "→ Publicando renderer/ en https://academic-tareas-monitor.web.app ..."
-firebase deploy --only hosting || { echo "ERROR al publicar"; read -p "Enter para salir..."; exit 1; }
+echo "→ Publicando interfaz + reglas de seguridad de Firestore ..."
+$FB deploy --only hosting,firestore:rules || { echo "ERROR al publicar"; read -p "Enter para salir..."; exit 1; }
 
 echo ""
 echo "✓ Interfaz publicada. Los usuarios la verán al reabrir la app."

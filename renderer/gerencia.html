@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://*.cloudfunctions.net; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"/>
   <title>Gerencia — Academic Tareas</title>
   <style>
     :root {
@@ -280,6 +280,20 @@
 
     const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db    = getFirestore(fbApp);
+
+    // ── Escape HTML — antídoto contra XSS almacenado ────────────────────
+    // Cualquier dato que venga de Firestore lo pudo escribir otro usuario.
+    // Si se concatena crudo en innerHTML, un asesor puede guardar
+    // <img src=x onerror="..."> en un pedido y ese código se ejecuta en la
+    // sesión del director cuando abre su panel (escalada de privilegios).
+    // Regla del proyecto: TODO valor dinámico pasa por esc() antes de
+    // interpolarse en HTML.
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     const auth  = getAuth(fbApp);
 
     // Esperar a que Firebase restaure la sesión iniciada en el login
@@ -391,10 +405,10 @@
           asesorEl.innerHTML += `
             <div class="asesor-card">
               <div class="asesor-header">
-                <div class="asesor-avatar">${avatarLetters(u.nombre)}</div>
+                <div class="asesor-avatar">${esc(avatarLetters(u.nombre))}</div>
                 <div class="asesor-info">
-                  <div class="asesor-name">${u.nombre}${rolBadge}</div>
-                  <div class="asesor-status ${statusClass(estado)}">${statusLabel(estado)}</div>
+                  <div class="asesor-name">${esc(u.nombre)}${rolBadge}</div>
+                  <div class="asesor-status ${esc(statusClass(estado))}">${esc(statusLabel(estado))}</div>
                 </div>
               </div>
               <div class="cuota-bar-wrap">
@@ -428,10 +442,10 @@
             const dc = difClass(t.dificultad);
             colaEl.innerHTML += `
               <div class="cola-item">
-                <span class="cola-badge ${dc}">${t.dificultad||"?"}</span>
+                <span class="cola-badge ${dc}">${esc(t.dificultad||"?")}</span>
                 <div class="cola-info">
-                  <div class="cola-cliente">${t.cliente||"—"}</div>
-                  <div class="cola-desc">${(t.materia||t.descripcion||"").slice(0,50)}</div>
+                  <div class="cola-cliente">${esc(t.cliente||"—")}</div>
+                  <div class="cola-desc">${esc((t.materia||t.descripcion||"").slice(0,50))}</div>
                 </div>
               </div>`;
           });
@@ -488,11 +502,11 @@
       card.dataset.id = tarea.id;
       card.innerHTML = `
         <div class="tarea-header">
-          <span class="dif-badge ${dc}">${tarea.dificultad||"?"}</span>
-          <span class="tarea-cliente">${tarea.cliente||"Sin cliente"}</span>
+          <span class="dif-badge ${dc}">${esc(tarea.dificultad||"?")}</span>
+          <span class="tarea-cliente">${esc(tarea.cliente||"Sin cliente")}</span>
         </div>
-        <div class="tarea-meta">${tarea.materia||tarea.descripcion||""} · ${tarea.escuela||""}</div>
-        <button class="btn-iniciar-act" data-id="${tarea.id}" data-nombre="${(tarea.cliente||'tarea').replace(/"/g,'')}">▶ Iniciar actividad</button>`;
+        <div class="tarea-meta">${esc(tarea.materia||tarea.descripcion||"")} · ${esc(tarea.escuela||"")}</div>
+        <button class="btn-iniciar-act" data-id="${tarea.id}" data-nombre="${esc((tarea.cliente||'tarea').replace(/"/g,''))}">▶ Iniciar actividad</button>`;
 
       // Quitar placeholder
       const placeholder = actListEl.querySelector(".sin-tareas");
@@ -588,15 +602,15 @@
           card.className = "tarea-card tipo-" + dc;
           card.innerHTML = `
             <div class="tarea-header">
-              <span class="dif-badge ${dc}">${t.dificultad||"?"}</span>
-              <span class="tarea-cliente">${t.cliente||"Sin cliente"}</span>
+              <span class="dif-badge ${dc}">${esc(t.dificultad||"?")}</span>
+              <span class="tarea-cliente">${esc(t.cliente||"Sin cliente")}</span>
             </div>
             <div class="tarea-meta">
-              ${t.materia ? `📚 ${t.materia}` : ""}
-              ${t.escuela ? ` · 🏫 ${t.escuela}` : ""}
-              ${t.dia_entrega ? ` · 📅 ${t.dia_entrega}` : ""}
+              ${t.materia ? `📚 ${esc(t.materia)}` : ""}
+              ${t.escuela ? ` · 🏫 ${esc(t.escuela)}` : ""}
+              ${t.dia_entrega ? ` · 📅 ${esc(t.dia_entrega)}` : ""}
             </div>
-            ${t.entregable ? `<div class="tarea-meta">📎 ${t.entregable}</div>` : ""}
+            ${t.entregable ? `<div class="tarea-meta">📎 ${esc(t.entregable)}</div>` : ""}
             <div class="tarea-actions">
               <button class="btn-aceptar"  data-id="${t.id}">✓ Aceptar</button>
               <button class="btn-rechazar" data-id="${t.id}">✕ Rechazar</button>

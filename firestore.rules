@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────────────────────────
+    //  AUTORIZACIÓN, NO SOLO AUTENTICACIÓN
+    //
+    //  "Estar autenticado" NO alcanza: el registro de Firebase es un
+    //  endpoint público, así que cualquiera puede obtener un token válido.
+    //  Lo que convierte a alguien en parte del equipo es tener un documento
+    //  en usuarios/{uid} creado por la dirección. Todas las reglas parten de
+    //  esMiembro(), de modo que un auto-registro externo no puede leer ni
+    //  escribir absolutamente nada.
+    // ─────────────────────────────────────────────────────────────────────
+
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    function esMiembro() {
+      return autenticado() &&
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function rol() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol;
+    }
+
+    function esDirector() {
+      return esMiembro() && rol() == 'director';
+    }
+
+    // Roles que coordinan el trabajo de otros (pueden tocar datos ajenos)
+    function esSupervisor() {
+      return esMiembro() && rol() in ['director', 'gerencia', 'atc'];
+    }
+
+    // ── Usuarios y ROLES ────────────────────────────────────────────────
+    // Cada quien puede leer su propio documento (lo necesita el login para
+    // saber su rol). Listar el directorio del equipo requiere ser miembro.
+    // Escribir —incluido el campo rol— solo la dirección: cierra la
+    // escalada de privilegios por auto-promoción.
+    match /usuarios/{uid} {
+      allow get:   if autenticado() && (request.auth.uid == uid || esMiembro());
+      allow list:  if esMiembro();
+      allow write: if esDirector();
+    }
+
+    // ── Configuración global (webhook de Sheets, cuotas máximas) ────────
+    // La URL del webhook permite escribir en la agenda: no la ve el equipo
+    // operativo completo, solo quienes la usan.
+    match /configuracion/{doc} {
+      allow read:  if esSupervisor();
+      allow write: if esDirector();
+    }
+
+    // ── Pedidos / unidades de trabajo ───────────────────────────────────
+    // Colaborativo por diseño (ATC crea, asesores ejecutan, gerencia
+    // reasigna), pero borrar es destructivo e irreversible: solo mandos.
+    // El tope de campos evita inflar documentos para encarecer la cuenta.
+    match /tareas/{doc} {
+      allow read:          if esMiembro();
+      allow create, update: if esMiembro() && request.resource.data.keys().size() < 60;
+      allow delete:        if esSupervisor();
+    }
+
+    // ── Actividades asignadas ───────────────────────────────────────────
+    // Solo los mandos asignan trabajo. El asignado puede actualizarla
+    // (iniciar, pausar, terminar, marcar vista) pero no crearla ni borrarla.
+    match /actividades_asignadas/{doc} {
+      allow read:   if esMiembro();
+      allow create: if esSupervisor();
+      allow update: if esSupervisor() ||
+                       (esMiembro() && resource.data.asignado_a_id == request.auth.uid);
+      allow delete: if esSupervisor();
+    }
+
+    // ── Cuota diaria ────────────────────────────────────────────────────
+    // Es la métrica de productividad: si cualquiera pudiera escribirla,
+    // un empleado se pondría la cuota en cero desde la consola. Cada quien
+    // solo escribe la suya; ATC/gerencia/dirección la ajustan al asignar.
+    match /cuota_diaria/{doc} {
+      allow read:  if esMiembro();
+      allow write: if esSupervisor() ||
+                      (esMiembro() && request.resource.data.asesor_id == request.auth.uid);
+    }
+
+    // ── Checklist diario ────────────────────────────────────────────────
+    // Mismo criterio: cada quien registra el suyo.
+    match /checklist_atc/{doc} {
+      allow read:  if esMiembro();
+      allow write: if esSupervisor() ||
+                      (esMiembro() && request.resource.data.uid == request.auth.uid);
+    }
+
+    // ── Rechazos (histórico; la app ya no escribe aquí) ─────────────────
+    match /rechazos/{doc} {
+      allow read:  if esSupervisor();
+      allow write: if false;
+    }
+
+    // Cualquier colección no listada queda DENEGADA por defecto.
+  }
+}

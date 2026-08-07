@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://*.cloudfunctions.net; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"/>
   <title>Academic Tareas Monitor</title>
   <link rel="stylesheet" href="app.css"/>
   <style>
@@ -373,6 +373,20 @@
 
     const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db    = getFirestore(fbApp);
+
+    // ── Escape HTML — antídoto contra XSS almacenado ────────────────────
+    // Cualquier dato que venga de Firestore lo pudo escribir otro usuario.
+    // Si se concatena crudo en innerHTML, un asesor puede guardar
+    // <img src=x onerror="..."> en un pedido y ese código se ejecuta en la
+    // sesión del director cuando abre su panel (escalada de privilegios).
+    // Regla del proyecto: TODO valor dinámico pasa por esc() antes de
+    // interpolarse en HTML.
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     const auth  = getAuth(fbApp);
 
     // Esperar a que Firebase restaure la sesión iniciada en el login
@@ -419,16 +433,16 @@
         card.style.cssText = "background:rgba(255,255,255,.55);border:1px solid rgba(16,33,92,.10);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:4px";
         card.innerHTML = `
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span style="font-size:9px;color:rgba(16,33,92,.45);font-family:monospace">#${t.numero_pedido || "—"}</span>
-            <span style="font-weight:800;font-size:12px;color:#10215c;flex:1">${t.cliente || "—"}</span>
-            <span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(9,163,239,.12);color:#067ab8">${estadoLabelGer[t.estado] || t.estado || "—"}</span>
+            <span style="font-size:9px;color:rgba(16,33,92,.45);font-family:monospace">#${esc(t.numero_pedido || "—")}</span>
+            <span style="font-weight:800;font-size:12px;color:#10215c;flex:1">${esc(t.cliente || "—")}</span>
+            <span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(9,163,239,.12);color:#067ab8">${esc(estadoLabelGer[t.estado] || t.estado || "—")}</span>
             <span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:999px;${pagado ? "background:rgba(29,158,75,.14);color:#1d9e4b" : parcial ? "background:rgba(207,117,0,.13);color:#cf7500" : "background:rgba(224,54,44,.10);color:#e0362c"}">${pagado ? "✓ Pagado" : parcial ? "Parcial" : "Sin pago"}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(16,33,92,.55);display:flex;flex-wrap:wrap;gap:3px 12px">
-            ${t.materia ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${t.materia}</span>` : ""}
-            ${t.dia_entrega ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${t.dia_entrega}${t.hora_entrega ? " · " + t.hora_entrega : ""}</span>` : ""}
-            ${t.asesor_asignado_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${t.asesor_asignado_nombre}</span>` : ""}
-            ${t.atc_nombre ? `<span>ATC: ${t.atc_nombre}</span>` : ""}
+            ${t.materia ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${esc(t.materia)}</span>` : ""}
+            ${t.dia_entrega ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${esc(t.dia_entrega)}${esc(t.hora_entrega ? " · " + t.hora_entrega : "")}</span>` : ""}
+            ${t.asesor_asignado_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${esc(t.asesor_asignado_nombre)}</span>` : ""}
+            ${t.atc_nombre ? `<span>ATC: ${esc(t.atc_nombre)}</span>` : ""}
           </div>`;
         listEl.appendChild(card);
       });
@@ -581,13 +595,13 @@
       card.innerHTML = `
         <div class="acta-header">
           <span class="acta-estado" style="background:${pBg[p]};color:${pColor[p]}">${p}</span>
-          <span class="acta-titulo">${a.titulo || "—"}</span>
-          <span class="acta-estado ${a.estado}">${estadoTxt[a.estado] || a.estado}</span>
+          <span class="acta-titulo">${esc(a.titulo || "—")}</span>
+          <span class="acta-estado ${esc(a.estado)}">${esc(estadoTxt[a.estado] || a.estado)}</span>
         </div>
-        ${a.descripcion ? `<div class="acta-desc">${a.descripcion}</div>` : ""}
+        ${a.descripcion ? `<div class="acta-desc">${esc(a.descripcion)}</div>` : ""}
         <div class="acta-meta">
-          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> <b>${a.fecha_limite}${a.hora_limite ? " · " + a.hora_limite : ""}</b></span>` : ""}
-          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> <b>${a.creado_por_nombre}</b></span>` : ""}
+          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> <b>${esc(a.fecha_limite)}${esc(a.hora_limite ? " · " + a.hora_limite : "")}</b></span>` : ""}
+          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> <b>${esc(a.creado_por_nombre)}</b></span>` : ""}
         </div>
         <div class="acta-crono">
           <span>⏱ Trabajo: <b id="acta-t-${a.id}">${fmtActa(actaTrabajoMs(a))}</b></span>
@@ -658,7 +672,7 @@
         _actaNotified.add(a.id);
         try {
           new Notification("Nueva actividad asignada", {
-            body: `${a.titulo || "Actividad"}${a.creado_por_nombre ? " — de " + a.creado_por_nombre : ""}. Revísala en tu panel de Actividades.`,
+            body: `${esc(a.titulo || "Actividad")}${esc(a.creado_por_nombre ? " — de " + a.creado_por_nombre : "")}. Revísala en tu panel de Actividades.`,
           });
         } catch (_) {}
         updateDoc(doc(db, "actividades_asignadas", a.id), { visto: true, notificado_en: new Date().toISOString() }).catch(() => {});
@@ -757,19 +771,19 @@
       card.innerHTML = `
         <div class="tarea-header">
           <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${difBgMapAct[difAct]||difBgMapAct.B};color:${difColorMapAct[difAct]||difColorMapAct.B}">${difAct}</span>
-          <span class="tarea-cliente">${tarea.cliente||'Sin cliente'}</span>
+          <span class="tarea-cliente">${esc(tarea.cliente||'Sin cliente')}</span>
         </div>
         <div class="tarea-data">
-          ${tarea.plataforma  ? `<span>Plataforma: <b>${tarea.plataforma}</b></span>`          : ""}
-          ${tarea.escuela     ? `<span>Escuela: <b>${tarea.escuela}</b></span>`                : ""}
-          ${tarea.id_alumno   ? `<span>ID: <b>${tarea.id_alumno}</b></span>`                   : ""}
-          ${tarea.contrasena  ? `<span>Contraseña: <b>${tarea.contrasena}</b></span>`          : ""}
-          ${tarea.materia     ? `<span style="grid-column:1/-1">Materia: <b>${tarea.materia}</b></span>`       : ""}
-          ${tarea.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${tarea.entregable}</b></span>` : ""}
-          ${tarea.dia_entrega ? `<span>Entrega: <b>${tarea.dia_entrega}</b></span>`             : ""}
-          ${tarea.subir       ? `<span>Subir: <b>${tarea.subir}</b></span>`                    : ""}
+          ${tarea.plataforma  ? `<span>Plataforma: <b>${esc(tarea.plataforma)}</b></span>`          : ""}
+          ${tarea.escuela     ? `<span>Escuela: <b>${esc(tarea.escuela)}</b></span>`                : ""}
+          ${tarea.id_alumno   ? `<span>ID: <b>${esc(tarea.id_alumno)}</b></span>`                   : ""}
+          ${tarea.contrasena  ? `<span>Contraseña: <b>${esc(tarea.contrasena)}</b></span>`          : ""}
+          ${tarea.materia     ? `<span style="grid-column:1/-1">Materia: <b>${esc(tarea.materia)}</b></span>`       : ""}
+          ${tarea.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${esc(tarea.entregable)}</b></span>` : ""}
+          ${tarea.dia_entrega ? `<span>Entrega: <b>${esc(tarea.dia_entrega)}</b></span>`             : ""}
+          ${tarea.subir       ? `<span>Subir: <b>${esc(tarea.subir)}</b></span>`                    : ""}
         </div>
-        ${tarea.anotaciones ? `<div class="tarea-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${tarea.anotaciones}</div>` : ""}
+        ${tarea.anotaciones ? `<div class="tarea-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${esc(tarea.anotaciones)}</div>` : ""}
 
         <!-- Cronómetro (oculto hasta iniciar) -->
         <div class="act-crono" id="crono-${tarea.id}">
@@ -982,19 +996,19 @@
           card.innerHTML = `
             <div class="tarea-header">
               <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${difBgMap[dif]||difBgMap.B};color:${difColorMap[dif]||difColorMap.B}">${dif}</span>
-              <span class="tarea-cliente">${t.cliente||'Sin cliente'}</span>
+              <span class="tarea-cliente">${esc(t.cliente||'Sin cliente')}</span>
             </div>
             <div class="tarea-data">
-              ${t.plataforma  ? `<span>Plataforma: <b>${t.plataforma}</b></span>`          : ""}
-              ${t.escuela     ? `<span>Escuela: <b>${t.escuela}</b></span>`                : ""}
-              ${t.id_alumno   ? `<span>ID: <b>${t.id_alumno}</b></span>`                   : ""}
-              ${t.contrasena  ? `<span>Contraseña: <b>${t.contrasena}</b></span>`          : ""}
-              ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${t.materia}</b></span>`       : ""}
-              ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${t.entregable}</b></span>` : ""}
-              ${t.dia_entrega ? `<span>Entrega: <b>${t.dia_entrega}</b></span>`             : ""}
-              ${t.subir       ? `<span>Subir: <b>${t.subir}</b></span>`                    : ""}
+              ${t.plataforma  ? `<span>Plataforma: <b>${esc(t.plataforma)}</b></span>`          : ""}
+              ${t.escuela     ? `<span>Escuela: <b>${esc(t.escuela)}</b></span>`                : ""}
+              ${t.id_alumno   ? `<span>ID: <b>${esc(t.id_alumno)}</b></span>`                   : ""}
+              ${t.contrasena  ? `<span>Contraseña: <b>${esc(t.contrasena)}</b></span>`          : ""}
+              ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${esc(t.materia)}</b></span>`       : ""}
+              ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${esc(t.entregable)}</b></span>` : ""}
+              ${t.dia_entrega ? `<span>Entrega: <b>${esc(t.dia_entrega)}</b></span>`             : ""}
+              ${t.subir       ? `<span>Subir: <b>${esc(t.subir)}</b></span>`                    : ""}
             </div>
-            ${t.anotaciones ? `<div class="tarea-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${t.anotaciones}</div>` : ""}
+            ${t.anotaciones ? `<div class="tarea-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${esc(t.anotaciones)}</div>` : ""}
             <div class="tarea-actions" style="margin-top:8px">
               <button class="btn-aceptar" data-id="${t.id}">✓ Aceptar</button>
               <button class="btn-rechazar" data-id="${t.id}">✕ Rechazar</button>
@@ -1320,6 +1334,20 @@
     // comparte la sesión y Firestore rechaza sus consultas)
     const fbMon = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const dbMon = getFirestore(fbMon);
+
+    // ── Escape HTML — antídoto contra XSS almacenado ────────────────────
+    // Cualquier dato que venga de Firestore lo pudo escribir otro usuario.
+    // Si se concatena crudo en innerHTML, un asesor puede guardar
+    // <img src=x onerror="..."> en un pedido y ese código se ejecuta en la
+    // sesión del director cuando abre su panel (escalada de privilegios).
+    // Regla del proyecto: TODO valor dinámico pasa por esc() antes de
+    // interpolarse en HTML.
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     const authMon = getAuth(fbMon);
     // Esperar a que la sesión esté restaurada antes de consultar
     await new Promise(resolve => {
@@ -1473,14 +1501,14 @@
         const dc  = difCls(t.dificultad);
         return `<div class="pedido-card ${cls}">
           <div class="pedido-top">
-            <span class="dif-m ${dc}">${t.dificultad||"?"}</span>
-            <span class="pedido-cliente">${t.cliente||"—"}</span>
+            <span class="dif-m ${dc}">${esc(t.dificultad||"?")}</span>
+            <span class="pedido-cliente">${esc(t.cliente||"—")}</span>
             <span style="font-size:10px;font-weight:700;color:${cls==='urgente'?'#ff453a':'#ff9f0a'}">${cls==='urgente'?'<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> VENCIDO':'<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2.5H4.5z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg> HOY'}</span>
           </div>
-          <div class="pedido-meta"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${t.materia||t.descripcion||"—"} · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${t.asesor_nombre||"Sin asignar"} · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${t.dia_entrega||"—"}</div>
+          <div class="pedido-meta"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${esc(t.materia||t.descripcion||"—")} · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${esc(t.asesor_nombre||"Sin asignar")} · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${esc(t.dia_entrega||"—")}</div>
           <div class="pedido-bottom">
             ${pagoBadge(t.precio, t.cantidad_pagada, t.estatus_pago)}
-            <span class="estado-badge">${t.estado||"—"}</span>
+            <span class="estado-badge">${esc(t.estado||"—")}</span>
           </div>
         </div>`;
       }).join("");
@@ -1510,10 +1538,10 @@
 
         return `<div class="mon-asesor">
           <div class="mon-asesor-top">
-            <div class="mon-avatar">${avatarL(u.nombre)}</div>
+            <div class="mon-avatar">${esc(avatarL(u.nombre))}</div>
             <div style="flex:1">
-              <div class="mon-asesor-name">${u.nombre} ${rolBadge}</div>
-              <div class="mon-estado ${estado}">${estadoLabel}</div>
+              <div class="mon-asesor-name">${esc(u.nombre)} ${rolBadge}</div>
+              <div class="mon-estado ${esc(estado)}">${estadoLabel}</div>
             </div>
             <div style="text-align:right">
               <div style="font-size:11px;font-weight:700;color:#09a3ef">${pct}%</div>
@@ -1564,23 +1592,23 @@
         const dc  = difCls(t.dificultad);
         return `<div class="pedido-card ${cls}">
           <div class="pedido-top">
-            ${t.numero_pedido ? `<span class="pedido-num">#${t.numero_pedido}</span>` : ""}
-            <span class="dif-m ${dc}">${t.dificultad||"?"}</span>
-            <span class="pedido-cliente">${t.cliente||"—"}</span>
+            ${t.numero_pedido ? `<span class="pedido-num">#${esc(t.numero_pedido)}</span>` : ""}
+            <span class="dif-m ${dc}">${esc(t.dificultad||"?")}</span>
+            <span class="pedido-cliente">${esc(t.cliente||"—")}</span>
           </div>
           <div class="pedido-meta">
-            ${t.plataforma ? `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="12" rx="2"/><path d="M9 20.5h6M12 16.5v4"/></svg> ${t.plataforma}` : ""}
-            ${t.escuela ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 5l9 4.5-9 4.5z"/><path d="M6.5 11.5v4c3 2.5 8 2.5 11 0v-4"/></svg> ${t.escuela}` : ""}
-            ${t.materia ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${t.materia}` : ""}
+            ${t.plataforma ? `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="12" rx="2"/><path d="M9 20.5h6M12 16.5v4"/></svg> ${esc(t.plataforma)}` : ""}
+            ${t.escuela ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 5l9 4.5-9 4.5z"/><path d="M6.5 11.5v4c3 2.5 8 2.5 11 0v-4"/></svg> ${esc(t.escuela)}` : ""}
+            ${t.materia ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> ${esc(t.materia)}` : ""}
           </div>
           <div class="pedido-meta">
-            <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${t.asesor_nombre||"Sin asignar"}
-            ${t.dia_entrega ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${t.dia_entrega}` : ""}
+            <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> ${esc(t.asesor_nombre||"Sin asignar")}
+            ${t.dia_entrega ? ` · <svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${esc(t.dia_entrega)}` : ""}
             ${cls==="urgente" ? ' · <span style="color:#ff453a;font-weight:700"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> VENCIDO</span>' : cls==="hoy" ? ' · <span style="color:#ff9f0a;font-weight:700"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2.5H4.5z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg> HOY</span>' : ""}
           </div>
           <div class="pedido-bottom">
             ${pagoBadge(t.precio, t.cantidad_pagada, t.estatus_pago)}
-            <span class="estado-badge">${t.estado||"—"}</span>
+            <span class="estado-badge">${esc(t.estado||"—")}</span>
           </div>
         </div>`;
       }).join("");
@@ -1621,8 +1649,8 @@
         const pedidosHtml = misHoy.slice(0,5).map(t => {
           const dc = difCls(t.dificultad);
           return `<div class="atc-pedido-row">
-            <span class="dif-m ${dc}">${t.dificultad||"?"}</span>
-            <span style="flex:1">${t.cliente||"—"} · ${t.materia||t.descripcion||"—"}</span>
+            <span class="dif-m ${dc}">${esc(t.dificultad||"?")}</span>
+            <span style="flex:1">${esc(t.cliente||"—")} · ${esc(t.materia||t.descripcion||"—")}</span>
             <span style="color:rgba(16,33,92,.45)">${hhmm(t.creado_en)}</span>
           </div>`;
         }).join("");
@@ -1633,8 +1661,8 @@
 
         return `<div class="atc-card">
           <div class="atc-header">
-            <div class="mon-avatar" style="background:#5e6ad2">${avatarL(u.nombre)}</div>
-            <div class="atc-name">${u.nombre}</div>
+            <div class="mon-avatar" style="background:#5e6ad2">${esc(avatarL(u.nombre))}</div>
+            <div class="atc-name">${esc(u.nombre)}</div>
             <div>
               <div class="atc-count">${misHoy.length}</div>
               <div style="font-size:8px;color:rgba(16,33,92,.45);text-align:right">pedidos hoy</div>
@@ -1669,14 +1697,14 @@
           tiempoStr = mins < 60 ? `${mins} min` : `${Math.round(mins/60)} h`;
         }
         return `<div class="cola-card">
-          <span class="dif-m ${dc}">${t.dificultad||"?"}</span>
+          <span class="dif-m ${dc}">${esc(t.dificultad||"?")}</span>
           <div class="cola-info">
-            <div class="cola-cliente-m">${t.cliente||"—"}</div>
-            <div class="cola-desc-m">${t.materia||t.descripcion||"—"} ${t.escuela ? "· "+t.escuela : ""}</div>
-            ${t.razon_rechazo ? `<div class="cola-tiempo" style="color:#ff453a">Rechazado: ${t.razon_rechazo}</div>` : ""}
+            <div class="cola-cliente-m">${esc(t.cliente||"—")}</div>
+            <div class="cola-desc-m">${esc(t.materia||t.descripcion||"—")} ${esc(t.escuela ? "· "+t.escuela : "")}</div>
+            ${t.razon_rechazo ? `<div class="cola-tiempo" style="color:#ff453a">Rechazado: ${esc(t.razon_rechazo)}</div>` : ""}
             ${tiempoStr ? `<div class="cola-tiempo">En cola: ${tiempoStr}</div>` : ""}
           </div>
-          ${t.dia_entrega ? `<div style="font-size:9px;font-weight:700;color:${urgenciaClass(t.dia_entrega)==='urgente'?'#ff453a':urgenciaClass(t.dia_entrega)==='hoy'?'#ff9f0a':'rgba(16,33,92,.45)'}"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${t.dia_entrega}</div>` : ""}
+          ${t.dia_entrega ? `<div style="font-size:9px;font-weight:700;color:${esc(urgenciaClass(t.dia_entrega)==='urgente'?'#ff453a':urgenciaClass(t.dia_entrega)==='hoy'?'#ff9f0a':'rgba(16,33,92,.45)')}"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> ${esc(t.dia_entrega)}</div>` : ""}
         </div>`;
       }).join("");
     }

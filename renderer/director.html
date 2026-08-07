@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://*.cloudfunctions.net; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"/>
   <title>Director — Academic Tareas</title>
   <style>
     :root {
@@ -634,6 +634,20 @@
 
     const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db    = getFirestore(fbApp);
+
+    // ── Escape HTML — antídoto contra XSS almacenado ────────────────────
+    // Cualquier dato que venga de Firestore lo pudo escribir otro usuario.
+    // Si se concatena crudo en innerHTML, un asesor puede guardar
+    // <img src=x onerror="..."> en un pedido y ese código se ejecuta en la
+    // sesión del director cuando abre su panel (escalada de privilegios).
+    // Regla del proyecto: TODO valor dinámico pasa por esc() antes de
+    // interpolarse en HTML.
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     const mainAuth = getAuth(fbApp);
 
     // Esperar a que Firebase restaure la sesión iniciada en el login
@@ -694,16 +708,16 @@
           const estado = u.estado_hoy || "offline";
           if (estado === "activo") activos++;
 
-          const tipos = (u.tipos_habilitados || []).map(t => `<span class="dif-badge ${difBadgeClass(t)}">${t}</span>`).join(" ");
+          const tipos = (u.tipos_habilitados || []).map(t => `<span class="dif-badge ${difBadgeClass(t)}">${esc(t)}</span>`).join(" ");
 
           listEl.innerHTML += `
             <div class="asesor-card">
               <div class="asesor-header">
-                <div class="asesor-avatar">${avatarLetters(u.nombre)}</div>
+                <div class="asesor-avatar">${esc(avatarLetters(u.nombre))}</div>
                 <div class="asesor-info">
-                  <div class="asesor-name">${u.nombre}</div>
-                  <div class="asesor-status ${estado === "activo" ? "active" : estado === "inactivo" ? "idle" : "offline"}">
-                    ${estado === "activo" ? "● Activo" : estado === "inactivo" ? "● Inactivo" : "○ Desconectado"}
+                  <div class="asesor-name">${esc(u.nombre)}</div>
+                  <div class="asesor-status ${esc(estado === "activo" ? "active" : estado === "inactivo" ? "idle" : "offline")}">
+                    ${esc(estado === "activo" ? "● Activo" : estado === "inactivo" ? "● Inactivo" : "○ Desconectado")}
                   </div>
                 </div>
                 ${tipos ? `<div style="display:flex;gap:4px;flex-wrap:wrap">${tipos}</div>` : ""}
@@ -732,7 +746,7 @@
           colaSnap.forEach(d => {
             const t = d.data();
             const dc = difBadgeClass(t.dificultad);
-            colaEl.innerHTML += `<div class="cola-item"><span class="cola-badge ${dc}">${t.dificultad||"?"}</span><div class="cola-info"><div class="cola-cliente">${t.cliente}</div><div class="cola-desc">${t.materia||t.descripcion||""}</div></div></div>`;
+            colaEl.innerHTML += `<div class="cola-item"><span class="cola-badge ${dc}">${esc(t.dificultad||"?")}</span><div class="cola-info"><div class="cola-cliente">${esc(t.cliente)}</div><div class="cola-desc">${esc(t.materia||t.descripcion||"")}</div></div></div>`;
           });
         }
 
@@ -821,13 +835,13 @@
       card.innerHTML = `
         <div class="acta-header">
           <span class="acta-estado" style="background:${pBg[p]};color:${pColor[p]}">${p}</span>
-          <span class="acta-titulo">${a.titulo || "—"}</span>
-          <span class="acta-estado ${a.estado}">${estadoTxt[a.estado] || a.estado}</span>
+          <span class="acta-titulo">${esc(a.titulo || "—")}</span>
+          <span class="acta-estado ${esc(a.estado)}">${esc(estadoTxt[a.estado] || a.estado)}</span>
         </div>
-        ${a.descripcion ? `<div class="acta-desc">${a.descripcion}</div>` : ""}
+        ${a.descripcion ? `<div class="acta-desc">${esc(a.descripcion)}</div>` : ""}
         <div class="acta-meta">
-          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> Límite: <b>${a.fecha_limite}${a.hora_limite ? " · " + a.hora_limite : ""}</b></span>` : ""}
-          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Asignada por: <b>${a.creado_por_nombre}</b></span>` : ""}
+          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> Límite: <b>${esc(a.fecha_limite)}${esc(a.hora_limite ? " · " + a.hora_limite : "")}</b></span>` : ""}
+          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Asignada por: <b>${esc(a.creado_por_nombre)}</b></span>` : ""}
         </div>
         <div class="acta-crono">
           <span>⏱ Trabajo: <b id="acta-t-${a.id}">${fmtActa(actaTrabajoMs(a))}</b></span>
@@ -918,7 +932,7 @@
           _actaNotified.add(a.id);
           try {
             new Notification("Nueva actividad asignada", {
-              body: `${a.titulo || "Actividad"}${a.creado_por_nombre ? " — de " + a.creado_por_nombre : ""}. Revísala en la pestaña Actividades.`,
+              body: `${esc(a.titulo || "Actividad")}${esc(a.creado_por_nombre ? " — de " + a.creado_por_nombre : "")}. Revísala en la pestaña Actividades.`,
             });
           } catch (_) {}
           updateDoc(doc(db, "actividades_asignadas", a.id), { visto: true, notificado_en: new Date().toISOString() }).catch(() => {});
@@ -1063,20 +1077,20 @@
         card.innerHTML = `
           <div class="mt-header">
             <span class="dif-badge ${difCls[dif]||'B'}" style="font-size:10px;padding:2px 8px">${dif}</span>
-            <span class="mt-cliente">${t.cliente || "—"}</span>
-            <span style="font-size:10px;background:rgba(255,255,255,.07);padding:2px 8px;border-radius:4px;color:var(--sub)">${estLabel[t.estado]||t.estado}</span>
+            <span class="mt-cliente">${esc(t.cliente || "—")}</span>
+            <span style="font-size:10px;background:rgba(255,255,255,.07);padding:2px 8px;border-radius:4px;color:var(--sub)">${esc(estLabel[t.estado]||t.estado)}</span>
           </div>
           <div class="mt-data">
-            ${t.plataforma  ? `<span>Plataforma: <b>${t.plataforma}</b></span>` : ""}
-            ${t.escuela     ? `<span>Escuela: <b>${t.escuela}</b></span>` : ""}
-            ${t.id_alumno   ? `<span>ID: <b>${t.id_alumno}</b></span>` : ""}
-            ${t.contrasena  ? `<span>Contraseña: <b>${t.contrasena}</b></span>` : ""}
-            ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${t.materia}</b></span>` : ""}
-            ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${t.entregable}</b></span>` : ""}
-            ${t.dia_entrega ? `<span>Entrega: <b>${t.dia_entrega}${t.hora_entrega ? " · " + t.hora_entrega : ""}</b></span>` : ""}
-            ${t.subir       ? `<span>Subir: <b>${t.subir}</b></span>` : ""}
+            ${t.plataforma  ? `<span>Plataforma: <b>${esc(t.plataforma)}</b></span>` : ""}
+            ${t.escuela     ? `<span>Escuela: <b>${esc(t.escuela)}</b></span>` : ""}
+            ${t.id_alumno   ? `<span>ID: <b>${esc(t.id_alumno)}</b></span>` : ""}
+            ${t.contrasena  ? `<span>Contraseña: <b>${esc(t.contrasena)}</b></span>` : ""}
+            ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${esc(t.materia)}</b></span>` : ""}
+            ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${esc(t.entregable)}</b></span>` : ""}
+            ${t.dia_entrega ? `<span>Entrega: <b>${esc(t.dia_entrega)}${esc(t.hora_entrega ? " · " + t.hora_entrega : "")}</b></span>` : ""}
+            ${t.subir       ? `<span>Subir: <b>${esc(t.subir)}</b></span>` : ""}
           </div>
-          ${t.anotaciones ? `<div class="mt-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${t.anotaciones}</div>` : ""}
+          ${t.anotaciones ? `<div class="mt-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${esc(t.anotaciones)}</div>` : ""}
           <div class="mt-crono" id="dmt-${t.id}">
             <div class="mt-crono-dot"></div>
             <div class="mt-crono-vals">
@@ -1224,19 +1238,21 @@
           const card = document.createElement("div");
           card.className = "pedido-card";
 
+          // Estos helpers DEVUELVEN HTML, así que escapan el valor por dentro
+          // (no deben envolverse en esc() desde fuera o se vería el markup).
           const row = (label, val) => val
-            ? `<div class="pedido-field"><div class="pf-label">${label}</div><div class="pf-val">${val}</div></div>`
+            ? `<div class="pedido-field"><div class="pf-label">${esc(label)}</div><div class="pf-val">${esc(val)}</div></div>`
             : "";
           const rowFull = (label, val) => val
-            ? `<div class="pedido-field pedido-full"><div class="pf-label">${label}</div><div class="pf-val">${val}</div></div>`
+            ? `<div class="pedido-field pedido-full"><div class="pf-label">${esc(label)}</div><div class="pf-val">${esc(val)}</div></div>`
             : "";
 
           card.innerHTML = `
             <div class="pedido-header">
-              <span class="pedido-id">#${t.numero_pedido||"—"}</span>
-              <span class="pedido-cliente">${t.cliente||"—"}</span>
-              <span class="dif-badge ${dc}">${t.dificultad||"?"}</span>
-              <span class="pedido-badge ${t.estado||"pendiente"}">${estadoLabel[t.estado]||t.estado}</span>
+              <span class="pedido-id">#${esc(t.numero_pedido||"—")}</span>
+              <span class="pedido-cliente">${esc(t.cliente||"—")}</span>
+              <span class="dif-badge ${dc}">${esc(t.dificultad||"?")}</span>
+              <span class="pedido-badge ${esc(t.estado||"pendiente")}">${esc(estadoLabel[t.estado]||t.estado)}</span>
             </div>
             <div class="pedido-grid">
               ${row("Plataforma", t.plataforma)}
@@ -1250,7 +1266,7 @@
               ${row("Subir", t.subir)}
               ${row("Asesor", t.asesor_nombre||"Sin asignar")}
               ${t.precio != null ? row("Precio", "$" + t.precio) : ""}
-              ${ep ? `<div class="pedido-field"><div class="pf-label">Pago</div><div class="pf-val"><span class="pago-badge ${ep}">${ep}</span></div></div>` : ""}
+              ${ep ? `<div class="pedido-field"><div class="pf-label">Pago</div><div class="pf-val"><span class="pago-badge ${esc(ep)}">${esc(ep)}</span></div></div>` : ""}
               ${t.cantidad_pagada != null ? row("Cantidad pagada", "$" + t.cantidad_pagada) : ""}
               ${rowFull("Anotaciones", t.anotaciones)}
             </div>
@@ -1271,7 +1287,7 @@
     function abrirModalEliminarPedido(id, t, card) {
       _delPedido = { id, card };
       document.getElementById("del-p-nombre").textContent =
-        `#${t.numero_pedido || "—"} · ${t.cliente || "sin cliente"}${t.materia ? " · " + t.materia : ""}`;
+        `#${esc(t.numero_pedido || "—")} · ${esc(t.cliente || "sin cliente")}${esc(t.materia ? " · " + t.materia : "")}`;
       document.getElementById("modal-eliminar-pedido").classList.remove("hidden");
     }
     document.getElementById("btn-del-p-cancel").addEventListener("click", () => {
@@ -1369,7 +1385,7 @@
           cargarPedidos();
         }, 800);
       } catch(e) {
-        msgEl.innerHTML = `<div class="msg-err">Error: ${e.message}</div>`;
+        msgEl.innerHTML = `<div class="msg-err">Error: ${esc(e.message)}</div>`;
       }
       btn.disabled = false; btn.textContent = "Guardar cambios";
     };
@@ -1391,12 +1407,12 @@
           card.style.alignItems    = "stretch";
           card.innerHTML = `
             <div style="display:flex;align-items:center;gap:12px">
-              <div class="usuario-avatar" style="background:${avatarColor(u.rol)}">${avatarLetters(u.nombre)}</div>
+              <div class="usuario-avatar" style="background:${esc(avatarColor(u.rol))}">${esc(avatarLetters(u.nombre))}</div>
               <div class="usuario-info">
-                <div class="usuario-nombre">${u.nombre || "—"}</div>
-                <div class="usuario-email">${u.email || "—"}</div>
+                <div class="usuario-nombre">${esc(u.nombre || "—")}</div>
+                <div class="usuario-email">${esc(u.email || "—")}</div>
               </div>
-              <span class="rol-badge ${u.rol||"asesor"}">${(u.rol||"asesor").toUpperCase()}</span>
+              <span class="rol-badge ${esc(u.rol||"asesor")}">${esc((u.rol||"asesor").toUpperCase())}</span>
             </div>
             <div class="usuario-actions" style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
               <button class="btn-sm btn-editar-usuario"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar</button>
@@ -1471,7 +1487,7 @@
           creado_en: new Date().toISOString()
         });
 
-        msgEl.innerHTML = `<div class="msg-ok">✓ Usuario ${nombre} creado con rol ${rol.toUpperCase()}</div>`;
+        msgEl.innerHTML = `<div class="msg-ok">✓ Usuario ${esc(nombre)} creado con rol ${esc(rol.toUpperCase())}</div>`;
         btn.textContent = "Crear usuario"; btn.disabled = false;
         setTimeout(() => {
           document.getElementById("modal-crear-usuario").classList.add("hidden");
@@ -1549,7 +1565,7 @@
           cargarUsuarios();
         }, 1200);
       } catch(e) {
-        msgEl.innerHTML = `<div class="msg-err">Error: ${e.message}</div>`;
+        msgEl.innerHTML = `<div class="msg-err">Error: ${esc(e.message)}</div>`;
         btn.disabled = false; btn.textContent = "Sí, eliminar";
       }
     };
@@ -1613,8 +1629,8 @@
           card.dataset.uid = uid;
           card.innerHTML = `
             <div class="asesor-cuota-header">
-              <div class="asesor-avatar" style="width:28px;height:28px;font-size:11px">${avatarLetters(u.nombre)}</div>
-              <div class="asesor-cuota-name">${u.nombre}</div>
+              <div class="asesor-avatar" style="width:28px;height:28px;font-size:11px">${esc(avatarLetters(u.nombre))}</div>
+              <div class="asesor-cuota-name">${esc(u.nombre)}</div>
               <button class="btn-sm btn-save-asesor">Guardar</button>
             </div>
 
@@ -1636,7 +1652,7 @@
               ${tipos.map(t => {
                 const dc  = difBadgeClass(t);
                 const sel = habilitados.includes(t) ? "selected " + dc : "";
-                return `<button class="tipo-chip ${sel}" data-tipo="${t}">${t}</button>`;
+                return `<button class="tipo-chip ${sel}" data-tipo="${esc(t)}">${esc(t)}</button>`;
               }).join("")}
             </div>`;
 

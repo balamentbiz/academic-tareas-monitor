@@ -9,7 +9,9 @@ echo "================================================"
 echo ""
 
 # Cargar token
-if [ -f ".env" ]; then export $(grep -v '^#' .env | xargs); fi
+# Cargar secretos sin exponerlos en la línea de comandos (xargs los deja
+# visibles en la tabla de procesos para cualquier usuario del equipo)
+if [ -f ".env" ]; then set -a; source ./.env; set +a; fi
 if [ -z "$GH_TOKEN" ]; then echo "ERROR: Token no encontrado en .env"; read -p "Enter..."; exit 1; fi
 
 # Versión actual
@@ -37,7 +39,10 @@ git config user.email "academicsolutionsmx@gmail.com"
 git config user.name "balamentbiz"
 git add -A
 git commit -m "v$CURRENT" 2>/dev/null || echo "(sin cambios nuevos)"
-git push --force https://balamentbiz:${GH_TOKEN}@github.com/balamentbiz/academic-tareas-monitor.git main 2>&1 | tail -3
+# Sin --force (evita borrar historial del repo) y con el token fuera de la
+# línea de comandos: se pasa por stdin al credential helper.
+git -c credential.helper='!f() { echo "username=balamentbiz"; echo "password=$GH_TOKEN"; }; f' \
+  push https://github.com/balamentbiz/academic-tareas-monitor.git main 2>&1 | tail -3
 
 # ── Construir Mac DMG + ZIP (el ZIP lo usa el auto-updater) ──
 echo ""
@@ -108,18 +113,23 @@ EXISTING=$(curl -s -H "Authorization: token $GH_TOKEN" \
 if [ -n "$EXISTING" ]; then
   RELEASE_ID="$EXISTING"
   echo "Release existente (ID: $RELEASE_ID) — eliminando assets viejos..."
-  curl -s -H "Authorization: token $GH_TOKEN" \
-    "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID/assets" \
-    | python3 -c "
-import json,sys,urllib.request,os
-assets=json.load(sys.stdin)
-token=os.environ.get('GH_TOKEN','')
-for a in assets:
-    req=urllib.request.Request('https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/assets/'+str(a['id']),method='DELETE')
-    req.add_header('Authorization','token '+token)
-    try: urllib.request.urlopen(req)
-    except: pass
-" 2>/dev/null
+  # Borra TODOS los assets (paginado, via curl — el urllib de Python falla por
+  # certificados SSL en algunas instalaciones). Si queda alguno con el mismo
+  # nombre, la subida nueva falla con "already_exists".
+  while true; do
+    IDS=$(curl -s -H "Authorization: token $GH_TOKEN" \
+      "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/$RELEASE_ID/assets?per_page=100" \
+      | python3 -c "import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d=[]
+print(' '.join(str(a['id']) for a in d) if isinstance(d,list) else '')")
+    [ -z "$IDS" ] && break
+    for ID in $IDS; do
+      curl -s -X DELETE -H "Authorization: token $GH_TOKEN" \
+        "https://api.github.com/repos/balamentbiz/academic-tareas-monitor/releases/assets/$ID" > /dev/null
+    done
+  done
+  echo "  assets anteriores eliminados"
 else
   RELEASE_ID=$(curl -s -X POST \
     -H "Authorization: token $GH_TOKEN" \

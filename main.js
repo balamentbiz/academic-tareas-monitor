@@ -3,9 +3,20 @@ const path  = require("path");
 const fs    = require("fs");
 const { exec } = require("child_process");
 
-// Capturar errores globales silenciosamente
-process.on("uncaughtException",  (e) => console.error("[error silenciado]", e.message));
-process.on("unhandledRejection", (e) => console.error("[promesa sin catch]", e?.message || e));
+// Capturar errores globales sin tumbar la app, pero dejando rastro completo:
+// con solo el mensaje era imposible diagnosticar fallos del tracking en las
+// máquinas de los usuarios. El stack se guarda junto a los datos de sesión.
+function registrarError(etiqueta, e) {
+  const linea = `[${new Date().toISOString()}] ${etiqueta}: ${e?.stack || e?.message || e}\n`;
+  console.error(etiqueta, e?.message || e);
+  try {
+    const dir = path.join(app.getPath("userData"), "sessions");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(path.join(dir, "errores.log"), linea);
+  } catch (_) {}
+}
+process.on("uncaughtException",  (e) => registrarError("[uncaughtException]", e));
+process.on("unhandledRejection", (e) => registrarError("[unhandledRejection]", e));
 
 
 // ── Persistencia ─────────────────────────────────────────────────────────────
@@ -33,6 +44,39 @@ function remove(filename) { try { if (fs.existsSync(f(filename))) fs.unlinkSync(
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 let session     = load("current.json");
+
+// Si la app se cerró con un tiempo muerto abierto y se reabre horas (o días)
+// después, ese idle "huérfano" incluiría todo el tiempo con la app apagada y
+// falsearía el porcentaje de productividad. Se descarta al arrancar.
+if (session && session.currentIdleStart) {
+  const abierto = Date.now() - session.currentIdleStart;
+  if (abierto > 30 * 60 * 1000) { // más de media hora: la app no estuvo corriendo
+    console.log("[sesión] descartando tiempo muerto huérfano de", Math.round(abierto / 60000), "min");
+    session.currentIdleStart = null;
+    session._lastActivityTs = Date.now();
+  }
+}
+
+// Red de seguridad para cierres que no pasan por before-quit (forzar salida,
+// caída de la app, corte de luz): si la sesión quedó "activa" pero la última
+// señal de vida es vieja, ese hueco NO fue trabajo. Se convierte en pausa
+// abierta desde el último momento con actividad real.
+if (session && session.status === "active") {
+  const ultimaSenal = session._lastActivityTs || session.startTime;
+  const hueco = Date.now() - ultimaSenal;
+  if (hueco > 3 * 60 * 1000) { // 3 min: el tracking late cada 10 s, así que es un cierre
+    console.log("[sesión] recuperando cierre inesperado — hueco de", Math.round(hueco / 60000), "min");
+    if (!session.pauses) session.pauses = [];
+    session.pauses.push({
+      id: `p_${ultimaSenal}`,
+      reason: "Aplicación cerrada inesperadamente",
+      startTime: ultimaSenal,
+      endTime: null,
+    });
+    session.status = "paused";
+    saveNow("current.json", session);
+  }
+}
 let win         = null;
 let idleTimer   = null;
 let loggedUser  = null;  // { uid, email, nombre, rol }
@@ -74,7 +118,32 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true, // el renderer no puede tocar Node aunque lo comprometan
     },
+  });
+
+  // ── Blindaje de navegación ──────────────────────────────────────────────
+  // El renderer solo puede navegar a nuestra UI (remota o local). Cualquier
+  // otro enlace se abre en el navegador del sistema, nunca dentro de la app.
+  //
+  // Se compara el ORIGEN EXACTO, no un startsWith: "https://mi-app.web.app"
+  // también es prefijo de "https://mi-app.web.app.sitio-atacante.com", que se
+  // cargaría con nuestro preload y quedaría con acceso completo a window.AT.
+  const esOrigenPermitido = (url) => {
+    try {
+      if (url.startsWith("file://")) return true;
+      return !!REMOTE_UI && new URL(url).origin === new URL(REMOTE_UI).origin;
+    } catch { return false; }
+  };
+  win.webContents.on("will-navigate", (e, url) => {
+    if (!esOrigenPermitido(url)) {
+      e.preventDefault();
+      if (/^https?:/i.test(url)) shell.openExternal(url);
+    }
+  });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:/i.test(url)) shell.openExternal(url);
+    return { action: "deny" }; // jamás ventanas nuevas dentro de la app
   });
 
   // Fallback: si la UI remota no carga (sin internet, hosting caído),
@@ -85,12 +154,16 @@ function createWindow() {
     _uiRemota = false;
     win.loadFile(path.join(__dirname, "renderer", _vistaActual));
   };
+  const esNuestroHosting = (url) => {
+    try { return !!REMOTE_UI && new URL(url).origin === new URL(REMOTE_UI).origin; }
+    catch { return false; }
+  };
   win.webContents.on("did-fail-load", (_e, code, desc, url) => {
-    if (url && url.startsWith(REMOTE_UI) && code !== -3 /* ERR_ABORTED */) caerALocal(desc);
+    if (url && esNuestroHosting(url) && code !== -3 /* ERR_ABORTED */) caerALocal(desc);
   });
   // 404/500 del hosting (p. ej. antes del primer deploy) no disparan did-fail-load
   win.webContents.on("did-navigate", (_e, url, httpResponseCode) => {
-    if (url && url.startsWith(REMOTE_UI) && httpResponseCode >= 400) caerALocal("HTTP " + httpResponseCode);
+    if (url && esNuestroHosting(url) && httpResponseCode >= 400) caerALocal("HTTP " + httpResponseCode);
   });
 
   // Siempre arranca en el login
@@ -138,12 +211,15 @@ function loadDashboard(rol) {
   // Reaplicar al terminar de cargar (por si algo movió la ventana en el interín)
   win.webContents.once("did-finish-load", () => applyWindowSize(rolNorm));
 
-  // Asesor, gerencia y ATC necesitan tracking (cuota, idle, actividades)
-  if (rol === "asesor" || rol === "gerencia" || rol === "atc") {
-    startIdleCheck();
-    startAppTracking();
-    startActivityPolling();
-  }
+  // El tracking arranca para CUALQUIER rol. El proceso principal recibe el rol
+  // desde el renderer y no puede verificarlo, así que si solo se rastreara a
+  // ciertos roles bastaría con declararse "director" desde la consola para
+  // apagarse el monitoreo. El tracking solo registra mientras hay sesión
+  // iniciada (start-day), de modo que en director —que no inicia jornada— no
+  // recoge nada, pero tampoco se puede desactivar mintiendo sobre el rol.
+  startIdleCheck();
+  startAppTracking();
+  startActivityPolling();
 }
 
 // ── Idle check → lanza ventana overlay del sistema ───────────────────────────
@@ -233,6 +309,7 @@ ipcMain.handle("get-status", () => ({ session, pendingReport: load("pending_repo
 
 ipcMain.handle("start-day", (_, { collaborator }) => {
   const now = Date.now();
+  resetAcumuladores(); // el turno nuevo no hereda apps/páginas del anterior
   session = {
     id:`session_${now}`, collaborator, date:new Date(now).toISOString().split("T")[0],
     startTime:now, endTime:null, status:"active",
@@ -248,6 +325,7 @@ ipcMain.handle("start-day", (_, { collaborator }) => {
 ipcMain.handle("pause-session", (_, { reason }) => {
   if (!session || session.status !== "active") return { ok:false };
   const now = Date.now();
+  closeIdleOverlay(); // si el aviso estaba abierto, no dejarlo tapando pantallas
   session.status = "paused";
   session.pauses.push({ id:`p_${now}`, reason:reason||"pausa", startTime:now, endTime:null });
   save("current.json", session);
@@ -268,6 +346,17 @@ ipcMain.handle("resume-session", () => {
 ipcMain.handle("end-day", (_, { comments }) => {
   if (!session) return { ok:false };
   const now = Date.now();
+  // Si el overlay de tiempo muerto seguía abierto en otro monitor quedaría
+  // tapando la pantalla sin forma de cerrarlo (su botón depende de session).
+  closeIdleOverlay();
+  stopActivityTracking();
+  // Cerrar la pausa abierta (si la jornada termina estando en pausa, ese tiempo
+  // debe contabilizarse como pausa y no como trabajo en el reporte).
+  const pausaAbierta = (session.pauses || []).slice().reverse().find(p => !p.endTime);
+  if (pausaAbierta) {
+    pausaAbierta.endTime = now;
+    session.totalPausedMs = (session.totalPausedMs || 0) + (now - pausaAbierta.startTime);
+  }
   session.endTime = now; session.status = "finished"; session.comments = comments||"";
   const report = generateReport(session);
   // Archivar en historial — usar saveNow para operaciones críticas de fin de sesión
@@ -325,8 +414,9 @@ ipcMain.handle("save-report-image", async (_, { report, filename }) => {
     const imgWin = new BrowserWindow({
       width: 900, height: 1200,
       show: false,
-      webPreferences: { contextIsolation: true, nodeIntegration: false }
+      webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
     });
+    imgWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 
     imgWin.loadFile(path.join(__dirname, "renderer", "report-image.html"));
 
@@ -399,7 +489,60 @@ ipcMain.handle("check-for-updates", async () => {
     return { status: "error", message: e.message };
   }
 });
-ipcMain.on("quit-app", () => app.quit());
+// ── Cierre de la aplicación ───────────────────────────────────────────────────
+// Al salir, el cronómetro debe DETENERSE. Antes la sesión quedaba "activa" y al
+// reabrir al día siguiente la jornada aparecía con las horas que la app estuvo
+// cerrada. Ahora se registra una pausa automática: el tiempo cerrado queda
+// contabilizado como pausa (no como trabajo) y el colaborador reanuda cuando
+// vuelve. Se guarda de forma síncrona porque el proceso está por terminar.
+let _cerrando = false;
+function pausarSesionPorCierre(motivo) {
+  if (_cerrando) return;
+  _cerrando = true;
+  try {
+    stopActivityTracking();
+    _permitirCierreOverlay = true;
+    closeIdleOverlay();
+    if (session && session.status === "active") {
+      const now = Date.now();
+      if (!session.pauses) session.pauses = [];
+      session.pauses.push({ id: `p_${now}`, reason: motivo, startTime: now, endTime: null });
+      session.status = "paused";
+      session._lastActivityTs = now;
+    }
+    if (session) saveNow("current.json", session);
+  } catch (e) { console.error("[cierre]", e?.message || e); }
+}
+
+// Salida garantizada: uiohook-napi (el módulo que cuenta clics y teclas a nivel
+// de sistema) mantiene un hilo nativo vivo que a veces impide que el proceso
+// termine — la app quedaba corriendo en segundo plano y solo se podía matar
+// desde el Monitor de Actividad. Este plan B fuerza la salida si en 1.5 s el
+// proceso no terminó por sí solo.
+let _salidaForzada = false;
+function salirDefinitivamente() {
+  if (_salidaForzada) return;
+  _salidaForzada = true;
+  setTimeout(() => {
+    try { app.exit(0); } catch (_) { process.exit(0); }
+  }, 1500).unref?.();
+}
+
+ipcMain.on("quit-app", () => {
+  pausarSesionPorCierre("Aplicación cerrada");
+  salirDefinitivamente();
+  app.quit();
+});
+app.on("before-quit", () => {
+  pausarSesionPorCierre("Aplicación cerrada");
+  salirDefinitivamente();
+});
+app.on("will-quit", () => {
+  // Último intento de soltar el hook nativo antes de cerrar
+  try { stopActivityTracking(); } catch (_) {}
+});
+// Cierre del sistema operativo (apagado / reinicio)
+powerMonitor.on("shutdown", () => { pausarSesionPorCierre("Equipo apagado"); salirDefinitivamente(); });
 
 ipcMain.handle("uninstall-app", async () => {
   const { response } = await dialog.showMessageBox(win, {
@@ -413,23 +556,38 @@ ipcMain.handle("uninstall-app", async () => {
   });
   if (response !== 1) return { ok: false };
 
-  const { execSync } = require("child_process");
+  // Antes se ejecutaba `rm -rf` también en Windows (comando inexistente): el
+  // borrado fallaba en silencio pero se avisaba "desinstalado" y el empleado
+  // se quedaba con la app instalada. Ahora se usa la API de Node, que funciona
+  // en ambos sistemas, y solo se declara éxito si de verdad se borró algo.
   const dataDir = app.getPath("userData");
+  let errores = [];
 
-  // Eliminar datos de usuario
-  try { execSync(`rm -rf "${dataDir}"`); } catch (_) {}
+  const borrar = (ruta) => {
+    try { fs.rmSync(ruta, { recursive: true, force: true }); }
+    catch (e) { errores.push(`${ruta}: ${e.message}`); }
+  };
 
-  // Eliminar la app de /Applications/
-  try { execSync(`rm -rf "/Applications/Academic Tareas Monitor.app"`); } catch (_) {}
+  borrar(dataDir);
+  if (process.platform === "darwin") {
+    borrar("/Applications/Academic Tareas Monitor.app");
+    borrar(path.join(app.getPath("home"), "Library/Preferences/com.academictareas.monitor.plist"));
+  } else if (process.platform === "win32") {
+    // Instalación por usuario de NSIS + acceso directo del menú inicio
+    borrar(path.join(app.getPath("appData"), "..", "Local", "Programs", "academic-tareas-monitor"));
+    borrar(path.join(app.getPath("appData"), "Microsoft", "Windows", "Start Menu", "Programs", "Academic Tareas Monitor.lnk"));
+  }
 
-  // Eliminar preferencias
-  try { execSync(`rm -f "$HOME/Library/Preferences/com.academictareas.monitor.plist"`); } catch (_) {}
-
+  const ok = errores.length === 0;
   await dialog.showMessageBox(win, {
-    type: "info",
-    title: "Desinstalación completada",
-    message: "Academic Tareas Monitor ha sido desinstalado.",
-    detail: "Puedes eliminar la carpeta MONITOREO APP de tu Escritorio manualmente si lo deseas.",
+    type: ok ? "info" : "warning",
+    title: ok ? "Desinstalación completada" : "Desinstalación parcial",
+    message: ok
+      ? "Academic Tareas Monitor ha sido desinstalado."
+      : "Se borraron los datos, pero quedaron archivos sin eliminar.",
+    detail: ok
+      ? "Puedes eliminar la carpeta del proyecto manualmente si lo deseas."
+      : "Desinstala la aplicación desde el sistema (Aplicaciones en Mac, o Agregar o quitar programas en Windows).\n\n" + errores.join("\n"),
     buttons: ["OK"],
   });
 
@@ -437,7 +595,13 @@ ipcMain.handle("uninstall-app", async () => {
   return { ok: true };
 });
 
-ipcMain.handle("open-url", (_, url) => shell.openExternal(url));
+// Solo http/https: sin este filtro, un renderer comprometido podría abrir
+// file:, smb: o manejadores de protocolo del sistema operativo.
+ipcMain.handle("open-url", (_, url) => {
+  if (typeof url === "string" && /^https?:\/\//i.test(url)) return shell.openExternal(url);
+  console.warn("[open-url] esquema no permitido:", String(url).slice(0, 60));
+  return false;
+});
 ipcMain.handle("open-blackboard", () => {
   const { spawn } = require("child_process");
   const url = "https://uvmonline.blackboard.com/webapps/login/?action=default_login";
@@ -460,7 +624,8 @@ ipcMain.handle("save-report-file", async (_, { content, filename, ext }) => {
 });
 
 // ── Seguimiento de aplicaciones + páginas Chrome ─────────────────────────────
-let overlayWins = []; // una ventana por monitor
+let overlayWins = [];              // una ventana por monitor
+let _permitirCierreOverlay = false; // solo la app puede cerrarlos, no el usuario
 
 function showIdleOverlay() {
   if (overlayWins.length > 0) return; // ya están abiertas
@@ -468,6 +633,9 @@ function showIdleOverlay() {
   const displays = screen.getAllDisplays();
 
   displays.forEach(display => {
+    // display.bounds cubre TODA la pantalla física (incluye la franja de la
+    // barra de menús de macOS y la del Dock). workAreaSize, en cambio, deja
+    // esas zonas fuera — por eso antes el aviso no tapaba la pantalla completa.
     const { x, y, width, height } = display.bounds;
     const w = new BrowserWindow({
       x, y, width, height,
@@ -477,32 +645,62 @@ function showIdleOverlay() {
       skipTaskbar: true,
       resizable: false,
       movable: false,
+      minimizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      hasShadow: false,
+      roundedCorners: false,    // sin esquinas redondeadas: cubre hasta el borde
+      enableLargerThanScreen: true, // evita que macOS recorte la ventana al área útil
       focusable: true,
-      show: false, // mostrar solo después de posicionar correctamente
+      show: false,              // mostrar solo después de posicionar correctamente
       webPreferences: {
         preload: path.join(__dirname, "preload-overlay.js"),
         contextIsolation: true,
         nodeIntegration: false,
+        sandbox: true,
       },
     });
+    w.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 
-    // Nivel más alto disponible en macOS para cubrir espacios y pantallas completas
+    // El overlay no se puede cerrar con Cmd+W: hay que escribir el motivo.
+    // Se bloquea con un guard y NO con closable:false, porque una ventana no
+    // cerrable impide que app.quit() termine el proceso (la app se quedaría
+    // corriendo en segundo plano).
+    w.on("close", (e) => {
+      if (!_permitirCierreOverlay) e.preventDefault();
+    });
+
     if (process.platform === "darwin") {
-      w.setAlwaysOnTop(true, "screen-saver");
+      // "screen-saver" es el nivel más alto: queda por encima de la barra de
+      // menús, del Dock y de cualquier app en pantalla completa.
+      w.setAlwaysOnTop(true, "screen-saver", 1);
+      w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
     } else {
-      w.setAlwaysOnTop(true);
+      w.setAlwaysOnTop(true, "screen-saver");
+      w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     }
-
-    w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
     w.loadFile(path.join(__dirname, "renderer", "overlay.html"));
 
-    w.once("ready-to-show", () => {
-      // Forzar posición exacta en el monitor correspondiente antes de mostrar
+    const cubrirPantalla = () => {
+      if (w.isDestroyed()) return;
       w.setBounds({ x, y, width, height });
-      w.show();
-      // Solo dar foco al overlay del monitor principal
-      if (display.id === screen.getPrimaryDisplay().id) w.focus();
+      w.moveTop();
+    };
+
+    w.once("ready-to-show", () => {
+      cubrirPantalla();
+      w.showInactive();
+      cubrirPantalla();
+      // macOS a veces reajusta la geometría justo después de mostrar la
+      // ventana; se reafirma un par de veces para que quede a pantalla completa.
+      setTimeout(cubrirPantalla, 60);
+      setTimeout(cubrirPantalla, 300);
+      // Solo el overlay del monitor principal toma el foco (para escribir el motivo)
+      if (display.id === screen.getPrimaryDisplay().id) {
+        w.focus();
+        if (process.platform === "darwin") app.focus({ steal: true });
+      }
     });
 
     w.on("closed", () => {
@@ -516,7 +714,11 @@ function showIdleOverlay() {
 function closeIdleOverlay() {
   const wins = [...overlayWins];
   overlayWins = [];
-  wins.forEach(w => { try { w.close(); } catch (_) {} });
+  _permitirCierreOverlay = true; // levanta el guard: ahora sí pueden cerrarse
+  wins.forEach(w => {
+    try { if (!w.isDestroyed()) { w.destroy(); } } catch (_) {}
+  });
+  _permitirCierreOverlay = false;
 }
 
 // Cuando el asesor hace clic en "Reanudar trabajo" desde el overlay
@@ -549,16 +751,21 @@ let chromePages      = {};
 let _activityEvents = 0;
 let _uiohookActive  = false;
 
+// Se llama en CADA login. Sin la guarda de idempotencia se registraban
+// listeners duplicados: tras dos re-logins, un clic físico contaba dos o tres
+// veces y el reporte de productividad quedaba inflado. Los listeners y el
+// intervalo se crean UNA sola vez por proceso.
+let _pendingClicks = 0, _pendingKeys = 0;
+let _flushInterval = null, _fallbackInterval = null;
+
 function startActivityPolling() {
-  // Intentar usar uiohook-napi para eventos globales del sistema
+  if (_uiohookActive || _fallbackInterval) return; // ya inicializado
+
   try {
     const { uIOhook } = require("uiohook-napi");
 
-    // Acumuladores locales — flush cada 800ms para no saturar IPC
-    let _pendingClicks = 0, _pendingKeys = 0;
-
     const flushEvents = () => {
-      if (!session || session.status !== "active") return;
+      if (!session || session.status !== "active") { _pendingClicks = 0; _pendingKeys = 0; return; }
       if (_pendingClicks > 0) {
         session.clicks = (session.clicks || 0) + _pendingClicks;
         _pendingClicks = 0;
@@ -570,7 +777,12 @@ function startActivityPolling() {
         safeSend("global-event", { type: "key", keyPresses: session.keyPresses });
       }
     };
-    setInterval(flushEvents, 800);
+    clearInterval(_flushInterval);
+    _flushInterval = setInterval(flushEvents, 800);
+
+    uIOhook.removeAllListeners("mousedown");
+    uIOhook.removeAllListeners("keydown");
+    uIOhook.removeAllListeners("wheel");
 
     uIOhook.on("mousedown", () => {
       if (!session || session.status !== "active") return;
@@ -595,7 +807,7 @@ function startActivityPolling() {
     // Fallback: polling de idle para detectar actividad aproximada
     console.log("⚠️  uiohook no disponible, usando polling:", e.message);
     let _lastIdleMs = 0;
-    setInterval(() => {
+    _fallbackInterval = setInterval(() => {
       if (!session || session.status !== "active") return;
       const idleMs = powerMonitor.getSystemIdleTime() * 1000;
       if (idleMs < _lastIdleMs - 300) _activityEvents++;
@@ -604,12 +816,46 @@ function startActivityPolling() {
   }
 }
 
+// Detiene el hook global y todos los temporizadores de tracking. Se llama al
+// cerrar sesión y al terminar el día: sin esto, el hook de bajo nivel sigue
+// procesando cada evento del sistema toda la noche con la app en el login.
+function stopActivityTracking() {
+  clearInterval(trackInterval);   trackInterval = null;
+  clearInterval(_flushInterval);  _flushInterval = null;
+  clearInterval(_fallbackInterval); _fallbackInterval = null;
+  _pendingClicks = 0; _pendingKeys = 0;
+  if (_uiohookActive) {
+    try {
+      const { uIOhook } = require("uiohook-napi");
+      uIOhook.removeAllListeners("mousedown");
+      uIOhook.removeAllListeners("keydown");
+      uIOhook.removeAllListeners("wheel");
+      uIOhook.stop();
+    } catch (_) {}
+    _uiohookActive = false;
+  }
+}
+
+// Los acumuladores viven en el proceso, no en la sesión: sin reiniciarlos, el
+// reporte del segundo turno heredaba apps y páginas del turno anterior.
+function resetAcumuladores() {
+  activeApps = {};
+  chromePages = {};
+  currentChromeUrl = "";
+  _activityEvents = 0;
+}
+
 const TRACK_INTERVAL_MS = 10000; // 10 segundos
+let _tickCount = 0;              // para espaciar las consultas a osascript
 
 function startAppTracking() {
   clearInterval(trackInterval);
   trackInterval = setInterval(() => {
     if (!session || session.status !== "active") return;
+
+    // Latido: marca que la app sigue viva. Si al arrancar este dato es viejo,
+    // sabemos que hubo un cierre inesperado y ese hueco no cuenta como trabajo.
+    session._lastActivityTs = Date.now();
 
     // ── Acumular tiempo activo / inactivo ────────────────────────────────────
     const idleSecs = powerMonitor.getSystemIdleTime();
@@ -619,10 +865,18 @@ function startAppTracking() {
       session.totalIdleMs = (session.totalIdleMs || 0) + TRACK_INTERVAL_MS;
     }
 
-    // Ejecutar en paralelo — no bloquear uno por el otro
-    Promise.all([trackApps(), trackChrome()]).then(() => {
-      save("current.json", session);
-    });
+    // Consultar apps y Chrome lanza dos procesos osascript. Hacerlo cada tick
+    // son ~5.700 procesos por jornada sin necesidad: basta cada 30 s.
+    _tickCount++;
+    const toca = _tickCount % 3 === 0;
+
+    // Red de seguridad: aunque una promesa se quedara colgada, el timeout
+    // garantiza que el guardado de la sesión ocurra igual.
+    const conTimeout = (p) => Promise.race([p, new Promise(r => setTimeout(r, 5000))]);
+    (toca
+      ? Promise.all([conTimeout(trackApps()), conTimeout(trackChrome())]).catch(() => {})
+      : Promise.resolve()
+    ).then(() => { if (session) save("current.json", session); });
 
     // Guardar contadores en sesión
     session.activityEvents = _activityEvents;
@@ -645,11 +899,17 @@ function startAppTracking() {
 }
 
 // ── Rastrear aplicaciones abiertas con tiempo ─────────────────────────────────
+// IMPORTANTE: esta promesa debe resolverse SIEMPRE, incluso en error. El
+// intervalo de tracking hace Promise.all([trackApps(), trackChrome()]).then(save):
+// si una se queda pendiente, el guardado periódico de la sesión deja de
+// ejecutarse en silencio y se pierde la jornada si el equipo se apaga.
+// osascript solo existe en macOS, así que en Windows/Linux resolvemos de una.
 function trackApps() { return new Promise(resolve => {
+  if (process.platform !== "darwin" || !session) return resolve();
   exec(
     `osascript -e 'tell application "System Events" to get name of every process whose background only is false'`,
     (err, stdout) => {
-      if (err || !stdout) return;
+      if (err || !stdout) return resolve();
       const now  = Date.now();
       const apps = stdout.trim().split(", ").filter(a => a && a !== "Electron" && a !== "Academic Tareas Monitor");
 
@@ -685,14 +945,15 @@ function trackApps() { return new Promise(resolve => {
 
 // ── Rastrear páginas en Chrome ────────────────────────────────────────────────
 function trackChrome() { return new Promise(resolve => {
+  if (process.platform !== "darwin" || !session) return resolve();
   exec(
     `osascript -e 'tell application "Google Chrome" to return {URL of active tab of front window, title of active tab of front window}'`,
     (err, stdout) => {
-      if (err || !stdout) return;
+      if (err || !stdout) return resolve();
       const parts = stdout.trim().split(", ");
       const url   = parts[0] || "";
       const title = parts.slice(1).join(", ") || url;
-      if (!url || url === "about:blank") return;
+      if (!url || url === "about:blank") return resolve();
 
       const now = Date.now();
 
@@ -711,6 +972,16 @@ function trackChrome() { return new Promise(resolve => {
       }
 
       currentChromeUrl = url;
+
+      // Tope de memoria en el objeto FUENTE (no solo en lo serializado):
+      // sin esto, chromePages crece una entrada por cada URL única durante
+      // toda la vida del proceso. Conservamos las 200 de mayor tiempo.
+      const claves = Object.keys(chromePages);
+      if (claves.length > 200) {
+        claves.sort((a, b) => (chromePages[b].totalMs || 0) - (chromePages[a].totalMs || 0))
+          .slice(200)
+          .forEach(k => { if (k !== currentChromeUrl) delete chromePages[k]; });
+      }
 
       // Guardar en sesión
       // Limitar a 50 páginas más visitadas para evitar fuga de memoria
@@ -751,9 +1022,13 @@ ipcMain.handle("auth-success", (_, usuario) => {
 ipcMain.handle("auth-logout", () => {
   loggedUser = null;
   remove("logged_user.json");
-  // Detener tracking si estaba activo
+  // Detener TODO el tracking: hook global, flush, intervalo de apps y overlays.
+  // Sin esto los listeners se acumulaban en cada re-login (clics contados por
+  // duplicado) y el hook seguía activo con la app en el login.
   clearInterval(idleTimer);
   idleTimer = null;
+  stopActivityTracking();
+  closeIdleOverlay();
   applyWindowSize("login");
   loadView("login.html");
   return { ok: true };
@@ -763,14 +1038,34 @@ ipcMain.handle("get-logged-user", () => loggedUser);
 
 // ── Google Sheets sync ────────────────────────────────────────────────────────
 // Usa https nativo para manejar los redirects de Google Apps Script manualmente
+// El destino se restringe a Google Apps Script. Este canal envía datos del
+// pedido (incluidas contraseñas) desde el proceso principal con el módulo
+// https de Node, o sea FUERA del alcance de la CSP: sin allowlist, cualquier
+// XSS podría usarlo para exfiltrar, y un redirect malicioso del webhook
+// reenviaría el mismo POST a un host arbitrario (SSRF).
+const HOSTS_WEBHOOK = ["script.google.com", "script.googleusercontent.com"];
+function destinoPermitido(u) {
+  try {
+    const { protocol, hostname } = new URL(u);
+    return protocol === "https:" && HOSTS_WEBHOOK.some(h => hostname === h || hostname.endsWith("." + h));
+  } catch { return false; }
+}
+
 ipcMain.handle("sync-pedido", async (_, { url, payload }) => {
   if (!url) return { ok: false, reason: "no_url" };
+  if (!destinoPermitido(url)) {
+    console.warn("[sheets-sync] destino no permitido:", String(url).slice(0, 80));
+    return { ok: false, reason: "destino_no_permitido" };
+  }
   const https = require("https");
   const body  = JSON.stringify(payload);
 
   function doPost(targetUrl, redirectsLeft) {
     return new Promise((resolve) => {
       try {
+        if (!destinoPermitido(targetUrl)) {
+          return resolve({ ok: false, reason: "redirect_no_permitido" });
+        }
         const u = new URL(targetUrl);
         const opts = {
           hostname: u.hostname,
@@ -818,22 +1113,54 @@ ipcMain.handle("sync-pedido", async (_, { url, payload }) => {
 // falla sin romper nada y queda el botón "Buscar actualizaciones" manual.
 function initAutoUpdater() {
   if (process.platform !== "win32" && process.platform !== "darwin") return;
+
+  // El instalador de macOS va firmado con Developer ID y notarizado: el propio
+  // sistema verifica la autenticidad del publicador, así que la instalación
+  // automática es segura.
+  //
+  // El instalador de Windows AÚN NO está firmado con Authenticode.
+  // electron-updater solo compara el hash contra latest.yml, que viaja en el
+  // mismo release: quien lograra publicar un release podría instalar código
+  // arbitrario y en silencio en todos los equipos Windows. Hasta contar con
+  // certificado de firma, en Windows solo se AVISA y se abre la página de
+  // descarga; el usuario instala a mano y ve el nombre del publicador.
+  const firmaVerificable = process.platform === "darwin";
+
   try {
     const { autoUpdater } = require("electron-updater");
-    autoUpdater.autoDownload = true;
-    autoUpdater.autoInstallOnAppQuit = true; // instala al cerrar la app
-    autoUpdater.on("update-downloaded", (info) => {
-      dialog.showMessageBox(win, {
-        type: "info",
-        title: "Actualización lista",
-        message: `Nueva versión ${info.version} descargada.`,
-        detail: "Se instalará al cerrar la aplicación, o puedes reiniciar ahora.",
-        buttons: ["Al cerrar", "Reiniciar ahora"],
-        defaultId: 0,
-      }).then(({ response }) => {
-        if (response === 1) autoUpdater.quitAndInstall();
+    autoUpdater.autoDownload = firmaVerificable;
+    autoUpdater.autoInstallOnAppQuit = firmaVerificable;
+
+    if (!firmaVerificable) {
+      autoUpdater.on("update-available", (info) => {
+        dialog.showMessageBox(win, {
+          type: "info",
+          title: "Hay una versión nueva",
+          message: `Está disponible la versión ${info.version}.`,
+          detail: "Descárgala e instálala cuando puedas. La instalación es manual mientras el instalador de Windows no esté firmado.",
+          buttons: ["Después", "Ir a la descarga"],
+          defaultId: 1,
+        }).then(({ response }) => {
+          if (response === 1) {
+            shell.openExternal("https://github.com/balamentbiz/academic-tareas-monitor/releases/latest");
+          }
+        });
       });
-    });
+    } else {
+      autoUpdater.on("update-downloaded", (info) => {
+        dialog.showMessageBox(win, {
+          type: "info",
+          title: "Actualización lista",
+          message: `Nueva versión ${info.version} descargada.`,
+          detail: "Se instalará al cerrar la aplicación, o puedes reiniciar ahora.",
+          buttons: ["Al cerrar", "Reiniciar ahora"],
+          defaultId: 0,
+        }).then(({ response }) => {
+          if (response === 1) autoUpdater.quitAndInstall();
+        });
+      });
+    }
+
     autoUpdater.on("error", (e) => console.log("[updater]", e?.message || e));
     autoUpdater.checkForUpdates().catch(() => {});
     setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 4 * 60 * 60 * 1000); // cada 4 h
@@ -842,4 +1169,9 @@ function initAutoUpdater() {
 
 app.whenReady().then(() => { createWindow(); initAutoUpdater(); });
 app.on("activate", () => { if (BrowserWindow.getAllWindows().length===0) createWindow(); else win?.show(); });
-app.on("window-all-closed", () => { if (process.platform!=="darwin") app.quit(); });
+
+// Cerrar la ventana = cerrar la aplicación, TAMBIÉN en macOS.
+// El comportamiento normal de macOS (dejar la app viva en el Dock) hacía que
+// la sesión siguiera "activa" durante horas después de que el colaborador creía
+// haberla cerrado, inflando la duración de la jornada.
+app.on("window-all-closed", () => app.quit());

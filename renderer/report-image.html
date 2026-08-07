@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'none'"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quicksand:wght@500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -304,7 +305,7 @@ function renderReport(r) {
       html += '<div class="activity-name">' + safe(a.titulo) + ' <span style="font-size:10px;font-weight:800;color:#067ab8">[' + safe(a.prioridad) + ']</span></div>';
       html += '<div style="font-size:10.5px;color:var(--text3);font-weight:700">'
             + (a.asignada_por ? 'Asignada por ' + safe(a.asignada_por) + ' · ' : '')
-            + a.iniciado + ' → ' + a.terminado
+            + safe(a.iniciado) + ' → ' + safe(a.terminado)
             + (a.pausas ? ' · ' + a.pausas + ' pausa' + (a.pausas !== 1 ? 's' : '') : '')
             + '</div>';
       html += '</div>';

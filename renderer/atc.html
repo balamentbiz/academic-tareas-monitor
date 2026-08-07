@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://*.cloudfunctions.net; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"/>
   <title>ATC — Academic Tareas</title>
   <style>
     :root {
@@ -759,6 +759,20 @@
 
     const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db    = getFirestore(fbApp);
+
+    // ── Escape HTML — antídoto contra XSS almacenado ────────────────────
+    // Cualquier dato que venga de Firestore lo pudo escribir otro usuario.
+    // Si se concatena crudo en innerHTML, un asesor puede guardar
+    // <img src=x onerror="..."> en un pedido y ese código se ejecuta en la
+    // sesión del director cuando abre su panel (escalada de privilegios).
+    // Regla del proyecto: TODO valor dinámico pasa por esc() antes de
+    // interpolarse en HTML.
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     const auth  = getAuth(fbApp);
 
     // Esperar a que Firebase restaure la sesión iniciada en el login
@@ -819,28 +833,28 @@
           <div class="mc-act-grid">
             <div class="mc-act-field" style="grid-column:1/-1">
               <label>Entregable</label>
-              <input type="text" data-field="entregable" value="${act.entregable||""}" placeholder="Ej. ENTREGABLE 2, EXAMEN FINAL..."/>
+              <input type="text" data-field="entregable" value="${esc(act.entregable||"")}" placeholder="Ej. ENTREGABLE 2, EXAMEN FINAL..."/>
             </div>
             <div class="mc-act-field">
               <label>Día entrega</label>
-              <input type="date" data-field="dia_entrega" value="${act.dia_entrega||""}"/>
+              <input type="date" data-field="dia_entrega" value="${esc(act.dia_entrega||"")}"/>
             </div>
             <div class="mc-act-field">
               <label>Hora límite</label>
-              <input type="time" data-field="hora_entrega" value="${act.hora_entrega||""}"/>
+              <input type="time" data-field="hora_entrega" value="${esc(act.hora_entrega||"")}"/>
             </div>
             <div class="mc-act-field">
               <label>Subir / No subir</label>
               <select data-field="subir">
                 <option value="">—</option>
-                <option ${act.subir==="SUBIR"?"selected":""}>SUBIR</option>
-                <option ${act.subir==="NO SUBIR"?"selected":""}>NO SUBIR</option>
+                <option ${esc(act.subir==="SUBIR"?"selected":"")}>SUBIR</option>
+                <option ${esc(act.subir==="NO SUBIR"?"selected":"")}>NO SUBIR</option>
               </select>
             </div>
           </div>
           <div class="mc-act-nota">
             <label>Anotaciones</label>
-            <input type="text" data-field="anotaciones" value="${act.anotaciones||""}" placeholder="Notas adicionales..."/>
+            <input type="text" data-field="anotaciones" value="${esc(act.anotaciones||"")}" placeholder="Notas adicionales..."/>
           </div>`;
 
         // Escuchar cambios en los campos → actualizar _mcActs en tiempo real
@@ -893,7 +907,7 @@
         document.getElementById("mc-materia").value    = prefill.materia    || "";
         _mcMatId = prefill.materia_id || null;
         if (prefill.dificultad) {
-          const btn = document.querySelector(`.mc-dif-btn[data-dif="${prefill.dificultad}"]`);
+          const btn = document.querySelector(`.mc-dif-btn[data-dif="${esc(prefill.dificultad)}"]`);
           if (btn) { btn.classList.add("selected"); _mcDif = prefill.dificultad; }
         }
       }
@@ -1488,20 +1502,20 @@
         const parcial = !pagado && Number(t.cantidad_pagada) > 0;
         card.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-            <span style="font-size:10px;color:var(--sub);font-family:monospace">#${t.numero_pedido || "—"}</span>
-            <span style="font-weight:800;color:var(--text);flex:1">${t.cliente || "—"}</span>
-            <span class="pedido-badge ${t.estado || 'pendiente'}">${estadoLabel[t.estado] || t.estado || "—"}</span>
+            <span style="font-size:10px;color:var(--sub);font-family:monospace">#${esc(t.numero_pedido || "—")}</span>
+            <span style="font-weight:800;color:var(--text);flex:1">${esc(t.cliente || "—")}</span>
+            <span class="pedido-badge ${esc(t.estado || 'pendiente')}">${esc(estadoLabel[t.estado] || t.estado || "—")}</span>
             <span style="font-size:10px;font-weight:800;padding:2px 9px;border-radius:999px;${pagado ? "background:rgba(29,158,75,.14);color:var(--green)" : parcial ? "background:rgba(207,117,0,.13);color:var(--orange)" : "background:rgba(224,54,44,.10);color:var(--red)"}">${pagado ? "✓ Pagado" : parcial ? "Parcial" : "Sin pago"}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:11.5px;color:var(--sub)">
-            ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${t.plataforma}</b></span>` : ""}
-            ${t.escuela ? `<span>Escuela: <b style="color:var(--text)">${t.escuela}</b></span>` : ""}
-            ${t.materia ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${t.materia}</b></span>` : ""}
-            ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
-            ${t.dia_entrega ? `<span>Entrega: <b style="color:var(--text)">${t.dia_entrega}${t.hora_entrega ? " · " + t.hora_entrega : ""}</b></span>` : ""}
+            ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${esc(t.plataforma)}</b></span>` : ""}
+            ${t.escuela ? `<span>Escuela: <b style="color:var(--text)">${esc(t.escuela)}</b></span>` : ""}
+            ${t.materia ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${esc(t.materia)}</b></span>` : ""}
+            ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${esc(t.entregable)}</b></span>` : ""}
+            ${t.dia_entrega ? `<span>Entrega: <b style="color:var(--text)">${esc(t.dia_entrega)}${esc(t.hora_entrega ? " · " + t.hora_entrega : "")}</b></span>` : ""}
             ${t.precio != null && t.precio !== "" ? `<span>Precio: <b style="color:var(--text)">$${Number(t.precio).toLocaleString("es-MX")}</b></span>` : ""}
-            ${t.asesor_asignado_nombre ? `<span>Asesor: <b style="color:var(--text)">${t.asesor_asignado_nombre}</b></span>` : ""}
-            ${t.atc_nombre ? `<span>ATC: <b style="color:var(--text)">${t.atc_nombre}</b></span>` : ""}
+            ${t.asesor_asignado_nombre ? `<span>Asesor: <b style="color:var(--text)">${esc(t.asesor_asignado_nombre)}</b></span>` : ""}
+            ${t.atc_nombre ? `<span>ATC: <b style="color:var(--text)">${esc(t.atc_nombre)}</b></span>` : ""}
           </div>`;
         listEl.appendChild(card);
       });
@@ -1573,13 +1587,13 @@
       card.innerHTML = `
         <div class="acta-header">
           <span class="acta-estado" style="background:${pBg[p]};color:${pColor[p]}">${p}</span>
-          <span class="acta-titulo">${a.titulo || "—"}</span>
-          <span class="acta-estado ${a.estado}">${estadoTxt[a.estado] || a.estado}</span>
+          <span class="acta-titulo">${esc(a.titulo || "—")}</span>
+          <span class="acta-estado ${esc(a.estado)}">${esc(estadoTxt[a.estado] || a.estado)}</span>
         </div>
-        ${a.descripcion ? `<div class="acta-desc">${a.descripcion}</div>` : ""}
+        ${a.descripcion ? `<div class="acta-desc">${esc(a.descripcion)}</div>` : ""}
         <div class="acta-meta">
-          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> Límite: <b>${a.fecha_limite}${a.hora_limite ? " · " + a.hora_limite : ""}</b></span>` : ""}
-          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Asignada por: <b>${a.creado_por_nombre}</b></span>` : ""}
+          ${a.fecha_limite ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/></svg> Límite: <b>${esc(a.fecha_limite)}${esc(a.hora_limite ? " · " + a.hora_limite : "")}</b></span>` : ""}
+          ${a.creado_por_nombre ? `<span><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Asignada por: <b>${esc(a.creado_por_nombre)}</b></span>` : ""}
         </div>
         <div class="acta-crono">
           <span>⏱ Trabajo: <b id="acta-t-${a.id}">${fmtActa(actaTrabajoMs(a))}</b></span>
@@ -1699,7 +1713,7 @@
           _actaNotified.add(a.id);
           try {
             new Notification("Nueva actividad asignada", {
-              body: `${a.titulo || "Actividad"}${a.creado_por_nombre ? " — de " + a.creado_por_nombre : ""}. Revísala en la pestaña Asignadas.`,
+              body: `${esc(a.titulo || "Actividad")}${esc(a.creado_por_nombre ? " — de " + a.creado_por_nombre : "")}. Revísala en la pestaña Asignadas.`,
             });
           } catch (_) {}
           updateDoc(doc(db, "actividades_asignadas", a.id), { visto: true, notificado_en: new Date().toISOString() }).catch(() => {});
@@ -1763,20 +1777,20 @@
         card.innerHTML = `
           <div class="mt-header">
             <span class="mt-dif-badge" style="background:${difBg[dif]||difBg.B};color:${difColor[dif]||difColor.B}">${dif}</span>
-            <span class="mt-cliente">${t.cliente || "—"}</span>
-            <span class="pedido-badge ${t.estado||'pendiente'}">${estadoLabel[t.estado]||t.estado}</span>
+            <span class="mt-cliente">${esc(t.cliente || "—")}</span>
+            <span class="pedido-badge ${esc(t.estado||'pendiente')}">${esc(estadoLabel[t.estado]||t.estado)}</span>
           </div>
           <div class="mt-data">
-            ${t.plataforma  ? `<span>Plataforma: <b>${t.plataforma}</b></span>` : ""}
-            ${t.escuela     ? `<span>Escuela: <b>${t.escuela}</b></span>` : ""}
-            ${t.id_alumno   ? `<span>ID: <b>${t.id_alumno}</b></span>` : ""}
-            ${t.contrasena  ? `<span>Contraseña: <b>${t.contrasena}</b></span>` : ""}
-            ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${t.materia}</b></span>` : ""}
-            ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${t.entregable}</b></span>` : ""}
-            ${t.dia_entrega ? `<span>Entrega: <b>${t.dia_entrega}${t.hora_entrega ? " · " + t.hora_entrega : ""}</b></span>` : ""}
-            ${t.subir       ? `<span>Subir: <b>${t.subir}</b></span>` : ""}
+            ${t.plataforma  ? `<span>Plataforma: <b>${esc(t.plataforma)}</b></span>` : ""}
+            ${t.escuela     ? `<span>Escuela: <b>${esc(t.escuela)}</b></span>` : ""}
+            ${t.id_alumno   ? `<span>ID: <b>${esc(t.id_alumno)}</b></span>` : ""}
+            ${t.contrasena  ? `<span>Contraseña: <b>${esc(t.contrasena)}</b></span>` : ""}
+            ${t.materia     ? `<span style="grid-column:1/-1">Materia: <b>${esc(t.materia)}</b></span>` : ""}
+            ${t.entregable  ? `<span style="grid-column:1/-1">Entregable: <b>${esc(t.entregable)}</b></span>` : ""}
+            ${t.dia_entrega ? `<span>Entrega: <b>${esc(t.dia_entrega)}${esc(t.hora_entrega ? " · " + t.hora_entrega : "")}</b></span>` : ""}
+            ${t.subir       ? `<span>Subir: <b>${esc(t.subir)}</b></span>` : ""}
           </div>
-          ${t.anotaciones ? `<div class="mt-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${t.anotaciones}</div>` : ""}
+          ${t.anotaciones ? `<div class="mt-nota"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${esc(t.anotaciones)}</div>` : ""}
           <div class="mt-crono" id="mtc-${t.id}">
             <div class="mt-crono-dot"></div>
             <div class="mt-crono-vals">
@@ -1961,18 +1975,18 @@
         card.style.borderLeft = `3px solid ${cfg.color}`;
         card.innerHTML = `
           <div class="pedido-header" style="margin-bottom:6px">
-            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.border}">${cfg.label}</span>
-            <span class="pedido-cliente">${t.cliente || "—"}</span>
-            <span class="pedido-badge ${badgeMap[t.estado]||'pendiente'}">${estadoLabel[t.estado]||t.estado}</span>
+            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.border}">${esc(cfg.label)}</span>
+            <span class="pedido-cliente">${esc(t.cliente || "—")}</span>
+            <span class="pedido-badge ${esc(badgeMap[t.estado]||'pendiente')}">${esc(estadoLabel[t.estado]||t.estado)}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:11px;color:var(--sub)">
-            ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${t.plataforma}</b></span>` : ""}
-            ${t.escuela    ? `<span>Escuela: <b style="color:var(--text)">${t.escuela}</b></span>` : ""}
-            ${t.materia    ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${t.materia}</b></span>` : ""}
-            ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
-            ${t._diaEnt    ? `<span>Entrega: <b style="color:${cfg.color}">${t._diaEnt}${t.hora_entrega ? ' · ' + t.hora_entrega : ''}</b></span>` : ""}
-            ${t.asesor_nombre ? `<span>Asesor: <b style="color:var(--text)">${t.asesor_nombre}</b></span>` : ""}
-            ${t.dificultad ? `<span>Dif: <b style="color:var(--text)">${t.dificultad}</b></span>` : ""}
+            ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${esc(t.plataforma)}</b></span>` : ""}
+            ${t.escuela    ? `<span>Escuela: <b style="color:var(--text)">${esc(t.escuela)}</b></span>` : ""}
+            ${t.materia    ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${esc(t.materia)}</b></span>` : ""}
+            ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${esc(t.entregable)}</b></span>` : ""}
+            ${t._diaEnt    ? `<span>Entrega: <b style="color:${cfg.color}">${t._diaEnt}${esc(t.hora_entrega ? ' · ' + t.hora_entrega : '')}</b></span>` : ""}
+            ${t.asesor_nombre ? `<span>Asesor: <b style="color:var(--text)">${esc(t.asesor_nombre)}</b></span>` : ""}
+            ${t.dificultad ? `<span>Dif: <b style="color:var(--text)">${esc(t.dificultad)}</b></span>` : ""}
           </div>`;
         listEl.appendChild(card);
       });
@@ -2012,34 +2026,34 @@
           card.className = "pedido-card";
           card.innerHTML = `
             <div class="pedido-header">
-              <span class="pedido-id">#${t.numero_pedido || "—"}</span>
-              <span class="pedido-cliente">${t.cliente}</span>
-              <span class="pedido-badge ${badgeMap[t.estado]||'pendiente'}">${estadoLabel[t.estado]||t.estado}</span>
+              <span class="pedido-id">#${esc(t.numero_pedido || "—")}</span>
+              <span class="pedido-cliente">${esc(t.cliente)}</span>
+              <span class="pedido-badge ${esc(badgeMap[t.estado]||'pendiente')}">${esc(estadoLabel[t.estado]||t.estado)}</span>
               ${t.listo_para_cobrar && t.estado === "completado" ? `<span class="badge-listo-cobrar"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M14.6 9c-.6-.9-1.5-1.4-2.6-1.4-1.6 0-2.7.8-2.7 2 0 2.7 5.4 1.4 5.4 4 0 1.2-1.1 2-2.7 2-1.2 0-2.2-.5-2.8-1.5"/></svg> Listo p/cobrar</span>` : ""}
               <button class="btn-duplicar" title="Duplicar con mismas credenciales"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 12l2.2 2.2L15.5 10"/></svg> Duplicar</button>
             </div>
             <div class="pedido-desc" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px;color:var(--sub);margin:6px 0">
-              ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${t.plataforma}</b></span>` : ""}
-              ${t.escuela    ? `<span>Escuela: <b style="color:var(--text)">${t.escuela}</b></span>` : ""}
-              ${t.id_alumno  ? `<span>ID: <b style="color:var(--text)">${t.id_alumno}</b></span>` : ""}
-              ${t.contrasena ? `<span>Pass: <b style="color:var(--text)">${t.contrasena}</b></span>` : ""}
-              ${t.materia    ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${t.materia}</b></span>` : ""}
-              ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
+              ${t.plataforma ? `<span>Plataforma: <b style="color:var(--text)">${esc(t.plataforma)}</b></span>` : ""}
+              ${t.escuela    ? `<span>Escuela: <b style="color:var(--text)">${esc(t.escuela)}</b></span>` : ""}
+              ${t.id_alumno  ? `<span>ID: <b style="color:var(--text)">${esc(t.id_alumno)}</b></span>` : ""}
+              ${t.contrasena ? `<span>Pass: <b style="color:var(--text)">${esc(t.contrasena)}</b></span>` : ""}
+              ${t.materia    ? `<span style="grid-column:1/-1">Materia: <b style="color:var(--text)">${esc(t.materia)}</b></span>` : ""}
+              ${t.entregable ? `<span style="grid-column:1/-1">Entregable: <b style="color:var(--text)">${esc(t.entregable)}</b></span>` : ""}
               ${t.dia_agenda  ? `<span>Agenda: <b style="color:var(--text)">${t.dia_agenda}</b></span>` : ""}
-              ${t.dia_entrega ? `<span>Entrega: <b style="color:var(--text)">${t.dia_entrega}${t.hora_entrega ? ' · ' + t.hora_entrega : ''}</b></span>` : ""}
-              ${t.subir       ? `<span>Subir: <b style="color:var(--text)">${t.subir}</b></span>` : ""}
+              ${t.dia_entrega ? `<span>Entrega: <b style="color:var(--text)">${esc(t.dia_entrega)}${esc(t.hora_entrega ? ' · ' + t.hora_entrega : '')}</b></span>` : ""}
+              ${t.subir       ? `<span>Subir: <b style="color:var(--text)">${esc(t.subir)}</b></span>` : ""}
               ${t.precio != null ? `<span>Precio: <b style="color:var(--text)">$${t.precio}</b></span>` : ""}
-              ${t.estatus_pago ? `<span>Pago: <b style="color:${estatusPagoColor[t.estatus_pago]||'var(--text)'}">${t.estatus_pago}</b></span>` : ""}
+              ${t.estatus_pago ? `<span>Pago: <b style="color:${esc(estatusPagoColor[t.estatus_pago]||'var(--text)')}">${esc(t.estatus_pago)}</b></span>` : ""}
               ${t.cantidad_pagada != null ? `<span>Pagado: <b style="color:var(--text)">$${t.cantidad_pagada}</b></span>` : ""}
             </div>
-            ${t.anotaciones ? `<div style="font-size:11px;color:var(--sub);border-top:1px solid var(--border);padding-top:5px;margin-top:2px"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${t.anotaciones}</div>` : ""}
+            ${t.anotaciones ? `<div style="font-size:11px;color:var(--sub);border-top:1px solid var(--border);padding-top:5px;margin-top:2px"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg> ${esc(t.anotaciones)}</div>` : ""}
             <div class="pedido-meta" style="margin-top:6px">
-              <span>Dif: <b>${t.dificultad}</b></span>
-              <span>Asesor: <b>${t.asesor_nombre || "Sin asignar"}</b></span>
+              <span>Dif: <b>${esc(t.dificultad)}</b></span>
+              <span>Asesor: <b>${esc(t.asesor_nombre || "Sin asignar")}</b></span>
             </div>
             <div class="pedido-actions">
-              <button class="btn-p-action primary btn-editar" ${EDITABLE(t.estado)?'':'disabled'}><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar</button>
-              <button class="btn-p-action primary btn-reasignar" ${REASIGNABLE(t.estado)?'':'disabled'}><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Reasignar</button>
+              <button class="btn-p-action primary btn-editar" ${esc(EDITABLE(t.estado)?'':'disabled')}><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/></svg> Editar</button>
+              <button class="btn-p-action primary btn-reasignar" ${esc(REASIGNABLE(t.estado)?'':'disabled')}><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1-3.5 3.6-5.2 7-5.2s6 1.7 7 5.2"/></svg> Reasignar</button>
               <button class="btn-p-action danger btn-eliminar"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M7 7l.8 12a2 2 0 0 0 2 1.9h4.4a2 2 0 0 0 2-1.9L17 7"/></svg></button>
             </div>`;
 
@@ -2106,7 +2120,7 @@
           header.className = "mat-grupo-header";
           header.innerHTML = `
             <span class="mat-grupo-badge"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> MATERIA COMPLETA</span>
-            <span class="mat-grupo-title">${rep.cliente} · ${rep.materia || "—"}</span>
+            <span class="mat-grupo-title">${esc(rep.cliente)} · ${esc(rep.materia || "—")}</span>
             <span class="mat-grupo-code">${mid}</span>
             <span class="mat-grupo-stats">${items.length} entregables · ${completados} completados · $${precioTotal.toLocaleString("es-MX")}</span>
             <span style="font-size:12px;color:var(--sub);margin-left:auto">▾</span>`;
@@ -2144,24 +2158,60 @@
       return [h > 0 ? `${h}h` : null, m > 0 ? `${m}m` : null, `${sec}s`].filter(Boolean).join(" ");
     }
 
+    // Tiempo pausado acumulado + inicio de la pausa abierta (si la hay).
+    // El cronómetro debe mostrar tiempo de TRABAJO, no reloj de pared: si no se
+    // descontaran las pausas, al reabrir la app se verían las horas que estuvo
+    // cerrada como si se hubieran trabajado.
+    let _pausadoMs = 0, _pausaAbierta = null;
+
+    function pintarEstadoSesion(s, nombre) {
+      const dot     = document.getElementById("sesion-dot");
+      const estadoE = document.getElementById("sesion-estado");
+      const btn     = document.getElementById("btn-pausa-atc");
+      const pausada = s && s.status === "paused";
+      if (dot) dot.classList.toggle("idle", !!pausada);
+      if (estadoE) {
+        if (pausada) estadoE.textContent = "⏸ Sesión en pausa — pulsa Reanudar para continuar";
+        else estadoE.innerHTML = `Sesión activa · ${esc(nombre || "")}`;
+      }
+      if (btn) {
+        btn.textContent = pausada ? "▶ Reanudar" : "⏸ Pausa";
+        btn.style.background  = pausada ? "rgba(50,215,75,.12)" : "rgba(255,159,10,.12)";
+        btn.style.borderColor = pausada ? "rgba(50,215,75,.3)"  : "rgba(255,159,10,.3)";
+        btn.style.color       = pausada ? "var(--green)" : "var(--orange)";
+      }
+    }
+
+    function recalcularPausas(s) {
+      _pausadoMs = s?.totalPausedMs || 0;
+      _pausaAbierta = null;
+      const abierta = (s?.pauses || []).slice().reverse().find(p => !p.endTime);
+      if (abierta) _pausaAbierta = abierta.startTime;
+    }
+
     async function iniciarSesionATC() {
       if (!window.AT) return;
       const user = await window.AT.getLoggedUser();
       if (!user) return;
-      const { session: s } = (await window.AT.getStatus()) || {};
-      if (!s || s.status !== "active") {
+      let { session: s } = (await window.AT.getStatus()) || {};
+      // Solo se abre jornada nueva si no hay ninguna. Una sesión en pausa
+      // (por ejemplo, porque se cerró la app) se conserva y se reanuda a mano.
+      if (!s) {
         await window.AT.startDay({ collaborator: user.nombre });
       }
       const status2 = await window.AT.getStatus();
-      _sesionStart = status2?.session?.startTime || Date.now();
-
-      const estadoEl = document.getElementById("sesion-estado");
-      if (estadoEl) estadoEl.textContent = `Sesión activa · ${user.nombre}`;
+      s = status2?.session || null;
+      _sesionStart = s?.startTime || Date.now();
+      recalcularPausas(s);
+      pintarEstadoSesion(s, user.nombre);
 
       clearInterval(_timerInterval);
       _timerInterval = setInterval(() => {
         const timerEl = document.getElementById("sesion-timer");
-        if (timerEl) timerEl.textContent = "⏱ " + fmtMs(Date.now() - _sesionStart);
+        if (!timerEl) return;
+        const enPausa = _pausaAbierta ? Date.now() - _pausaAbierta : 0;
+        const trabajo = Date.now() - _sesionStart - _pausadoMs - enPausa;
+        timerEl.textContent = "⏱ " + fmtMs(Math.max(0, trabajo));
       }, 1000);
 
       // ── Contadores de clicks / teclas ─────────────────────────────────────
@@ -2169,7 +2219,7 @@
         window.AT.onGlobalEvent((ev) => {
           if (ev.type === "click") {
             const el = document.getElementById("sesion-clicks");
-            if (el) el.textContent = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3.5" width="8" height="17" rx="4"/><path d="M12 7v3.5"/></svg> ${ev.clicks.toLocaleString()}`;
+            if (el) el.innerHTML = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3.5" width="8" height="17" rx="4"/><path d="M12 7v3.5"/></svg> ${ev.clicks.toLocaleString()}`;
           }
           if (ev.type === "key") {
             const el = document.getElementById("sesion-keys");
@@ -2187,7 +2237,7 @@
           const est  = document.getElementById("sesion-estado");
           if (dot)  dot.classList.add("idle");
           if (idle) idle.style.display = "inline";
-          if (est)  est.textContent = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> Tiempo muerto · ${user.nombre}`;
+          if (est)  est.innerHTML = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg> Tiempo muerto · ${esc(user.nombre)}`;
         });
       }
     }
@@ -2195,30 +2245,17 @@
     // ── Botón Pausa / Reanudar ────────────────────────────────────────────────
     document.getElementById("btn-pausa-atc")?.addEventListener("click", async function() {
       const { session: s } = (await window.AT.getStatus()) || {};
-      const dot     = document.getElementById("sesion-dot");
-      const estadoE = document.getElementById("sesion-estado");
-      const idle    = document.getElementById("sesion-idle");
       if (!s) return;
+      const user2 = await window.AT.getLoggedUser();
 
-      if (s.status === "active") {
-        await window.AT.pauseSession({ reason: "pausa manual ATC" });
-        this.textContent = "▶ Reanudar";
-        this.style.background    = "rgba(50,215,75,.12)";
-        this.style.borderColor   = "rgba(50,215,75,.3)";
-        this.style.color         = "var(--green)";
-        if (dot)  dot.classList.add("idle");
-        if (estadoE) estadoE.textContent = "⏸ Sesión en pausa";
-      } else if (s.status === "paused") {
-        await window.AT.resumeSession();
-        this.textContent = "⏸ Pausa";
-        this.style.background    = "rgba(255,159,10,.12)";
-        this.style.borderColor   = "rgba(255,159,10,.3)";
-        this.style.color         = "var(--orange)";
-        if (dot)  dot.classList.remove("idle");
-        if (idle) idle.style.display = "none";
-        const user2 = await window.AT.getLoggedUser();
-        if (estadoE && user2) estadoE.textContent = `Sesión activa · ${user2.nombre}`;
-      }
+      if (s.status === "active")      await window.AT.pauseSession({ reason: "pausa manual ATC" });
+      else if (s.status === "paused") await window.AT.resumeSession();
+
+      const { session: s2 } = (await window.AT.getStatus()) || {};
+      recalcularPausas(s2);
+      pintarEstadoSesion(s2, user2?.nombre);
+      const idle = document.getElementById("sesion-idle");
+      if (idle && s2?.status === "active") idle.style.display = "none";
     });
 
     // Iniciar sesión automáticamente al cargar
@@ -2265,7 +2302,7 @@
       if (texto) texto.textContent = done === total
         ? `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.4 2.4 4.6-5"/></svg> ¡Todas completadas! (${totalExecs} ejecuciones totales)`
         : `Actividades del día — ${pct}%`;
-      if (prog)  prog.textContent = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 12l2.2 2.2L15.5 10"/></svg> ${done}/${total}`;
+      if (prog)  prog.innerHTML = `<svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4.5" width="12" height="16" rx="2.5"/><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0"/><path d="M9 12l2.2 2.2L15.5 10"/></svg> ${done}/${total}`;
     }
 
     async function cargarActividades() {
@@ -2339,7 +2376,7 @@
           item.innerHTML = `
             <div class="act-checkbox">${icon}</div>
             <div class="act-body">
-              <div class="act-label">${act.label}</div>
+              <div class="act-label">${esc(act.label)}</div>
               ${act.sub ? `<div class="act-sub">${act.sub}</div>` : ""}
               ${execListHtml ? `<div class="exec-list">${execListHtml}</div>` : ""}
               ${isRun ? `
@@ -2533,7 +2570,7 @@
         if (!exs.length && !enCursoAct) return "";
         return `
           <div class="rep-act-row">
-            <div class="rep-act-name">${exs.length > 0 ? "✓" : "⏱"} ${a.label}
+            <div class="rep-act-name">${exs.length > 0 ? "✓" : "⏱"} ${esc(a.label)}
               <span style="font-size:10px;font-weight:400;color:var(--sub);margin-left:6px">${exs.length} completada${exs.length !== 1 ? "s" : ""}</span>
             </div>
             <div class="rep-act-execs">
@@ -2644,16 +2681,16 @@
 
           card.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-size:10px;color:var(--sub);font-family:monospace">#${t.numero_pedido || "—"}</span>
-              <span style="font-size:13px;font-weight:700;flex:1">${t.cliente || "—"}</span>
+              <span style="font-size:10px;color:var(--sub);font-family:monospace">#${esc(t.numero_pedido || "—")}</span>
+              <span style="font-size:13px;font-weight:700;flex:1">${esc(t.cliente || "—")}</span>
               ${t.listo_para_cobrar ? `<span class="badge-listo-cobrar"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M14.6 9c-.6-.9-1.5-1.4-2.6-1.4-1.6 0-2.7.8-2.7 2 0 2.7 5.4 1.4 5.4 4 0 1.2-1.1 2-2.7 2-1.2 0-2.2-.5-2.8-1.5"/></svg> Listo para cobrar</span>` : ""}
-              <span class="pago-badge ${pagoEstatus}">${pagoEstatus}</span>
+              <span class="pago-badge ${esc(pagoEstatus)}">${esc(pagoEstatus)}</span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:11px;color:var(--sub)">
-              ${t.materia    ? `<span style="grid-column:1/-1"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> <b style="color:var(--text)">${t.materia}</b></span>` : ""}
-              ${t.entregable ? `<span style="grid-column:1/-1"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg> <b style="color:var(--text)">${t.entregable}</b></span>` : ""}
-              ${t.asesor_nombre ? `<span>Asesor: <b style="color:var(--text)">${t.asesor_nombre}</b></span>` : ""}
-              ${t.dia_entrega   ? `<span>Entrega: <b style="color:var(--text)">${t.dia_entrega}${t.hora_entrega ? ' · ' + t.hora_entrega : ''}</b></span>` : ""}
+              ${t.materia    ? `<span style="grid-column:1/-1"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg> <b style="color:var(--text)">${esc(t.materia)}</b></span>` : ""}
+              ${t.entregable ? `<span style="grid-column:1/-1"><svg class="vi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg> <b style="color:var(--text)">${esc(t.entregable)}</b></span>` : ""}
+              ${t.asesor_nombre ? `<span>Asesor: <b style="color:var(--text)">${esc(t.asesor_nombre)}</b></span>` : ""}
+              ${t.dia_entrega   ? `<span>Entrega: <b style="color:var(--text)">${esc(t.dia_entrega)}${esc(t.hora_entrega ? ' · ' + t.hora_entrega : '')}</b></span>` : ""}
               ${t.precio != null ? `<span>Total: <b style="color:var(--text)">$${t.precio}</b></span>` : ""}
               ${pendienteAmt != null ? `<span>Pendiente: <b style="color:var(--orange)">$${pendienteAmt}</b></span>` : ""}
             </div>

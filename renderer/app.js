@@ -4,6 +4,13 @@
 // ── Utilidades ────────────────────────────────────────────────────────────────
 function el(id) { return document.getElementById(id); }
 
+// Escape HTML: todo dato dinámico se escapa antes de ir a innerHTML
+function esc(v) {
+  return String(v == null ? "" : v)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 function fmt(ms) {
   if (!ms || ms < 0) return "0s";
   const s = Math.floor(ms / 1000);
@@ -202,7 +209,14 @@ window.AT.getStatus().then(function(data) {
     return;
   }
   if (session.status === "active")  { showView("active");  startTick(session); }
-  if (session.status === "paused")  { showView("paused");  showPauseInfo(session); startPauseTick(); }
+  if (session.status === "paused")  {
+    showView("paused"); showPauseInfo(session);
+    // Al reabrir la app en pausa, pauseStartTs venía vacío y el cronómetro
+    // se quedaba congelado en 0. Se recupera de la pausa abierta.
+    var pausaAbierta = (session.pauses || []).slice().reverse().find(function(p) { return !p.endTime; });
+    if (pausaAbierta) pauseStartTs = pausaAbierta.startTime;
+    startPauseTick();
+  }
 }).catch(function(e) { console.error("init error", e); showView("idle"); });
 
 window.AT.onShowIdle(function() { showIdleOverlay(); });
@@ -246,6 +260,11 @@ if (window.AT.onGlobalEvent) {
 // ── Tick del main → actualizar contadores de pausas y actividades ─────────────
 var _lastIdle = 0, _lastActivities = 0, _lastActiveMs = 0, _lastIdleMs = 0;
 
+// ── Tick del main process → activo/inactivo/contadores ───────────────────────
+// Un solo listener: antes había dos registrados al mismo canal haciendo
+// trabajo redundante en cada tick.
+var _lastActiveMs = 0, _lastIdleMs = 0;
+
 if (window.AT.onSessionTick) {
   window.AT.onSessionTick(function(data) {
     _lastActiveMs = data.totalActiveMs || 0;
@@ -254,16 +273,6 @@ if (window.AT.onSessionTick) {
     var a = data.activitiesCount || 0;
     if (i !== _lastIdle)        { if (el("cnt-idle"))       { el("cnt-idle").textContent       = i; bumpCounter("cnt-idle"); }       _lastIdle = i; }
     if (a !== _lastActivities)  { if (el("cnt-activities")) { el("cnt-activities").textContent = a; bumpCounter("cnt-activities"); } _lastActivities = a; }
-  });
-}
-
-// ── Tick del main process → actualizar activo/inactivo/eventos ────────────────
-var _lastActiveMs = 0, _lastIdleMs = 0;
-
-if (window.AT.onSessionTick) {
-  window.AT.onSessionTick(function(data) {
-    _lastActiveMs = data.totalActiveMs || 0;
-    _lastIdleMs   = data.totalIdleMs   || 0;
     if (el("cnt-events")) el("cnt-events").textContent = data.activityEvents || 0;
   });
 }
@@ -283,7 +292,12 @@ function startSecondTick() {
 
   _secTickInt = setInterval(function() {
     if (!_sessionStartTime) return;
-    var elapsed = Date.now() - _sessionStartTime;
+    // Tiempo de jornada = reloj de pared MENOS lo pausado (incluida la pausa
+    // abierta). Sin esto, cerrar la app y volver al día siguiente mostraba
+    // todas las horas cerradas como si fueran de trabajo.
+    var enPausa = _pausaAbiertaTs ? (Date.now() - _pausaAbiertaTs) : 0;
+    var elapsed = Date.now() - _sessionStartTime - _pausadoAcumMs - enPausa;
+    if (elapsed < 0) elapsed = 0;
     if (_elElapsed) _elElapsed.textContent = fmt(elapsed);
     if (_elActive)  _elActive.textContent  = fmt(_lastActiveMs);
     if (_elIdle)    _elIdle.textContent    = fmt(_lastIdleMs);
@@ -580,11 +594,23 @@ function validateIdle() {
 }
 
 // ── Ticks ─────────────────────────────────────────────────────────────────────
+var _pausadoAcumMs = 0, _pausaAbiertaTs = null;
+
+function refrescarPausas(session) {
+  _pausadoAcumMs = (session && session.totalPausedMs) || 0;
+  _pausaAbiertaTs = null;
+  var ps = (session && session.pauses) || [];
+  for (var i = ps.length - 1; i >= 0; i--) {
+    if (!ps[i].endTime) { _pausaAbiertaTs = ps[i].startTime; break; }
+  }
+}
+
 function startTick(session) {
   if (session) {
     _sessionStartTime = session.startTime;
     _lastActiveMs = session.totalActiveMs || 0;
     _lastIdleMs   = session.totalIdleMs   || 0;
+    refrescarPausas(session);
     if (el("stat-start")) el("stat-start").textContent = new Date(session.startTime).toLocaleTimeString("es-MX");
     el("activity-count") && (el("activity-count").textContent = (session.activities || []).length);
   }
@@ -651,8 +677,8 @@ function renderReport(r) {
     html += '<span class="rsec">Actividades (' + activities.length + ')</span>';
     activities.forEach(function(a) {
       html += '<div style="background:rgba(50,215,75,.06);border-left:3px solid #32d74b;padding:5px 8px;margin:3px 0;border-radius:0 6px 6px 0;font-size:11px">';
-      html += '<strong style="color:#32d74b">' + a.number + '. ' + a.name + '</strong><br>';
-      html += '<span style="color:#87b1ea">▶ ' + a.startTime + ' → ■ ' + a.endTime + ' · ' + a.duration + '</span></div>';
+      html += '<strong style="color:#32d74b">' + a.number + '. ' + esc(a.name) + '</strong><br>';
+      html += '<span style="color:#87b1ea">▶ ' + esc(a.startTime) + ' → ■ ' + esc(a.endTime) + ' · ' + esc(a.duration) + '</span></div>';
     });
   } else {
     html += '<span style="color:rgba(135,177,234,.4);font-size:12px">Sin actividades</span>';
@@ -660,10 +686,10 @@ function renderReport(r) {
 
   // Resumen
   html += '<span class="rsec">Resumen</span>';
-  html += '<strong>Colaborador:</strong> ' + r.meta.collaborator + '<br>';
-  html += '<strong>Fecha:</strong> ' + r.meta.date + '<br>';
-  html += '<strong>Entrada:</strong> ' + summary.startTime + ' &nbsp;|&nbsp; <strong>Salida:</strong> ' + summary.endTime + '<br>';
-  html += '<strong>Activo:</strong> ' + summary.activeTime + ' &nbsp;|&nbsp; <strong>Inactivo:</strong> ' + summary.idleTime + '<br>';
+  html += '<strong>Colaborador:</strong> ' + esc(r.meta.collaborator) + '<br>';
+  html += '<strong>Fecha:</strong> ' + esc(r.meta.date) + '<br>';
+  html += '<strong>Entrada:</strong> ' + esc(summary.startTime) + ' &nbsp;|&nbsp; <strong>Salida:</strong> ' + esc(summary.endTime) + '<br>';
+  html += '<strong>Activo:</strong> ' + esc(summary.activeTime) + ' &nbsp;|&nbsp; <strong>Inactivo:</strong> ' + esc(summary.idleTime) + '<br>';
   html += '<strong>Clics:</strong> ' + (summary.clicks || 0) + ' &nbsp;|&nbsp; <strong>Teclas:</strong> ' + (summary.keyPresses || 0) + '<br>';
   html += '<strong>T. muertos:</strong> ' + (summary.totalIdlePeriods || 0) + ' &nbsp;|&nbsp; <strong>Actividades:</strong> ' + (summary.totalActivities || 0) + ' &nbsp;|&nbsp; <strong>Productividad:</strong> ' + summary.productivityPct + '%';
 
@@ -671,7 +697,7 @@ function renderReport(r) {
   if (pauses.length > 0) {
     html += '<span class="rsec">Pausas</span>';
     pauses.forEach(function(p) {
-      html += '<strong>' + p.reason + '</strong> ' + p.start + '→' + p.end + ' (' + p.duration + ')<br>';
+      html += '<strong>' + esc(p.reason) + '</strong> ' + esc(p.start) + '→' + esc(p.end) + ' (' + esc(p.duration) + ')<br>';
     });
   }
 
@@ -680,8 +706,8 @@ function renderReport(r) {
     html += '<span class="rsec" style="color:#ff453a">Tiempos muertos (' + idlePeriods.length + ')</span>';
     idlePeriods.forEach(function(ip) {
       html += '<div style="background:rgba(255,69,58,.07);border-left:3px solid #ff453a;padding:4px 8px;margin:2px 0;border-radius:0 4px 4px 0;font-size:11px">';
-      html += ip.start + '→' + ip.end + ' · <strong style="color:#ff453a">' + ip.duration + '</strong><br>';
-      html += '<span style="color:#87b1ea">Motivo: ' + ip.reason + '</span></div>';
+      html += ip.start + '→' + esc(ip.end) + ' · <strong style="color:#ff453a">' + esc(ip.duration) + '</strong><br>';
+      html += '<span style="color:#87b1ea">Motivo: ' + esc(ip.reason) + '</span></div>';
     });
   }
 
@@ -690,7 +716,7 @@ function renderReport(r) {
     html += '<span class="rsec">Aplicaciones usadas (' + appsOpened.length + ')</span>';
     appsOpened.forEach(function(a) {
       html += '<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0">';
-      html += '<span style="color:#87b1ea">• ' + a.name + '</span>';
+      html += '<span style="color:#87b1ea">• ' + esc(a.name) + '</span>';
       html += '<span style="color:#09a3ef;font-weight:700">' + (a.duration || "—") + '</span></div>';
     });
   }
@@ -701,9 +727,9 @@ function renderReport(r) {
     chromePages.slice(0, 10).forEach(function(p) {
       html += '<div style="margin:3px 0;font-size:11px">';
       html += '<div style="display:flex;justify-content:space-between">';
-      html += '<strong style="color:#f6f6f6;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.title + '</strong>';
-      html += '<span style="color:#09a3ef;font-weight:700;flex-shrink:0;margin-left:8px">' + p.duration + '</span></div>';
-      html += '<span style="color:rgba(135,177,234,.5);font-size:10px;word-break:break-all">' + p.url + '</span></div>';
+      html += '<strong style="color:#f6f6f6;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.title) + '</strong>';
+      html += '<span style="color:#09a3ef;font-weight:700;flex-shrink:0;margin-left:8px">' + esc(p.duration) + '</span></div>';
+      html += '<span style="color:rgba(135,177,234,.5);font-size:10px;word-break:break-all">' + esc(p.url) + '</span></div>';
     });
   }
 
@@ -712,9 +738,9 @@ function renderReport(r) {
   var shown = pages.slice(0, 8);
   shown.forEach(function(p, i) {
     if (i > 0) html += '<hr style="border:none;border-top:1px solid rgba(135,177,234,.1);margin:3px 0">';
-    html += '<strong>' + p.number + '. ' + p.title + '</strong><br>';
-    html += '<span style="color:rgba(135,177,234,.5);font-size:10px;word-break:break-all">' + p.url + '</span><br>';
-    html += '<span style="font-size:11px">' + p.openedAt + '→' + p.closedAt + ' · ⏱ ' + p.duration + ' · ' + p.clicks + ' clics</span>';
+    html += '<strong>' + p.number + '. ' + esc(p.title) + '</strong><br>';
+    html += '<span style="color:rgba(135,177,234,.5);font-size:10px;word-break:break-all">' + esc(p.url) + '</span><br>';
+    html += '<span style="font-size:11px">' + esc(p.openedAt) + '→' + esc(p.closedAt) + ' · ⏱ ' + esc(p.duration) + ' · ' + p.clicks + ' clics</span>';
   });
 
   el("report-summary").innerHTML = html;
